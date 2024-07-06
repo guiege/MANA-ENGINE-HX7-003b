@@ -1,3 +1,6 @@
+// MANA FIGHTING GAME ENGINE by guiege(Christian Schmitz)
+// FOR SHUKLA SHORES OFFICIAL USE ONLY
+
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
