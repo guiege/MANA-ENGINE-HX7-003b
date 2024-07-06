@@ -107,9 +107,9 @@ bool IntroState::enter()
 	testChar2->SetFlipped(true);
 	actors.push_back(testChar2);
 
-	Solid midgar(200, 700, 800, 800, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	Solid platform(1000, 700, 800, 800, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	Solid floor(0, 980, 1920, 100, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	solids.push_back(midgar);
+	solids.push_back(platform);
 	solids.push_back(floor);
 
 	// post->Chromatic = true;

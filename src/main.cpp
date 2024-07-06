@@ -239,7 +239,7 @@ int main()
         if(gCurrentState->doneLoading){
             //Specify the color of the background
             // glClearColor(48/(float)255, 56/(float)255, 65/(float)255, 1.0f);
-            glClearColor(38/(float)255, 38/(float)255, 38/(float)255, 1.0f);
+            glClearColor(39/(float)255, 39/(float)255, 39/(float)255, 1.0f);
 
             // Clean the back buffer and assign the new color to it
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
