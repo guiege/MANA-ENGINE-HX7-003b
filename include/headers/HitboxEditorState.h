@@ -1,5 +1,5 @@
-#ifndef TEST_STATE
-#define TEST_STATE
+#ifndef HITBOX_EDITOR_STATE
+#define HITBOX_EDITOR_STATE
 
 #include "imgui.h"
 
@@ -20,11 +20,11 @@
 using json = nlohmann::json;
 
 
-class TestState : public GameState
+class HitboxEditorState : public GameState
 {
 public:
 	//Static accessor
-	static TestState* get();
+	static HitboxEditorState* get();
 
 	//Transitions
 	bool enter();
@@ -36,10 +36,10 @@ public:
 
 private:
 	//Static instance
-	static TestState sTestState;
+	static HitboxEditorState sHitboxEditorState;
 
 	//Private constructor
-	TestState();
+	HitboxEditorState();
 
 	Renderer* batchRenderer;
 };

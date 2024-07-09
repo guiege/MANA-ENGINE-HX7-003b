@@ -40,7 +40,7 @@
 #include "ResourceManager.h"
 #include "GameState.h"
 #include "IntroState.h"
-#include "TestState.h"
+#include "HitboxEditorState.h"
 #include "BatchState.h"
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
@@ -155,7 +155,7 @@ int main()
     TextRenderer loadingText(width, height, textShader);
     loadingText.Load("res/fonts/FOTNewRodin Pro B.otf", 24);
 
-    gCurrentState = TestState::get();
+    gCurrentState = HitboxEditorState::get();
     gCurrentState->enter();
     std::thread loadingThread(ResourceManager::UploadToRAM);
     loadingThread.detach();
@@ -320,7 +320,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         changeState();
     }
     if (key == GLFW_KEY_F2 && action == GLFW_PRESS && gCurrentState->doneLoading){
-        setNextState(TestState::get());
+        setNextState(HitboxEditorState::get());
         changeState();
     }
     if (key == GLFW_KEY_F3 && action == GLFW_PRESS && gCurrentState->doneLoading){

@@ -1,4 +1,4 @@
-#include "TestState.h"
+#include "HitboxEditorState.h"
 
 Renderer* spriteRenderer;
 Renderer* shadowRenderer;
@@ -58,7 +58,7 @@ int curHitboxType = 0;
 
 Spritesheet* testSheet;
 
-bool TestState::exit()
+bool HitboxEditorState::exit()
 {
 
 	spriteRenderer->Delete();
@@ -79,7 +79,7 @@ bool TestState::exit()
 	return true;
 }
 
-bool TestState::enter()
+bool HitboxEditorState::enter()
 {
 	bool success = true;
 
@@ -147,7 +147,7 @@ bool TestState::enter()
 	return success;
 }
 
-void TestState::update(float dt)
+void HitboxEditorState::update(float dt)
 {
 
 	if(this->Keys[GLFW_KEY_I]){
@@ -230,7 +230,7 @@ void TestState::update(float dt)
 
 }
 
-void TestState::render()
+void HitboxEditorState::render()
 {
 	m_Camera->SetPosition(glm::vec3(cameraXPos, cameraYPos, 0));
 	m_Camera->SetRotation(cameraRot);
@@ -524,16 +524,16 @@ void TestState::render()
     // post->Render(glfwGetTime());
 }
 
-TestState TestState::sTestState;
+HitboxEditorState HitboxEditorState::sHitboxEditorState;
 
-TestState::TestState()
+HitboxEditorState::HitboxEditorState()
 {
 
 }
 
-TestState* TestState::get()
+HitboxEditorState* HitboxEditorState::get()
 {
-	return &sTestState;
+	return &sHitboxEditorState;
 }
 
 
