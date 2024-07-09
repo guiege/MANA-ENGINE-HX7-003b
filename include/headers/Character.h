@@ -4,17 +4,29 @@
 #include "Actor.h"
 #include "Spritesheet.h"
 #include "Util.h"
-#include "Animation.h"
+#include "InputHandler.h"
+
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 class Character : public Actor {
 public:
 
-    Character(Texture& texture, const char* file, const float xpos, const float ypos, const float width, const float height, const float rot, std::vector<Solid>& solids, glm::vec4 color = glm::vec4(1.0f))
-        : Actor(xpos, ypos, 0, 0, rot, solids), spritesheet(texture, file, xpos, ypos, width, height, rot, color) {}
+    Character(InputHandler* handler, Texture& texture, const char* file, const float xpos, const float ypos, const float width, const float height, const float rot, 
+        std::vector<Solid>& solids, glm::vec4 color = glm::vec4(1.0f))
+        : Actor(xpos, ypos, 0, 0, rot, solids), inputHandler(handler), spritesheet(texture, file, xpos, ypos, width, height, rot, color) {}
 
     void init();
 
-    // virtual void update(int tick) = 0;
+    int state = 0;
+
+    virtual void start() = 0;
+
+    virtual void update(int tick) = 0;
+
+    virtual void enterState(int newstate, int oldstate) = 0;
+
+    virtual void exitState(int oldstate, int newstate) = 0;
 
     void animate(int tick);
 
@@ -32,7 +44,13 @@ public:
 
     int currentFrame = 0;
 
-private:
+    Animation getAnimFromJson(json& file, const int index)
+    {
+        return Animation(file["animationList"][index]["keyframes"], file["animationList"][index]["frames"], file["animationList"][index]["repeat"]);
+    }
+
+
+protected:
 
     Spritesheet spritesheet;
 
@@ -52,6 +70,8 @@ private:
     bool flipped = false;
 
     glm::vec2 drawPosition;
+
+    InputHandler* inputHandler;
 
 };
 

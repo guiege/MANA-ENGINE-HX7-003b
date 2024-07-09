@@ -79,13 +79,7 @@ bool InputHandler::checkCommand(const std::bitset<4> &direction, bool hold)
 
 	bool executed = false;
 	
-	std::bitset<(buffer * 4)> dirCheck = dirPress;
-
-	if(hold)
-	{
-		dirCheck = dirHold;
-	}
-
+	std::bitset<(buffer * 4)> dirCheck = hold ? dirHold : dirPress;
 
 	if(std::bitset<4>(dirCheck.to_ullong()) == direction)
 		executed = true;

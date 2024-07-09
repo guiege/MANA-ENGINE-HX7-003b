@@ -4,6 +4,7 @@ void Character::init()
 {
 	readHurtboxesFromFile(hurtboxes, hitboxes, pushboxes, "res/hitboxes/testBoxes.hbox");
 	SetFrame(0);
+	start();
 }
 
 void Character::animate(int tick)
@@ -19,16 +20,20 @@ void Character::animate(int tick)
         SetFrame(currentAnim.frames[currentAnim.currentIndex]);
     }
 
-    if (currentAnim.repeat && animCount == currentAnim.keyframes.back()) {
-        animCount = 0;
-        currentAnim.currentIndex = 0;
+    if (animCount == currentAnim.keyframes.back()) {
+    	if(currentAnim.repeat){
+	        animCount = 0;
+	        currentAnim.currentIndex = 0;
+	    } else {
+	    	currentAnim.finished = true;
+	    }
     }
 
-    std::cout << "Frame: " << animCount
-              << ", Index: " << currentAnim.currentIndex 
-              << ", Current Frame: " << currentAnim.frames[currentAnim.currentIndex]
-              << ", Current Tick" << tick
-              << std::endl;
+    // std::cout << "Frame: " << animCount
+    //           << ", Index: " << currentAnim.currentIndex 
+    //           << ", Current Frame: " << currentAnim.frames[currentAnim.currentIndex]
+    //           << ", Current Tick" << tick
+    //           << std::endl;
 
     animCount++;
 }
@@ -82,6 +87,7 @@ rect Character::ProcessRect(const rect& r)
 void Character::PlayAnimation(const Animation& anim)
 {
 	currentAnim = anim;
+	currentAnim.finished = false;
     animCount = 0;
     currentAnim.currentIndex = 0;
     SetFrame(currentAnim.frames[0]);

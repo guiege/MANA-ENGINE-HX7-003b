@@ -53,11 +53,11 @@ void Spritesheet::draw(Renderer* renderer)
 	if(renderer->isBatch){
 		if(flipped){
 			renderer->DrawFlippedQuadAtlas(texture, glm::vec2(curClip.x, curClip.y), glm::vec2(curClip.w, curClip.h), curClip.rotated, pos + glm::vec2(anchorPosition - curClip.sourceX - curClip.w , curClip.sourceY), true, false, color);
-			// renderer->DrawQuad(pos + glm::vec2(anchorPosition - curClip.sourceX - curClip.w , curClip.sourceY), glm::vec2(curClip.w, curClip.h), 0.0f, glm::vec4(1.0f, 0.0f, 0.0f, 0.3f));
+			// DEBUG DRAW renderer->DrawQuad(pos + glm::vec2(anchorPosition - curClip.sourceX - curClip.w , curClip.sourceY), glm::vec2(curClip.w, curClip.h), 0.0f, glm::vec4(1.0f, 0.0f, 0.0f, 0.3f));
 		}
 		else{
 			renderer->DrawQuadAtlas(texture, glm::vec2(curClip.x, curClip.y), glm::vec2(curClip.w, curClip.h), curClip.rotated, (pos + glm::vec2(curClip.sourceX, curClip.sourceY)), color);
-			// renderer->DrawQuad(pos + glm::vec2(curClip.sourceX, curClip.sourceY), glm::vec2(curClip.w, curClip.h), 0.0f, glm::vec4(1.0f, 0.0f, 0.0f, 0.3f));
+			// DEBUG DRAW renderer->DrawQuad(pos + glm::vec2(curClip.sourceX, curClip.sourceY), glm::vec2(curClip.w, curClip.h), 0.0f, glm::vec4(1.0f, 0.0f, 0.0f, 0.3f));
 		}
 
 	}

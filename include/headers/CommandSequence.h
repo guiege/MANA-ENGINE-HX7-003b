@@ -4,8 +4,7 @@
 #include <vector>
 #include <bitset>
 
-class CommandSequence{
-public:
+struct CommandSequence{
 
 	int commandTimer = 0;
 

@@ -15,7 +15,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <nlohmann/json.hpp>
 
 #include "Shader.h"
 #include "Renderer.h"
@@ -26,12 +25,9 @@
 #include "PostProcessor.h"
 #include "InputHandler.h"
 #include "Character.h"
-#include "Animation.h"
 #include "Camera.h"
 
 #include "TestCharacter.h"
-
-using json = nlohmann::json;
 
 class IntroState : public GameState
 {
@@ -55,6 +51,7 @@ private:
 	IntroState();
 
 	Renderer* batchRenderer;
+	InputHandler* inputHandler;
 
 	Camera* m_Camera;
 

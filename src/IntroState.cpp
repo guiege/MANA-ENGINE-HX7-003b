@@ -1,8 +1,7 @@
 #include "IntroState.h"
 
-Character* testChar;
-Character* testChar2;
-InputHandler* inputHandler;
+TestCharacter* testChar;
+TestCharacter* testChar2;
 
 std::vector<Solid> solids;
 std::vector<Actor*> actors;
@@ -24,33 +23,20 @@ CommandSequence hadoken(hdknC, hdknH, 8);
 CommandSequence shoryuken(sykC, sykH, 8);
 CommandSequence spd(spdC, spdH, 8);
 
-std::ifstream file("res/hitboxes/testAnims.json");
-
-json testAnims = json::parse(file);
-
-const auto& anim = testAnims["animationList"][0];
-const auto& jab = testAnims["animationList"][1];
-
-std::string animName = anim["animationName"];
-std::vector<int> frames = anim["frames"].get<std::vector<int>>();
-std::vector<int> keyframes = anim["keyframes"].get<std::vector<int>>();
-bool repeat = anim["repeat"];
-
-Animation testAnim(keyframes, frames, repeat);
-Animation jabAnim(jab["keyframes"], jab["frames"], jab["repeat"]);
-
 int crouchingjabtimer = 0;
 
 bool IntroState::exit()
 {
-    for (int i = actors.size() - 1; i >= 0; --i)
-    {
-        if (actors[i] != nullptr)
-        {
-            delete actors[i];
-            actors[i] = nullptr;
-        }
-    }
+	delete testChar;
+	delete testChar2;
+    // for (int i = actors.size() - 1; i >= 0; --i)
+    // {
+    //     if (actors[i] != nullptr)
+    //     {
+    //         delete actors[i];
+    //         actors[i] = nullptr;
+    //     }
+    // }
 	actors.clear();
 	solids.clear();
 
@@ -97,15 +83,14 @@ bool IntroState::enter()
 	// post = new PostProcessor(ResourceManager::GetShader("post"), 1920, 1080);
 	inputHandler = new InputHandler();
 
-	testChar = new Character(ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 0, 0, 4296, 15673, 0, solids);
+	testChar = new TestCharacter(inputHandler, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 0, 0, 4296, 15673, 0, solids);
 	testChar->init();
-	testChar->PlayAnimation(testAnim);
-	actors.push_back(testChar);
+	// actors.push_back(testChar);
 
-	testChar2 = new Character(ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 500, 0, 4296, 15673, 0, solids);
-	testChar2->init();
-	testChar2->SetFlipped(true);
-	actors.push_back(testChar2);
+	// testChar2 = new TestCharacter(inputHandler, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 500, 0, 4296, 15673, 0, solids);
+	// testChar2->init();
+	// testChar2->SetFlipped(true);
+	// actors.push_back(testChar2);
 
 	Solid platform(1000, 700, 800, 800, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	Solid floor(0, 980, 1920, 100, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
@@ -119,12 +104,6 @@ bool IntroState::enter()
 
 void IntroState::update(float dt)
 {
-	// testChar->update(tick);
-	testChar->animate(tick);
-	// testChar2->update(tick);
-	// testChar->SetFrame(testCharFrame);
-	testChar->MoveY(10);
-
 	if(this->Keys[GLFW_KEY_F])
 		testChar->SetFlipped(true);
 	if(this->Keys[GLFW_KEY_G])
@@ -133,22 +112,18 @@ void IntroState::update(float dt)
 	if (this->Keys[GLFW_KEY_D])
 	{
 		inputHandler->registerInput(FK_Input_Buttons.FORWARD);
-		testChar->MoveX(20);
 	}
 	if (this->Keys[GLFW_KEY_A])
 	{
 		inputHandler->registerInput(FK_Input_Buttons.BACK);
-		testChar->MoveX(-20);
 	}
 	if (this->Keys[GLFW_KEY_S])
 	{
 		inputHandler->registerInput(FK_Input_Buttons.DOWN);
-		testChar->MoveY(20);
 	}
 	if (this->Keys[GLFW_KEY_W])
 	{
 		inputHandler->registerInput(FK_Input_Buttons.UP);
-		testChar->MoveY(-100);
 	}
 	if(this->Keys[GLFW_KEY_LEFT])
 	{
@@ -180,7 +155,6 @@ void IntroState::update(float dt)
 	if(Keys[GLFW_KEY_U])
 	{
 		inputHandler->registerInput(FK_Input_Buttons.LP);
-		testChar->PlayAnimation(Animation(jab["keyframes"], jab["frames"], jab["repeat"]));
 	}
 	
 	//check shoryu first then command normals and then hadou
@@ -211,13 +185,15 @@ void IntroState::update(float dt)
 	if(this->Keys[GLFW_KEY_M]){
 		testCharFrame++;
 	}
-
-	inputHandler->update(tick);
 	// std::cout << inputHandler->currentInputTimer  << " " << inputHandler->currentDirection << std::endl;
 
 	if(crouchingjabtimer > 0)
 		crouchingjabtimer--;
 
+	testChar->MoveY(10);
+	testChar->update(tick);
+	testChar->animate(tick);
+	inputHandler->update(tick);
 }
 
 void IntroState::render()
