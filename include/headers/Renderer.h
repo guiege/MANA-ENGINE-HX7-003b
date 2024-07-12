@@ -50,7 +50,7 @@ class Renderer
 
 		void DrawIndexedTexture(Texture &texture, Texture &palette, const glm::vec2& position, const glm::vec2& size = glm::vec2(1.0f, 1.0f), float rotate = 0.0f, const glm::vec4& color  = glm::vec4(1.0f));
 
-		void DrawIndexedTextureAtlas(Texture &texture, Texture &palette, const glm::vec2& clipPos, const glm::vec2& clipSize, bool rotated, const glm::vec2& position, const glm::vec4& color = glm::vec4(1.0f));
+		void DrawIndexedTextureAtlas(Texture &texture, Texture &palette, const glm::vec2& clipPos, const glm::vec2& clipSize, bool rotated, const glm::vec2& position, bool flipped = false, const glm::vec4& color = glm::vec4(1.0f));
 
 		void DrawTextureAtlas(Texture &texture, const glm::vec2& clipPos, const glm::vec2& clipSize, bool rotated, const glm::vec2& position, const glm::vec4& color = glm::vec4(1.0f));
 

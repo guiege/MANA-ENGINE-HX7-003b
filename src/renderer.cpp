@@ -57,27 +57,49 @@ void Renderer::DrawIndexedTexture(Texture &texture, Texture &palette, const glm:
 
 }
 
-void Renderer::DrawIndexedTextureAtlas(Texture &texture, Texture &palette, const glm::vec2& clipPos, const glm::vec2& clipSize, bool rotated, const glm::vec2& position, const glm::vec4& color)
+void Renderer::DrawIndexedTextureAtlas(Texture &texture, Texture &palette, const glm::vec2& clipPos, const glm::vec2& clipSize, bool rotated, const glm::vec2& position, bool flipped, const glm::vec4& color)
 {
     float x = clipPos.x;
     float y = clipPos.y;
     float width = clipSize.x;
     float height = clipSize.y;
+    
     if(rotated){
-        width = clipSize.y;
-        height = clipSize.x;
+        std::swap(width, height);
     }
-
+    
+    float texLeft = x / texture.Width;
+    float texRight = (x + width) / texture.Width;
+    float texTop = y / texture.Height;
+    float texBottom = (y + height) / texture.Height;
+    
+    if (flipped) {
+        if(rotated)
+            std::swap(texBottom, texTop);
+        else
+            std::swap(texLeft, texRight);
+        
+    }
+    
     float vertices[] = {
-        // pos                       // tex
-        0.0f, 0.0f,      x / texture.Width, y / texture.Height,
-        1.0f, 0.0f,      (x + width) / texture.Width, y / texture.Height,
-        0.0f, 1.0f,      x / texture.Width, (y + height) / texture.Height,
-
-        1.0f, 0.0f,      (x + width) / texture.Width, y / texture.Height,
-        1.0f, 1.0f,         (x + width) / texture.Width, (y + height) / texture.Height,
-        0.0f, 1.0f,      x / texture.Width, (y + height) / texture.Height
+        // pos      // tex
+        0.0f, 0.0f, texLeft,  texTop,
+        1.0f, 0.0f, texRight, texTop,
+        0.0f, 1.0f, texLeft,  texBottom,
+        1.0f, 0.0f, texRight, texTop,
+        1.0f, 1.0f, texRight, texBottom,
+        0.0f, 1.0f, texLeft,  texBottom
     };
+
+    //     float vertices[] = {
+    //     // pos                       // tex
+    //     0.0f, 0.0f,      flipped ? texRight : texLeft, texTop,
+    //     1.0f, 0.0f,      flipped ? texLeft : texRight, texTop,
+    //     0.0f, 1.0f,      flipped ? (x + width) / texture.Width : x / texture.Width, (y + height) / texture.Height,
+    //     1.0f, 0.0f,      flipped ? x / texture.Width : (x + width) / texture.Width, y / texture.Height,
+    //     1.0f, 1.0f,      flipped ? x / texture.Width : (x + width) / texture.Width, (y + height) / texture.Height,
+    //     0.0f, 1.0f,      flipped ? (x + width) / texture.Width : x / texture.Width, (y + height) / texture.Height
+    // };
 
     this->customVAO.Bind();
 
@@ -105,23 +127,24 @@ void Renderer::DrawIndexedTextureAtlas(Texture &texture, Texture &palette, const
     this->shader.SetMatrix4("model", model);
     this->shader.SetVector4f("spriteColor", color);
 
-    this->shader.SetInteger("image", 0);
-    this->shader.SetInteger("Palette", 1);
+    shader.SetInteger("image", 0);
+    shader.SetInteger("Palette", 1);
 
     glActiveTexture(GL_TEXTURE0);
     texture.Bind();
 
     glActiveTexture(GL_TEXTURE1);
     palette.Bind();
-
-    this->vao.Bind();
+    
+    this->customVAO.Bind();
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    this->vao.Unbind();
+    this->customVAO.Unbind();
 
     glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
+
 
 void Renderer::DrawTextureAtlas(Texture &texture, const glm::vec2& clipPos, const glm::vec2& clipSize, bool rotated, const glm::vec2& position, const glm::vec4& color)
 {

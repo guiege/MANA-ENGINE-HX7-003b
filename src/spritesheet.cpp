@@ -66,6 +66,20 @@ void Spritesheet::draw(Renderer* renderer)
 	}
 }
 
+void Spritesheet::draw(Renderer* renderer, Texture& palette) 
+{
+	if(renderer->isBatch){
+	}
+	else{
+		if(flipped){
+			renderer->DrawIndexedTextureAtlas(texture, palette, glm::vec2(curClip.x, curClip.y), glm::vec2(curClip.w, curClip.h), curClip.rotated, 
+				pos + glm::vec2(anchorPosition - curClip.sourceX - curClip.w , curClip.sourceY), true, color);
+		} else {
+			renderer->DrawIndexedTextureAtlas(texture, palette, glm::vec2(curClip.x, curClip.y), glm::vec2(curClip.w, curClip.h), curClip.rotated, (pos + glm::vec2(curClip.sourceX, curClip.sourceY)), false, color);
+		}
+	}
+}
+
 int Spritesheet::getLength()
 {
 	return (sheetindex.size() -1);

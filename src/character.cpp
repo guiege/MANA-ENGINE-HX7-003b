@@ -123,3 +123,34 @@ void Character::draw(Renderer* renderer)
 		}
 	}
 }
+
+void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& palette)
+{
+	drawPosition = pos - posOffset - glm::vec2(width, height);
+	spritesheet.SetFrame(currentFrame);
+	spritesheet.pos = pos;
+	spritesheet.draw(paletteRenderer, palette);
+	int vertCrossWidth = 2;
+	int vertCrossHeight = 40;
+	int horiCrossWidth = 32;
+	int horiCrossHeight = 2;
+	renderer->DrawOutline(pos + posOffset, glm::vec2(width, height), 0, glm::vec4(pushboxColor, 1.0f), 1);
+	renderer->DrawQuad(pos + posOffset + glm::vec2(width/2 - vertCrossWidth/2, height - vertCrossHeight/2), glm::vec2(vertCrossWidth, vertCrossHeight), 0, glm::vec4(1.0f));
+	renderer->DrawQuad(pos + posOffset + glm::vec2(width/2 - horiCrossWidth/2, height - horiCrossHeight/2), glm::vec2(horiCrossWidth, horiCrossHeight), 0, glm::vec4(1.0f));
+	// renderer->DrawQuad(pos, glm::vec2(5, 5), 0, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+	// renderer->DrawQuad({pos.x + spritesheet.getCurrentOffset().x*2 + spritesheet.getCurrentSize().x*1.5 - 5, pos.y}, glm::vec2(5, 5), 0, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+
+	if(hurtboxes.count(currentFrame) > 0){
+		for (int i = 0; i < hurtboxes[currentFrame].size(); ++i){
+			rect hurtbox = ProcessRect(hurtboxes[currentFrame][i]);
+			renderer->DrawOutline({pos.x + hurtbox.x, pos.y + hurtbox.y}, {hurtbox.width, hurtbox.height}, 0, glm::vec4(hurtboxColor, 1.0f), 1);
+		}
+	}
+
+	if(hitboxes.count(currentFrame) > 0){
+		for (int i = 0; i < hitboxes[currentFrame].size(); ++i){
+			rect hitbox = ProcessRect(hitboxes[currentFrame][i]);
+			renderer->DrawOutline({pos.x + hitbox.x, pos.y + hitbox.y}, {hitbox.width, hitbox.height}, 0, glm::vec4(hitboxColor, 1.0f), 1);
+		}
+	}
+}

@@ -51,7 +51,10 @@ private:
 	IntroState();
 
 	Renderer* batchRenderer;
+	Renderer* characterRenderer;
+
 	InputHandler* inputHandler;
+	InputHandler* inputHandler2;
 
 	Camera* m_Camera;
 

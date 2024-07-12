@@ -41,9 +41,13 @@ bool IntroState::exit()
 	solids.clear();
 
 	delete inputHandler;
+	delete inputHandler2;
 
 	batchRenderer->Delete();	
 	delete batchRenderer;
+
+	characterRenderer->Delete();
+	delete characterRenderer;
 
 	// post->Delete();
 	// delete post;
@@ -59,41 +63,46 @@ bool IntroState::enter()
 	testCharFrame = 0;
 
 	m_Camera = new Camera(0, 1920, 1080, 0);
-	cameraXPos = 0;
+	cameraXPos = -960;
 	cameraYPos = 0;
 	cameraRot = 0.0f;
 	cameraScale = 1.0f;
 
     ResourceManager::LoadShader("res/shaders/post.vert", "res/shaders/post.frag", "post");
+    ResourceManager::LoadShader("res/shaders/default.vert", "res/shaders/palette.frag", "palette");
     ResourceManager::LoadShader("res/shaders/batch.vert", "res/shaders/batch.frag", "batch");
 
-    ResourceManager::LoadTexture("res/textures/hyde.png", true, "hyde");
-    ResourceManager::LoadTexture("res/textures/hydesheet.png", true, "hydesheet");
+    ResourceManager::LoadTexture("res/textures/hydesheetindexed.png", true, "hydesheet");
+    ResourceManager::LoadTexture("res/textures/hydepal.png", true, "hydepal");
+    ResourceManager::LoadTexture("res/textures/hydepalp2.png", true, "hydepalp2");
     ResourceManager::LoadTexture("res/textures/ryu.png", true, "ryusheet");
     ResourceManager::LoadTexture("res/textures/ffviir-zoom-midgar-city.jpg", false, "midgar");
     
 
     glm::mat4 proj = glm::ortho(0.0f, (float)(1920), (float)(1080), 0.0f, -1.0f, 1.0f);
-    ResourceManager::GetShader("testShader").Use().SetMatrix4("projection", proj);
     ResourceManager::GetShader("batch").Use().SetMatrix4("projection", proj);
+    ResourceManager::GetShader("palette").Use().SetMatrix4("projection", proj);
+
+    characterRenderer = new Renderer(ResourceManager::GetShader("palette"));
 
     batchRenderer = new Renderer(ResourceManager::GetShader("batch"));
     batchRenderer->initBatchRenderData();
 
 	// post = new PostProcessor(ResourceManager::GetShader("post"), 1920, 1080);
 	inputHandler = new InputHandler();
+	inputHandler2 = new InputHandler();
 
-	testChar = new TestCharacter(inputHandler, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 0, 0, 4296, 15673, 0, solids);
+	testChar = new TestCharacter(inputHandler, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", -950, 0, 4296, 15673, 0, solids);
 	testChar->init();
 	// actors.push_back(testChar);
 
-	// testChar2 = new TestCharacter(inputHandler, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 500, 0, 4296, 15673, 0, solids);
-	// testChar2->init();
-	// testChar2->SetFlipped(true);
+	testChar2 = new TestCharacter(inputHandler2, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 50, 0, 4296, 15673, 0, solids);
+	testChar2->init();
+	testChar2->SetFlipped(true);
 	// actors.push_back(testChar2);
 
 	Solid platform(1000, 700, 800, 800, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	Solid floor(0, 980, 1920, 100, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	Solid floor(-2000, 980, 4000, 100, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	solids.push_back(platform);
 	solids.push_back(floor);
 
@@ -108,6 +117,28 @@ void IntroState::update(float dt)
 		testChar->SetFlipped(true);
 	if(this->Keys[GLFW_KEY_G])
 		testChar->SetFlipped(false);
+
+	if(Keys[GLFW_KEY_J])
+	{
+		inputHandler2->registerInput(FK_Input_Buttons.BACK);
+	}
+	if(Keys[GLFW_KEY_L])
+	{
+		inputHandler2->registerInput(FK_Input_Buttons.FORWARD);
+	}
+	if(Keys[GLFW_KEY_I])
+	{
+		inputHandler2->registerInput(FK_Input_Buttons.UP);
+	}
+	if(Keys[GLFW_KEY_K])
+	{
+		inputHandler2->registerInput(FK_Input_Buttons.DOWN);
+	}
+
+	if(Keys[GLFW_KEY_LEFT_BRACKET])
+	{
+		inputHandler2->registerInput(FK_Input_Buttons.LP);
+	}
 
 	if (this->Keys[GLFW_KEY_D])
 	{
@@ -191,9 +222,14 @@ void IntroState::update(float dt)
 		crouchingjabtimer--;
 
 	testChar->MoveY(10);
+	testChar2->MoveY(10);
+
 	testChar->update(tick);
+	testChar2->update(tick);
 	testChar->animate(tick);
+	testChar2->animate(tick);
 	inputHandler->update(tick);
+	inputHandler2->update(tick);
 }
 
 void IntroState::render()
@@ -203,6 +239,7 @@ void IntroState::render()
 	m_Camera->SetScale(glm::vec3(cameraScale, cameraScale, cameraScale));
 
 	ResourceManager::GetShader("batch").Use().SetMatrix4("projection", m_Camera->GetViewProjectionMatrix());
+	ResourceManager::GetShader("palette").Use().SetMatrix4("projection", m_Camera->GetViewProjectionMatrix());
 	// post->BeginRender();
 
 	batchRenderer->ResetStats();
@@ -217,8 +254,8 @@ void IntroState::render()
     // 	actors[i]->draw(renderer);
     // }
 
-    testChar->draw(batchRenderer);
-    // testChar2->draw(batchRenderer);
+    testChar->draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepal"));
+    testChar2->draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepalp2"));
 
     batchRenderer->EndBatch();
 

@@ -31,6 +31,7 @@ public:
     void animate(int tick);
 
     void draw(Renderer* renderer);
+    void draw(Renderer* renderer, Renderer* paletteRenderer, Texture& palette);
 
     void SetFrame(const int frame);
 
