@@ -11,29 +11,29 @@ void Character::animate(int tick)
 {
 	if (currentAnim.keyframes.empty()) return;
 
-    if (currentAnim.currentIndex < currentAnim.keyframes.size() - 1 &&
-        animCount >= currentAnim.keyframes[currentAnim.currentIndex + 1]) {
-        currentAnim.currentIndex++;
+    if (currentIndex < currentAnim.keyframes.size() - 1 &&
+        animCount >= currentAnim.keyframes[currentIndex + 1]) {
+        currentIndex++;
     }
 
-    if (currentAnim.currentIndex < currentAnim.frames.size()) {
-        SetFrame(currentAnim.frames[currentAnim.currentIndex]);
+    if (currentIndex < currentAnim.frames.size()) {
+        SetFrame(currentAnim.frames[currentIndex]);
     }
 
     if (animCount == currentAnim.keyframes.back()) {
     	if(currentAnim.repeat){
 	        animCount = 0;
-	        currentAnim.currentIndex = 0;
+	        currentIndex = 0;
 	    } else {
 	    	currentAnim.finished = true;
 	    }
     }
 
-    // std::cout << "Frame: " << animCount
-    //           << ", Index: " << currentAnim.currentIndex 
-    //           << ", Current Frame: " << currentAnim.frames[currentAnim.currentIndex]
-    //           << ", Current Tick" << tick
-    //           << std::endl;
+    std::cout << "Frame: " << animCount
+              << ", Index: " << currentIndex 
+              << ", Current Frame: " << currentAnim.frames[currentIndex]
+              << ", Current Tick" << tick
+              << std::endl;
 
     animCount++;
 }
@@ -89,7 +89,7 @@ void Character::PlayAnimation(const Animation& anim)
 	currentAnim = anim;
 	currentAnim.finished = false;
     animCount = 0;
-    currentAnim.currentIndex = 0;
+    currentIndex = 0;
     SetFrame(currentAnim.frames[0]);
 }
 

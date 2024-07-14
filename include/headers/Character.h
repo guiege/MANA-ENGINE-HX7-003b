@@ -20,6 +20,9 @@ public:
 
     int state = 0;
 
+    int animID;
+    int currentIndex = 0;
+
     virtual void start() = 0;
 
     virtual void update(int tick) = 0;

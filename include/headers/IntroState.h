@@ -29,11 +29,52 @@
 
 #include "TestCharacter.h"
 
+class state
+{
+	
+};
+
 class IntroState : public GameState
 {
 public:
+
+	TestCharacter* testChar;
+	TestCharacter* testChar2;
+
 	//Static accessor
 	static IntroState* get();
+
+	int len;
+	unsigned char *buffer;
+
+    bool save_char()
+    {
+        if (!testChar) {
+            std::cout << "testChar is null\n";
+            return false;
+        }
+        len = sizeof(TestCharacter);
+        buffer = new unsigned char[len];
+        if (!buffer)
+        {
+            std::cout << "save failed: memory allocation error\n";
+            return false;
+        }
+        memcpy(buffer, testChar, len);
+        std::cout << "save complete\n";
+        return true;
+    }
+
+    bool load_char()
+    {
+        if (!buffer || len == 0) {
+            std::cout << "load failed: no data to load\n";
+            return false;
+        }
+        memcpy(testChar, buffer, len);
+        std::cout << "load complete\n";
+        return true;
+    }
 
 	//Transitions
 	bool enter();

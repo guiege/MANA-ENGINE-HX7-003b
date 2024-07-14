@@ -11,6 +11,7 @@ void TestCharacter::start()
 	jabAnim = getAnimFromJson(animations, 1);
 
 	PlayAnimation(idleAnim);
+	animID = 0;
 }
 
 void TestCharacter::update(int tick)
@@ -18,7 +19,7 @@ void TestCharacter::update(int tick)
 
 	switch(state) {
 	case idle:
-		std::cout << "in idle state" << std::endl;
+		// std::cout << "in idle state" << std::endl;
 		
 		if(inputHandler->checkCommand(FK_Input_Buttons.BACK, true))
 			MoveX(-20);
@@ -29,14 +30,25 @@ void TestCharacter::update(int tick)
 
 		if(inputHandler->checkCommand(FK_Input_Buttons.LP, false)){
 			PlayAnimation(jabAnim);
+			animID = 1;
 			enterState(atk, state);
 		}
 		break;
 	case atk:
-		std::cout << "in atk state" << std::endl;
-		if(currentAnim.finished)
+		// std::cout << "in atk state" << std::endl;
+		if(currentAnim.finished){
 			enterState(idle, state);
+		}
 		break;
+	}
+
+	switch(animID){
+		case 0:
+			currentAnim = idleAnim;
+			break;
+		case 1:
+			currentAnim = jabAnim;
+			break;
 	}
 
 }
@@ -47,6 +59,7 @@ void TestCharacter::enterState(int newstate, int oldstate)
 	switch(newstate) {
 	case idle:
 		PlayAnimation(idleAnim);
+		animID = 0;
 		std::cout << "entering idle" << std::endl;
 		break;
 	case atk:

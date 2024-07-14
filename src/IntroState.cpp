@@ -1,8 +1,5 @@
 #include "IntroState.h"
 
-TestCharacter* testChar;
-TestCharacter* testChar2;
-
 std::vector<Solid> solids;
 std::vector<Actor*> actors;
 
@@ -183,6 +180,14 @@ void IntroState::update(float dt)
 		cameraScale += .1;
 	}
 
+	if(Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_S]){
+		save_char();
+	}
+
+	if(Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_L]){
+		load_char();
+	}
+
 	if(Keys[GLFW_KEY_U])
 	{
 		inputHandler->registerInput(FK_Input_Buttons.LP);
@@ -227,7 +232,7 @@ void IntroState::update(float dt)
 	testChar->update(tick);
 	testChar2->update(tick);
 	testChar->animate(tick);
-	testChar2->animate(tick);
+	// testChar2->animate(tick);
 	inputHandler->update(tick);
 	inputHandler2->update(tick);
 }
