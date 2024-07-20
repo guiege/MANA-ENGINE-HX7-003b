@@ -7,20 +7,11 @@ int testCharFrame = 0;
 
 // PostProcessor *post;
 
-std::vector<int> hdknH{-1, 1};
-std::vector<std::bitset<4>> hdknC{FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD};
+int crouchingjabtimer = 0;
 
-std::vector<int> sykH{-1, 1, 1};
-std::vector<std::bitset<4>> sykC{FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD};
 
 std::vector<int> spdH{-1, 1, 1, 1};
 std::vector<std::bitset<4>> spdC{FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK, FK_Input_Buttons.UP};
-
-CommandSequence hadoken(hdknC, hdknH, 8);
-CommandSequence shoryuken(sykC, sykH, 8);
-CommandSequence spd(spdC, spdH, 8);
-
-int crouchingjabtimer = 0;
 
 bool IntroState::exit()
 {
@@ -72,8 +63,8 @@ bool IntroState::enter()
     ResourceManager::LoadTexture("res/textures/hydesheetindexed.png", true, "hydesheet");
     ResourceManager::LoadTexture("res/textures/hydepal.png", true, "hydepal");
     ResourceManager::LoadTexture("res/textures/hydepalp2.png", true, "hydepalp2");
-    ResourceManager::LoadTexture("res/textures/ryu.png", true, "ryusheet");
-    ResourceManager::LoadTexture("res/textures/ffviir-zoom-midgar-city.jpg", false, "midgar");
+    // ResourceManager::LoadTexture("res/textures/ryu.png", true, "ryusheet");
+    // ResourceManager::LoadTexture("res/textures/ffviir-zoom-midgar-city.jpg", false, "midgar");
     
 
     glm::mat4 proj = glm::ortho(0.0f, (float)(1920), (float)(1080), 0.0f, -1.0f, 1.0f);
@@ -99,8 +90,8 @@ bool IntroState::enter()
 	// actors.push_back(testChar2);
 
 	Solid platform(1000, 700, 800, 800, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	Solid floor(-2000, 980, 4000, 100, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	solids.push_back(platform);
+	Solid floor(-2000, 980, 4000, 1000, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	// solids.push_back(platform);
 	solids.push_back(floor);
 
 	// post->Chromatic = true;
@@ -117,11 +108,17 @@ void IntroState::update(float dt)
 
 	if(Keys[GLFW_KEY_J])
 	{
-		inputHandler2->registerInput(FK_Input_Buttons.BACK);
+		if(testChar->GetFlipped())
+			inputHandler2->registerInput(FK_Input_Buttons.BACK);
+		else
+			inputHandler2->registerInput(FK_Input_Buttons.FORWARD);
 	}
 	if(Keys[GLFW_KEY_L])
 	{
-		inputHandler2->registerInput(FK_Input_Buttons.FORWARD);
+		if(testChar->GetFlipped())
+			inputHandler2->registerInput(FK_Input_Buttons.FORWARD);
+		else
+			inputHandler2->registerInput(FK_Input_Buttons.BACK);
 	}
 	if(Keys[GLFW_KEY_I])
 	{
@@ -139,11 +136,17 @@ void IntroState::update(float dt)
 
 	if (this->Keys[GLFW_KEY_D])
 	{
-		inputHandler->registerInput(FK_Input_Buttons.FORWARD);
+		if(testChar->GetFlipped())
+			inputHandler->registerInput(FK_Input_Buttons.BACK);
+		else
+			inputHandler->registerInput(FK_Input_Buttons.FORWARD);
 	}
 	if (this->Keys[GLFW_KEY_A])
 	{
-		inputHandler->registerInput(FK_Input_Buttons.BACK);
+		if(testChar->GetFlipped())
+			inputHandler->registerInput(FK_Input_Buttons.FORWARD);
+		else
+			inputHandler->registerInput(FK_Input_Buttons.BACK);
 	}
 	if (this->Keys[GLFW_KEY_S])
 	{
@@ -193,27 +196,27 @@ void IntroState::update(float dt)
 		inputHandler->registerInput(FK_Input_Buttons.LP);
 	}
 	
-	//check shoryu first then command normals and then hadou
-	if(inputHandler->checkCommand(FK_Input_Buttons.DOWN_FORWARD, true) || inputHandler->checkCommand(FK_Input_Buttons.DOWN, true))
-	{
-		if(inputHandler->checkCommand(FK_Input_Buttons.LP, false)){
-			crouchingjabtimer = 10;
-			std::cout << "LOW" << std::endl;
-		}
-	}
+	// //check shoryu first then command normals and then hadou
+	// if(inputHandler->checkCommand(FK_Input_Buttons.DOWN_FORWARD, true) || inputHandler->checkCommand(FK_Input_Buttons.DOWN, true))
+	// {
+	// 	if(inputHandler->checkCommand(FK_Input_Buttons.LP, false)){
+	// 		crouchingjabtimer = 10;
+	// 		std::cout << "LOW" << std::endl;
+	// 	}
+	// }
 
-	if(inputHandler->checkCommand(spd))
-	{
-		std::cout << "SPD" << std::endl;
-		if(inputHandler->checkCommand(FK_Input_Buttons.LP, false))
-			testChar->MoveY(250);
-	} 
-	else if(inputHandler->checkCommand(hadoken))
-	{
-		std::cout << "HADOKEN" << std::endl;
-		if(inputHandler->checkCommand(FK_Input_Buttons.LP, false) && crouchingjabtimer == 0)
-			testChar->MoveX(250);
-	}
+	// if(inputHandler->checkCommand(spd))
+	// {
+	// 	std::cout << "SPD" << std::endl;
+	// 	if(inputHandler->checkCommand(FK_Input_Buttons.LP, false))
+	// 		testChar->MoveY(250);
+	// } 
+	// else if(inputHandler->checkCommand(hadoken))
+	// {
+	// 	std::cout << "HADOKEN" << std::endl;
+	// 	if(inputHandler->checkCommand(FK_Input_Buttons.LP, false) && crouchingjabtimer == 0)
+	// 		testChar->MoveX(250);
+	// }
 
 	if(this->Keys[GLFW_KEY_N]){
 		testCharFrame--;
@@ -231,8 +234,8 @@ void IntroState::update(float dt)
 
 	testChar->update(tick);
 	testChar2->update(tick);
-	testChar->animate(tick);
-	// testChar2->animate(tick);
+	testChar->scriptSubroutine(tick);
+	testChar2->scriptSubroutine(tick);
 	inputHandler->update(tick);
 	inputHandler2->update(tick);
 }

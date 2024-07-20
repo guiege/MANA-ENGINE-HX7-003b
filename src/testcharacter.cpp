@@ -3,6 +3,11 @@
 
 void TestCharacter::start()
 {
+	readHurtboxesFromFile(hurtboxes, hitboxes, pushboxes, "res/hitboxes/testBoxes.hbox");
+	SetFrame(0);
+
+	loadScript("scripts/test.rose");
+
 	std::ifstream file("res/hitboxes/testAnims.json");
 
 	animations = json::parse(file);
@@ -22,16 +27,27 @@ void TestCharacter::update(int tick)
 		// std::cout << "in idle state" << std::endl;
 		
 		if(inputHandler->checkCommand(FK_Input_Buttons.BACK, true))
-			MoveX(-20);
+			MoveX(-20 * sign);
 		if(inputHandler->checkCommand(FK_Input_Buttons.FORWARD, true))
-			MoveX(20);
-		if(inputHandler->checkCommand(FK_Input_Buttons.UP, true))
-			MoveY(-100);
+			MoveX(20 * sign);
+		if(inputHandler->checkCommand(FK_Input_Buttons.UP, true)){
+			MoveY(-100 * sign);
+			// bbscriptFrameCount = 0;
+			// framesUntilNextCommand = 0;
+			// currentLine = 0;
+			// lastCommandExecuted = 0;
+			// currentState = "BanditBringer";
+		}
 
 		if(inputHandler->checkCommand(FK_Input_Buttons.LP, false)){
-			PlayAnimation(jabAnim);
-			animID = 1;
-			enterState(atk, state);
+			// bbscriptFrameCount = 0;
+			// framesUntilNextCommand = 0;
+			// currentLine = 0;
+			// lastCommandExecuted = 0;
+			// currentState = "GunFlame";
+			// PlayAnimation(jabAnim);
+			// animID = 1;
+			// enterState(atk, state);
 		}
 		break;
 	case atk:

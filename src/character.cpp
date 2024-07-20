@@ -2,40 +2,133 @@
 
 void Character::init()
 {
-	readHurtboxesFromFile(hurtboxes, hitboxes, pushboxes, "res/hitboxes/testBoxes.hbox");
-	SetFrame(0);
+	motionInputs["INPUT_236"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD}, {-1, 1}, 8);
+	motionInputs["INPUT_214"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK}, {-1, 1}, 8);
+	motionInputs["INPUT_623"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD}, {-1, 1, 1}, 8);
+	motionInputs["INPUT_421"] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK}, {-1, 1, 1}, 8);
+	motionInputs["INPUT_22"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN}, {-1, 1}, 8);
+	motionInputs["INPUT_66"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.FORWARD}, {-1, 1}, 8);
+
+	buttons["INPUT_PRESS_LP"] = Button(FK_Input_Buttons.LP, false);
+	buttons["INPUT_PRESS_MP"] = Button(FK_Input_Buttons.MP, false);
+	buttons["INPUT_PRESS_HP"] = Button(FK_Input_Buttons.HP, false);
+
+	buttons["INPUT_HOLD_LP"] = Button(FK_Input_Buttons.LP, true);
+	buttons["INPUT_HOLD_MP"] = Button(FK_Input_Buttons.MP, true);
+	buttons["INPUT_HOLD_HP"] = Button(FK_Input_Buttons.HP, true);
+
+	buttons["INPUT_PRESS_LK"] = Button(FK_Input_Buttons.LK, false);
+	buttons["INPUT_PRESS_MK"] = Button(FK_Input_Buttons.MK, false);
+	buttons["INPUT_PRESS_HK"] = Button(FK_Input_Buttons.HK, false);
+
+	buttons["INPUT_HOLD_LK"] = Button(FK_Input_Buttons.LK, true);
+	buttons["INPUT_HOLD_MK"] = Button(FK_Input_Buttons.MK, true);
+	buttons["INPUT_HOLD_HK"] = Button(FK_Input_Buttons.HK, true);
+
+	commandMap["sprite"] = [this](const std::vector<std::string>& params) {
+		if (params.empty()) return;
+		std::cout << "Setting sprite to " << params[0] << " for " << params[1] << " frames" << std::endl;
+		SetFrame(stoi(params[0]));
+		framesUntilNextCommand = stoi(params[1]);
+	};
+
+	commandMap["setCarriedMomentumPercentage"] = [this](const std::vector<std::string>& params) {
+		if (params.empty()) return;
+        std::cout << "Setting carried momentum percentage to " << params[0] << std::endl;
+        framesUntilNextCommand = 0;
+    };
+
+    commandMap["physicsXImpulse"] = [this](const std::vector<std::string>& params) {
+		if (params.empty()) return;
+		std::cout << "Giving a x physics impulse of " << params[0] << std::endl;
+		velocity.x = stoi(params[0]);
+        framesUntilNextCommand = 0;
+    };
+
+    commandMap["physicsYImpulse"] = [this](const std::vector<std::string>& params) {
+		if (params.empty()) return;
+		std::cout << "Giving a y physics impulse of " << params[0] << std::endl;
+		velocity.y = -stoi(params[0]);
+        framesUntilNextCommand = 0;
+    };
+
+    commandMap["setGravity"] = [this](const std::vector<std::string>& params) {
+		if (params.empty()) return;
+		std::cout << "Setting gravity value to " << params[0] << std::endl;
+		gravity = stoi(params[0]);
+        framesUntilNextCommand = 0;
+    };
+
+    SetFlipped(false);
 	start();
 }
 
-void Character::animate(int tick)
+void Character::runScript()
 {
-	if (currentAnim.keyframes.empty()) return;
-
-    if (currentIndex < currentAnim.keyframes.size() - 1 &&
-        animCount >= currentAnim.keyframes[currentIndex + 1]) {
-        currentIndex++;
+    if (framesUntilNextCommand > 0) {
+        framesUntilNextCommand--;
+        return;
     }
 
-    if (currentIndex < currentAnim.frames.size()) {
-        SetFrame(currentAnim.frames[currentIndex]);
+    while (currentLine < states[currentState].instructions.size()) {
+        auto it = commandMap.find(states[currentState].instructions[currentLine].command);
+        if (it != commandMap.end()) {
+            it->second(states[currentState].instructions[currentLine].parameters);
+            lastCommandExecuted = bbscriptFrameCount;
+            currentLine++;
+
+            if (framesUntilNextCommand > 0) {
+                break;
+            }
+        } else {
+            std::cout << "Unknown command: " << states[currentState].instructions[currentLine].command << std::endl;
+            currentLine++;
+        }
     }
 
-    if (animCount == currentAnim.keyframes.back()) {
-    	if(currentAnim.repeat){
-	        animCount = 0;
-	        currentIndex = 0;
-	    } else {
-	    	currentAnim.finished = true;
-	    }
-    }
+    bbscriptFrameCount++;
+}
 
-    std::cout << "Frame: " << animCount
-              << ", Index: " << currentIndex 
-              << ", Current Frame: " << currentAnim.frames[currentIndex]
-              << ", Current Tick" << tick
-              << std::endl;
+void Character::scriptSubroutine(int tick)
+{
+	if(yCollision){
+		velocity.x = 0;
+		velocity.y = 0;
+	}
 
-    animCount++;
+	for (const auto & [ key, value ] : states) {
+		if(value.properties.moveInput.size() == 2){
+		    if (!value.properties.moveInput.empty())
+		    {
+
+		        if(inputHandler->checkCommand(motionInputs[value.properties.moveInput[0]]))
+		        {
+		        	if(inputHandler->checkCommand(buttons[value.properties.moveInput[1]].ID, buttons[value.properties.moveInput[1]].hold))
+		        	{
+		        		bbscriptFrameCount = 0;
+		        		framesUntilNextCommand = 0;
+		            	currentLine = 0;
+		            	lastCommandExecuted = 0;
+		            	currentState = key;
+		        	}
+		        }
+		    }
+		} else if(value.properties.moveInput.size() == 1){
+			if(inputHandler->checkCommand(buttons[value.properties.moveInput[0]].ID, buttons[value.properties.moveInput[0]].hold))
+			{
+				bbscriptFrameCount = 0;
+				framesUntilNextCommand = 0;
+				currentLine = 0;
+				lastCommandExecuted = 0;
+				currentState = key;
+			}
+		}
+	}
+	runScript();
+
+    velocity.y += gravity;
+	MoveX(velocity.x * sign);
+	MoveY(velocity.y);
 }
 
 void Character::SetFrame(const int frame)
@@ -67,6 +160,7 @@ void Character::SetPushbox()
 
 void Character::SetFlipped(bool flop)
 {
+	sign = flop ? -1 : 1;
 	spritesheet.SetFlipped(flop);
 	flipped = flop;
 	SetPushbox();

@@ -13,6 +13,9 @@ public:
     glm::vec2 pos = glm::ivec2(0, 0);
     glm::vec2 posOffset = glm::ivec2(0, 0);
 
+    bool xCollision = false;
+    bool yCollision = false;
+
     Actor(const int xpos, const int ypos, const int width, const int height, const float rot, std::vector<Solid>& solids);
 
     void MoveX(float amount);

@@ -18,11 +18,13 @@ void Actor::MoveX(float amount)
 		{
 			if(!CheckCollision(solids, glm::ivec2(this->pos.x + posOffset.x + sign, pos.y + posOffset.y)))
 			{
+				xCollision = false;
 				pos.x += sign;
 				move -= sign;
 			}
 			else
 			{
+				xCollision = true;
 				// std::cout << "Collision!" << std::endl;
 				break;
 			}
@@ -43,12 +45,14 @@ void Actor::MoveY(float amount)
 		{
 			if(!CheckCollision(solids, glm::ivec2(pos.x + posOffset.x, pos.y + posOffset.y + sign)))
 			{
+				yCollision = false;
 				pos.y += sign;
 				move -= sign;
 			}
 			else
 			{
 				// std::cout << "Collision!" << std::endl;
+				yCollision = true;
 				break;
 			}
 			

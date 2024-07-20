@@ -6,6 +6,7 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <bitset>
 #include <map>
 #include <algorithm>
 
@@ -32,6 +33,31 @@ struct Vertex
 	glm::vec4 Color;
 	glm::vec2 TexCoords;
 	float TexIndex;
+};
+
+struct CommandSequence{
+
+    int commandTimer = 0;
+
+    int commandNumber = 0;
+
+    int currentTick = 0;
+
+    int lastInputTick = 0;
+
+    int tE;
+
+    std::vector<std::bitset<4>> commandList;
+
+    std::vector<int> holdList;
+
+    CommandSequence(const std::vector<std::bitset<4>> &commandList, const std::vector<int> &holdList, int tE)
+    :commandList(commandList), holdList(holdList), tE(tE)
+    {}
+
+    CommandSequence()
+    {}
+
 };
 
 struct rect
@@ -63,6 +89,15 @@ struct TextureData
 
 template <typename T> int sgn(T val) {
 	return (T(0) < val) - (val < T(0));
+}
+
+static std::string trim(const std::string& str) {
+    size_t first = str.find_first_not_of(" \t");
+    if (std::string::npos == first) {
+        return str;
+    }
+    size_t last = str.find_last_not_of(" \t");
+    return str.substr(first, (last - first + 1));
 }
 
 void writeHurtboxesToFile(const std::map<int, std::vector<rect>>& hurtboxes, const std::string& filename);
