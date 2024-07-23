@@ -8,6 +8,7 @@
 #include <fstream>
 #include <vector>
 #include <bitset>
+#include <deque>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -29,17 +30,14 @@
 
 #include "TestCharacter.h"
 
-class state
-{
-	
-};
-
 class IntroState : public GameState
 {
 public:
 
 	TestCharacter* testChar;
 	TestCharacter* testChar2;
+
+	Spritesheet* icons;
 
 	//Static accessor
 	static IntroState* get();
@@ -98,6 +96,14 @@ private:
 	InputHandler* inputHandler2;
 
 	Camera* m_Camera;
+
+	glm::mat4 proj;
+
+	std::unordered_map<int, std::vector<int>> inputHistory;
+	static const int MAX_HISTORY_SIZE = 22;
+	int currentIndex = 0;
+	glm::vec2 dirHistoryPos = {20, 188};
+	glm::vec2 butHistoryPos = {52, 188};
 
 	//CAMERA CONTROLS
 	float cameraXPos = 0;

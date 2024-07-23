@@ -78,6 +78,8 @@ struct rect
     }
 };
 
+bool intersect(const rect& r1, const rect& r2);
+
 struct TextureData
 {
     std::string file;

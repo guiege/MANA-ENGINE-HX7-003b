@@ -56,7 +56,7 @@ public:
 
     int state = 0;
 
-    int animID;
+
     int currentIndex = 0;
 
     virtual void start() = 0;
@@ -67,7 +67,7 @@ public:
 
     virtual void exitState(int oldstate, int newstate) = 0;
 
-    void scriptSubroutine(int tick);
+    void scriptSubroutine(int tick, Character* opponent);
     void runScript();
 
     void draw(Renderer* renderer);
@@ -83,16 +83,18 @@ public:
 
     void SetPushbox();
 
-    void PlayAnimation(const Animation& anim);
+    void SetState(std::string state);
+
+    // void PlayAnimation(const Animation& anim);
 
     rect ProcessRect(const rect& r);
 
     int currentFrame = 0;
 
-    Animation getAnimFromJson(json& file, const int index)
-    {
-        return Animation(file["animationList"][index]["keyframes"], file["animationList"][index]["frames"], file["animationList"][index]["repeat"]);
-    }
+    // Animation getAnimFromJson(json& file, const int index)
+    // {
+    //     return Animation(file["animationList"][index]["keyframes"], file["animationList"][index]["frames"], file["animationList"][index]["repeat"]);
+    // }
 
     void loadScript(const std::string& filename) {
         std::ifstream file(filename);
@@ -205,8 +207,8 @@ protected:
     std::map<int, std::vector<rect>> hitboxes;
     std::vector<rect> pushboxes;
 
-    int animCount = 0;
-    Animation currentAnim;
+    // int animCount = 0;
+    // Animation currentAnim;
 
     bool flipped = false;
     int sign = 0;
@@ -218,6 +220,7 @@ protected:
 
     //MOVEMENT VARIABLES
     glm::vec2 velocity = {0.0f, 0.0f};
+    glm::vec2 acceleration = {0.0f, 0.0f};
     float gravity = 0;
 
 };

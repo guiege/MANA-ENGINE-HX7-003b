@@ -8,20 +8,11 @@ void TestCharacter::start()
 
 	loadScript("scripts/test.rose");
 
-	std::ifstream file("res/hitboxes/testAnims.json");
-
-	animations = json::parse(file);
-
-	idleAnim = getAnimFromJson(animations, 0);
-	jabAnim = getAnimFromJson(animations, 1);
-
-	PlayAnimation(idleAnim);
-	animID = 0;
+	// animID = 0;
 }
 
 void TestCharacter::update(int tick)
 {
-
 	switch(state) {
 	case idle:
 		// std::cout << "in idle state" << std::endl;
@@ -52,20 +43,20 @@ void TestCharacter::update(int tick)
 		break;
 	case atk:
 		// std::cout << "in atk state" << std::endl;
-		if(currentAnim.finished){
-			enterState(idle, state);
-		}
+		// if(currentAnim.finished){
+		// 	enterState(idle, state);
+		// }
 		break;
 	}
 
-	switch(animID){
-		case 0:
-			currentAnim = idleAnim;
-			break;
-		case 1:
-			currentAnim = jabAnim;
-			break;
-	}
+	// switch(animID){
+	// 	case 0:
+	// 		currentAnim = idleAnim;
+	// 		break;
+	// 	case 1:
+	// 		currentAnim = jabAnim;
+	// 		break;
+	// }
 
 }
 
@@ -74,8 +65,8 @@ void TestCharacter::enterState(int newstate, int oldstate)
 	exitState(oldstate, newstate);
 	switch(newstate) {
 	case idle:
-		PlayAnimation(idleAnim);
-		animID = 0;
+		// PlayAnimation(idleAnim);
+		// animID = 0;
 		std::cout << "entering idle" << std::endl;
 		break;
 	case atk:

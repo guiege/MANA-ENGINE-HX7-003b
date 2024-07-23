@@ -55,11 +55,20 @@ bool InputHandler::checkCommand(CommandSequence &c)
 		}
 	}
 	else{
-		if(std::bitset<4>(dirCheck.to_ullong()) == c.commandList[c.commandNumber])
-		{
-			c.commandTimer = c.tE + 1;
-			c.commandNumber++;
-			c.lastInputTick = currentTick;
+		if(c.commandNumber >= 1 && c.commandList[c.commandNumber - 1] == c.commandList[c.commandNumber]){
+			if(std::bitset<4>((dirCheck).to_ullong()) == c.commandList[c.commandNumber])
+			{
+				c.commandTimer = c.tE + 1;
+				c.commandNumber++;
+				c.lastInputTick = currentTick;
+			}
+		} else {
+			if(std::bitset<4>((dirCheck | dirHold).to_ullong()) == c.commandList[c.commandNumber])
+			{
+				c.commandTimer = c.tE + 1;
+				c.commandNumber++;
+				c.lastInputTick = currentTick;
+			}
 		}
 
 	}
@@ -119,6 +128,10 @@ void InputHandler::update(const int &tick)
 
 	std::string newInput;
 
+	inputChanged = false;
+
+	oldDirection = currentDirection;
+
 	if (currentDirPress == FK_Input_Buttons.UP) {
 	    newInput = "UP";
 	} else if (currentDirPress == FK_Input_Buttons.BACK) {
@@ -142,6 +155,9 @@ void InputHandler::update(const int &tick)
 	if(newInput != currentDirection)
 		currentInputTimer = 0;
 	currentDirection = newInput;
+
+	if(oldDirection != currentDirection)
+		inputChanged = true;
 	
 	dirHold = dirHold << 4;
 	dirPress = dirPress << 4;

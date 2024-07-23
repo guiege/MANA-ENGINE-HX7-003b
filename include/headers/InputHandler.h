@@ -21,6 +21,7 @@ public:
 	int lastInputTick = 0;
 
 	std::string currentDirection = "NEUTRAL";
+	std::string oldDirection = "NEUTRAL";
 	int currentInputTimer = 0;
 
 				    //tick2|   tick1|
@@ -53,6 +54,8 @@ public:
 	bool checkCommand(const std::bitset<7> &direction, bool hold);
 
 	void update(const int &tick);
+
+	bool inputChanged = false;
 
 };
 

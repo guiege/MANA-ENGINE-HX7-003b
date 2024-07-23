@@ -23,8 +23,4 @@ public:
     void exitState(int oldstate, int newstate);
 
 private:
-
-	json animations;
-
-	Animation idleAnim, jabAnim;
 };

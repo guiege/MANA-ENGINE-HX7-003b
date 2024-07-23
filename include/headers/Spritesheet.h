@@ -20,6 +20,11 @@ public:
 
     void draw(Renderer* renderer, Texture& palette);
 
+    int GetFrame()
+    {
+        return currentFrame;
+    }
+
     void SetFrame(const int frame);
 
     glm::vec2 getCurrentSize();

@@ -6,8 +6,23 @@ void Character::init()
 	motionInputs["INPUT_214"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK}, {-1, 1}, 8);
 	motionInputs["INPUT_623"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD}, {-1, 1, 1}, 8);
 	motionInputs["INPUT_421"] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK}, {-1, 1, 1}, 8);
+
 	motionInputs["INPUT_22"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN}, {-1, 1}, 8);
+	motionInputs["INPUT_44"] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.BACK}, {-1, 1}, 8);
 	motionInputs["INPUT_66"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.FORWARD}, {-1, 1}, 8);
+
+	motionInputs["INPUT_41236"] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.FORWARD}, {-1, 1, 1, 1}, 8);
+	motionInputs["INPUT_63214"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.BACK}, {-1, 1, 1, 1}, 8);
+
+	motionInputs["INPUT_632146"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.BACK, FK_Input_Buttons.FORWARD}, {-1, 1, 1, 1, 1}, 8);
+
+	motionInputs["INPUT_2"] = CommandSequence({FK_Input_Buttons.DOWN}, {-1}, 8);
+	motionInputs["INPUT_3"] = CommandSequence({FK_Input_Buttons.DOWN_FORWARD}, {-1}, 8);
+	motionInputs["INPUT_4"] = CommandSequence({FK_Input_Buttons.BACK}, {-1}, 8);
+	motionInputs["INPUT_6"] = CommandSequence({FK_Input_Buttons.FORWARD}, {-1}, 8);
+	motionInputs["INPUT_8"] = CommandSequence({FK_Input_Buttons.UP}, {-1}, 8);
+	motionInputs["INPUT_87"] = CommandSequence({FK_Input_Buttons.UP_BACK}, {-1}, 8);
+	motionInputs["INPUT_89"] = CommandSequence({FK_Input_Buttons.UP_FORWARD}, {-1}, 8);
 
 	buttons["INPUT_PRESS_LP"] = Button(FK_Input_Buttons.LP, false);
 	buttons["INPUT_PRESS_MP"] = Button(FK_Input_Buttons.MP, false);
@@ -63,6 +78,15 @@ void Character::init()
 	start();
 }
 
+void Character::SetState(std::string state)
+{
+	bbscriptFrameCount = 0;
+	framesUntilNextCommand = 0;
+	currentLine = 0;
+	lastCommandExecuted = 0;
+	currentState = state;
+}
+
 void Character::runScript()
 {
     if (framesUntilNextCommand > 0) {
@@ -89,8 +113,9 @@ void Character::runScript()
     bbscriptFrameCount++;
 }
 
-void Character::scriptSubroutine(int tick)
+void Character::scriptSubroutine(int tick, Character* opponent)
 {
+
 	if(yCollision){
 		velocity.x = 0;
 		velocity.y = 0;
@@ -105,28 +130,43 @@ void Character::scriptSubroutine(int tick)
 		        {
 		        	if(inputHandler->checkCommand(buttons[value.properties.moveInput[1]].ID, buttons[value.properties.moveInput[1]].hold))
 		        	{
-		        		bbscriptFrameCount = 0;
-		        		framesUntilNextCommand = 0;
-		            	currentLine = 0;
-		            	lastCommandExecuted = 0;
-		            	currentState = key;
+		        		SetState(key);
 		        	}
 		        }
 		    }
 		} else if(value.properties.moveInput.size() == 1){
-			if(inputHandler->checkCommand(buttons[value.properties.moveInput[0]].ID, buttons[value.properties.moveInput[0]].hold))
-			{
-				bbscriptFrameCount = 0;
-				framesUntilNextCommand = 0;
-				currentLine = 0;
-				lastCommandExecuted = 0;
-				currentState = key;
+			if(value.properties.moveInput[0].find("PRESS") != std::string::npos || value.properties.moveInput[0].find("HOLD") != std::string::npos){
+				if(inputHandler->checkCommand(buttons[value.properties.moveInput[0]].ID, buttons[value.properties.moveInput[0]].hold))
+				{
+					SetState(key);
+				}
+			} else {
+				if(inputHandler->checkCommand(motionInputs[value.properties.moveInput[0]]))
+				{
+					SetState(key);
+				}
 			}
 		}
 	}
 	runScript();
 
+	if(hitboxes.count(currentFrame) > 0){
+		for (int i = 0; i < hitboxes[currentFrame].size(); ++i){
+			rect hitbox = ProcessRect(hitboxes[currentFrame][i]);
+			if(opponent->hurtboxes.count(opponent->currentFrame) > 0){
+				for (int j = 0; j < opponent->hurtboxes[opponent->currentFrame].size(); ++j){
+					rect hurtbox = opponent->ProcessRect(opponent->hurtboxes[opponent->currentFrame][j]);
+					if(intersect(hitbox, hurtbox)){
+						std::cout << "collision" << std::endl;
+					}
+				}
+			}
+		}
+	}
+
     velocity.y += gravity;
+    velocity.y += acceleration.y;
+    velocity.x += acceleration.x;
 	MoveX(velocity.x * sign);
 	MoveY(velocity.y);
 }
@@ -178,14 +218,14 @@ rect Character::ProcessRect(const rect& r)
 
 }
 
-void Character::PlayAnimation(const Animation& anim)
-{
-	currentAnim = anim;
-	currentAnim.finished = false;
-    animCount = 0;
-    currentIndex = 0;
-    SetFrame(currentAnim.frames[0]);
-}
+// void Character::PlayAnimation(const Animation& anim)
+// {
+// 	currentAnim = anim;
+// 	currentAnim.finished = false;
+//     animCount = 0;
+//     currentIndex = 0;
+//     SetFrame(currentAnim.frames[0]);
+// }
 
 void Character::draw(Renderer* renderer)
 {

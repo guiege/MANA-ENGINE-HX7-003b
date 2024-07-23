@@ -1,16 +1,16 @@
-addMove: BanditBringer
-	moveType: SPECIAL
-    characterState: STANDING
-    moveInput: INPUT_214
-    moveInput: INPUT_PRESS_LP
-	endMove:
-
 addMove: GunFlame
     moveType: SPECIAL
     characterState: STANDING
-    moveInput: INPUT_236
-    moveInput: INPUT_PRESS_LP
-	endMove: 
+    moveInput: INPUT_632146
+    moveInput: INPUT_PRESS_HP
+	endMove:
+
+addMove: BanditBringer
+	moveType: SPECIAL
+    characterState: STANDING
+    moveInput: INPUT_623
+    moveInput: INPUT_PRESS_MP
+	endMove:
 
 beginState: GunFlame
 	sprite: 32, 3
