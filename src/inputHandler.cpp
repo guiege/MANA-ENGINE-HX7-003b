@@ -61,23 +61,21 @@ bool InputHandler::checkCommand(CommandSequence &c)
 				c.commandTimer = c.tE + 1;
 				c.commandNumber++;
 				c.lastInputTick = currentTick;
+			} else if(std::bitset<4>((dirCheck).to_ullong()).any()){
+				c.commandNumber = 0;
 			}
-		} else {
-			if(std::bitset<4>((dirCheck | dirHold).to_ullong()) == c.commandList[c.commandNumber])
-			{
+		} else if(std::bitset<4>((dirCheck | dirHold).to_ullong()) == c.commandList[c.commandNumber]){
 				c.commandTimer = c.tE + 1;
 				c.commandNumber++;
 				c.lastInputTick = currentTick;
-			}
 		}
-
 	}
 
 	if(c.commandTimer > 0)
 		--c.commandTimer;
 	else{
 		if(c.commandNumber > 0)
-			--c.commandNumber;
+			c.commandNumber = 0;
 	}
 
 	return executed;

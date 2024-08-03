@@ -15,7 +15,9 @@ class Camera {
 		float GetRotation() const {return m_Rotation; }
 		void SetRotation(float rotation) { m_Rotation = rotation; RecalculateViewMatrix(); }
 
-		void SetScale(const glm::vec3& scale) {m_Scale = scale; RecalculateViewMatrix(); }
+		void SetScale(const float scale) {m_Scale = scale; RecalculateViewMatrix(); }
+
+		void SetCenter(const glm::vec3& cent) { center = cent; RecalculateViewMatrix(); }
 
 		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 		const glm::mat4& GetViewMatrix() const {return m_ViewMatrix; }
@@ -29,8 +31,8 @@ class Camera {
 		
 		glm::vec3 m_Position = {0.0f, 0.0f, 0.0f};
 		float m_Rotation = 0.0f;
-		glm::vec2 size;
-		glm::vec3 m_Scale = {1.0f, 1.0f, 1.0f};
+		glm::vec2 center;
+		float m_Scale = 1.0f;
 };
 
 

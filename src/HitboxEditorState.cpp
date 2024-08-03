@@ -50,8 +50,8 @@ bool loadingBoxes = false;
 bool copyingBoxes = false;
 bool movingBox = false;
 bool deletingBox = false;
-std::string boxesPath = "res/hitboxes/testBoxes.hbox";
-std::string loadBoxesPath = "res/hitboxes/testBoxes.hbox";
+std::string boxesPath = "scripts/hitboxes/testBoxes.hbox";
+std::string loadBoxesPath = "scripts/hitboxes/testBoxes.hbox";
 static bool open_clear_warning = false;
 static bool open_save_warning = false;
 int curHitboxType = 0;
@@ -234,7 +234,7 @@ void HitboxEditorState::render()
 {
 	m_Camera->SetPosition(glm::vec3(cameraXPos, cameraYPos, 0));
 	m_Camera->SetRotation(cameraRot);
-	m_Camera->SetScale(glm::vec3(cameraScale, cameraScale, cameraScale));
+	m_Camera->SetScale(cameraScale);
 
 	glm::vec2 centerOffset = glm::vec2(0.5f * 1920, 0.5f * 1080);
 	glm::vec2 cursorPosRelativeToCenter = glm::vec2(mouseX, mouseY) - centerOffset;

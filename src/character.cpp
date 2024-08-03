@@ -4,12 +4,12 @@ void Character::init()
 {
 	motionInputs["INPUT_236"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD}, {-1, 1}, 8);
 	motionInputs["INPUT_214"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK}, {-1, 1}, 8);
-	motionInputs["INPUT_623"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD}, {-1, 1, 1}, 8);
+	motionInputs["INPUT_623"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN_FORWARD}, {-1, 1, 1}, 8);
 	motionInputs["INPUT_421"] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK}, {-1, 1, 1}, 8);
 
-	motionInputs["INPUT_22"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN}, {-1, 1}, 8);
-	motionInputs["INPUT_44"] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.BACK}, {-1, 1}, 8);
-	motionInputs["INPUT_66"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.FORWARD}, {-1, 1}, 8);
+	motionInputs["INPUT_22"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN}, {1, 1}, 8);
+	motionInputs["INPUT_44"] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.BACK}, {1, 1}, 8);
+	motionInputs["INPUT_66"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.FORWARD}, {1, 1}, 8);
 
 	motionInputs["INPUT_41236"] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.FORWARD}, {-1, 1, 1, 1}, 8);
 	motionInputs["INPUT_63214"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.BACK}, {-1, 1, 1, 1}, 8);
@@ -42,40 +42,146 @@ void Character::init()
 
 	commandMap["sprite"] = [this](const std::vector<std::string>& params) {
 		if (params.empty()) return;
-		std::cout << "Setting sprite to " << params[0] << " for " << params[1] << " frames" << std::endl;
+		// std::cout << "Setting sprite to " << params[0] << " for " << params[1] << " frames" << std::endl;
 		SetFrame(stoi(params[0]));
-		framesUntilNextCommand = stoi(params[1]);
+		framesUntilNextCommand = stoi(params[1]) - 1;
 	};
 
 	commandMap["setCarriedMomentumPercentage"] = [this](const std::vector<std::string>& params) {
 		if (params.empty()) return;
-        std::cout << "Setting carried momentum percentage to " << params[0] << std::endl;
-        framesUntilNextCommand = 0;
+        // std::cout << "Setting carried momentum percentage to " << params[0] << std::endl;
     };
 
     commandMap["physicsXImpulse"] = [this](const std::vector<std::string>& params) {
 		if (params.empty()) return;
-		std::cout << "Giving a x physics impulse of " << params[0] << std::endl;
-		velocity.x = stoi(params[0]);
-        framesUntilNextCommand = 0;
+		// std::cout << "Giving a x physics impulse of " << params[0] << std::endl;
+		velocity.x = stoi(params[0]) / (float)1000;
     };
 
     commandMap["physicsYImpulse"] = [this](const std::vector<std::string>& params) {
 		if (params.empty()) return;
-		std::cout << "Giving a y physics impulse of " << params[0] << std::endl;
-		velocity.y = -stoi(params[0]);
-        framesUntilNextCommand = 0;
+		// std::cout << "Giving a y physics impulse of " << params[0] << std::endl;
+		velocity.y = -(stoi(params[0]) / (float)1000);
     };
 
     commandMap["setGravity"] = [this](const std::vector<std::string>& params) {
 		if (params.empty()) return;
-		std::cout << "Setting gravity value to " << params[0] << std::endl;
-		gravity = stoi(params[0]);
-        framesUntilNextCommand = 0;
+		// std::cout << "Setting gravity value to " << (stoi(params[0]) / (float)1000) << std::endl;
+		gravity = stoi(params[0]) / (float)1000;
     };
+
+   	commandMap["clearRegisteredUponCode"] = [this](const std::vector<std::string>& params) {
+   		// std::cout << "clearing registered values" << std::endl;
+   		velocity = {0.0f, 0.0f};
+   		acceleration = {0.0f, 0.0f};
+    };
+
+    commandMap["gotoLabel"] = [this](const std::vector<std::string>& params) {
+    	// std::cout << "Going to label: " << params[0] << " at line: " << states[currentState].labels[params[0]] << std::endl;
+    	currentLine = states[currentState].labels[params[0]] - 1;
+    };
+
+    commandMap["addCancelOption"] = [this](const std::vector<std::string>& params) {
+    	states[currentState].cancelOptions.push_back(params[0]);
+    };
+
+    commandMap["addGatlingOption"] = [this](const std::vector<std::string>& params) {
+    	// std::cout << "Adding gatling option: " << params[0] << std::endl;
+    	states[currentState].gatlingOptions.push_back(params[0]);
+    };
+
+    commandMap["addWhiffCancelOption"] = [this](const std::vector<std::string>& params) {
+    	// std::cout << "Adding whiff cancel option: " << params[0] << std::endl;
+    	addWhiffCancelOption(params[0]);
+    };
+
+    commandMap["damage"] = [this](const std::vector<std::string>& params) {
+    	// std::cout << "Setting damage to " << params[0] << std::endl;
+    	states[currentState].properties.damage = stoi(params[1]);
+    };
+
+    commandMap["hitstunAmount"] = [this](const std::vector<std::string>& params) {
+    	// std::cout << "Setting " << params[0] << " frames of hitstun" << std::endl;
+    	states[currentState].properties.hitstun = stoi(params[0]);
+    };
+
+    commandMap["hitStop"] = [this](const std::vector<std::string>& params) {
+    	// std::cout << "Setting " << params[0] << " frames of hitstop" << std::endl;
+    	states[currentState].properties.hitstop = stoi(params[0]);
+    };
+
+    commandMap["slowdown"] = [this](const std::vector<std::string>& params) {
+    	states[currentState].properties.slowdown = stoi(params[0]);
+    };
+
+    commandMap["cmn_screenshake"] = [this](const std::vector<std::string>& params) {
+    	// std::cout << "Setting requested shake to " << (stoi(params[0]) / (float)100) << std::endl;
+    	requestedShake = stoi(params[0]) / (float)100;
+    };
+
+    commandMap["pushbackX"] = [this](const std::vector<std::string>& params) {
+    	states[currentState].properties.pushbackMultiplier = stoi(params[0]) / 100.0f;
+    };
+
+    commandMap["cmn_AtkLv0"] = [this](const std::vector<std::string>& params) {
+    	states[currentState].properties.pushbackVelocity.x = 1250;
+    };
+
+    commandMap["cmn_AtkLv1"] = [this](const std::vector<std::string>& params) {
+    	states[currentState].properties.pushbackVelocity.x = 1375;
+    };
+
+    commandMap["cmn_AtkLv2"] = [this](const std::vector<std::string>& params) {
+    	states[currentState].properties.pushbackVelocity.x = 1500;
+    };
+
+    commandMap["cmn_AtkLv3"] = [this](const std::vector<std::string>& params) {
+    	states[currentState].properties.pushbackVelocity.x = 1750;
+    };
+
+    commandMap["cmn_AtkLv4"] = [this](const std::vector<std::string>& params) {
+    	states[currentState].properties.pushbackVelocity.x = 2000;
+    };
+
+    commandMap["callSubroutine"] = [this](const std::vector<std::string>& params) {
+    	callSubroutine(params[0]);
+    };
+
+    commandMap["walkFSpeed"] = [this](const std::vector<std::string>& params) {
+    	walkFSpeed = stoi(params[0]) / (float)1000;
+    };
+
+    commandMap["walkBSpeed"] = [this](const std::vector<std::string>& params) {
+    	walkBSpeed = stoi(params[0]) / (float)1000;
+    };
+
+    commandMap["initDashFSpeed"] = [this](const std::vector<std::string>& params) {
+    	// std::cout << (stoi(params[0]) / (float)1000) << std::endl;
+    	initDashFSpeed = stoi(params[0]) / (float)1000;
+    };
+
+    commandMap["fDashAccelSpeed"] = [this](const std::vector<std::string>& params) {
+    	fDashAccelSpeed = stoi(params[0]) / (float)1000;
+    };
+
+	commandMap["fDashFriction"] = [this](const std::vector<std::string>& params) {
+    	fDashFriction = stoi(params[0]);
+    };
+
+	// Add entries for motionInputs
+	for (const auto& [key, value] : motionInputs) {
+	    buttonMap[key] = false;
+	}
+
+	// Add entries for buttons
+	for (const auto& [key, value] : buttons) {
+	    buttonMap[key] = false;
+	}
 
     SetFlipped(false);
 	start();
+
+	SetState("RoundInit");
 }
 
 void Character::SetState(std::string state)
@@ -85,9 +191,21 @@ void Character::SetState(std::string state)
 	currentLine = 0;
 	lastCommandExecuted = 0;
 	currentState = state;
+	firstFrame = true;
+	states[currentState].gatlingOptions.clear();
+	states[currentState].whiffCancelOptions.clear();
+	hit = false;
+	cancellable = false;
+	subroutines.clear();
+	handleEvent(currentState, "IMMEDIATE");
+
+	if(state == "CmnActStand")
+		addWhiffCancelOption("cmnNandemoCancel");
+	if(state == "CmnActFWalk")
+		addWhiffCancelOption("CmnActFDash");
 }
 
-void Character::runScript()
+void Character::executeCommands()
 {
     if (framesUntilNextCommand > 0) {
         framesUntilNextCommand--;
@@ -97,78 +215,242 @@ void Character::runScript()
     while (currentLine < states[currentState].instructions.size()) {
         auto it = commandMap.find(states[currentState].instructions[currentLine].command);
         if (it != commandMap.end()) {
+        	framesUntilNextCommand = 0;
             it->second(states[currentState].instructions[currentLine].parameters);
             lastCommandExecuted = bbscriptFrameCount;
             currentLine++;
 
-            if (framesUntilNextCommand > 0) {
-                break;
-            }
+	        if (framesUntilNextCommand > 0) {
+	            return;
+	        }
         } else {
             std::cout << "Unknown command: " << states[currentState].instructions[currentLine].command << std::endl;
             currentLine++;
         }
     }
 
-    bbscriptFrameCount++;
+	if (currentLine >= states[currentState].instructions.size()) {
+	    if (framesUntilNextCommand > 0) {
+	        return; 
+	    }
+	    //current state animation has finished
+	    SetState("CmnActStand");
+	}
 }
 
-void Character::scriptSubroutine(int tick, Character* opponent)
+void Character::checkCollision(Character* opponent)
 {
-
-	if(yCollision){
-		velocity.x = 0;
-		velocity.y = 0;
-	}
-
-	for (const auto & [ key, value ] : states) {
-		if(value.properties.moveInput.size() == 2){
-		    if (!value.properties.moveInput.empty())
-		    {
-
-		        if(inputHandler->checkCommand(motionInputs[value.properties.moveInput[0]]))
-		        {
-		        	if(inputHandler->checkCommand(buttons[value.properties.moveInput[1]].ID, buttons[value.properties.moveInput[1]].hold))
-		        	{
-		        		SetState(key);
-		        	}
-		        }
-		    }
-		} else if(value.properties.moveInput.size() == 1){
-			if(value.properties.moveInput[0].find("PRESS") != std::string::npos || value.properties.moveInput[0].find("HOLD") != std::string::npos){
-				if(inputHandler->checkCommand(buttons[value.properties.moveInput[0]].ID, buttons[value.properties.moveInput[0]].hold))
-				{
-					SetState(key);
-				}
-			} else {
-				if(inputHandler->checkCommand(motionInputs[value.properties.moveInput[0]]))
-				{
-					SetState(key);
-				}
-			}
-		}
-	}
-	runScript();
-
-	if(hitboxes.count(currentFrame) > 0){
+	if(!hit && hitboxes.count(currentFrame) > 0){
 		for (int i = 0; i < hitboxes[currentFrame].size(); ++i){
 			rect hitbox = ProcessRect(hitboxes[currentFrame][i]);
+			hitbox.x += pos.x;
+			hitbox.y += pos.y;
 			if(opponent->hurtboxes.count(opponent->currentFrame) > 0){
 				for (int j = 0; j < opponent->hurtboxes[opponent->currentFrame].size(); ++j){
 					rect hurtbox = opponent->ProcessRect(opponent->hurtboxes[opponent->currentFrame][j]);
-					if(intersect(hitbox, hurtbox)){
-						std::cout << "collision" << std::endl;
+					hurtbox.x += opponent->pos.x;
+					hurtbox.y += opponent->pos.y;
+					if(intersect(hitbox, hurtbox) && !hit){
+						handleEvent(currentState, "HIT");
+						// handleEvent(currentState, "HIT_OR_GUARD");
+						cancellable = true;
+						hit = true;
+						hitstop = states[currentState].properties.hitstop;
+						opponent->SetState("CmnActHighGuardLoop");
+						opponent->velocity.x = -(states[currentState].properties.pushbackVelocity.x * 0.0154f * states[currentState].properties.pushbackMultiplier);
+						opponent->health -= states[currentState].properties.damage;
+						opponent->hitstop = states[currentState].properties.hitstop;
+						opponent->hitstun = states[currentState].properties.hitstun;
+						opponent->slowdown = states[currentState].properties.slowdown;
+						opponent->firstFrameHit = true;
+						break;
 					}
 				}
 			}
 		}
 	}
 
-    velocity.y += gravity;
-    velocity.y += acceleration.y;
-    velocity.x += acceleration.x;
+}
+
+void Character::checkCommands()
+{
+
+	for (const auto & [ key, value ] : states) {
+		bool gatling = false;
+		bool cancel = false;
+		if((std::find(states[currentState].gatlingOptions.begin(), states[currentState].gatlingOptions.end(), key) != states[currentState].gatlingOptions.end()) 
+			|| (std::find(states[currentState].gatlingOptions.begin(), states[currentState].gatlingOptions.end(), "cmnNandemoCancel") != states[currentState].gatlingOptions.end())){
+			gatling = true;
+		} else if((std::find(states[currentState].whiffCancelOptions.begin(), states[currentState].whiffCancelOptions.end(), key) != states[currentState].whiffCancelOptions.end()) 
+			|| (std::find(states[currentState].whiffCancelOptions.begin(), states[currentState].whiffCancelOptions.end(), "cmnNandemoCancel") != states[currentState].whiffCancelOptions.end())
+			|| (bbscriptFrameCount < karaFrames && states[key].properties.moveType == "SPECIAL" && states[currentState].properties.moveType == "NORMAL")
+			){
+			gatling = false;
+		} else if((std::find(states[currentState].cancelOptions.begin(), states[currentState].cancelOptions.end(), key) != states[currentState].cancelOptions.end()) 
+			|| (std::find(states[currentState].cancelOptions.begin(), states[currentState].cancelOptions.end(), "cmnNandemoCancel") != states[currentState].cancelOptions.end())){
+			cancel = true;
+		} else{
+			continue;
+		}
+
+		if(value.properties.moveInput.size() == 2){
+			if (!value.properties.moveInput.empty())
+			{
+			    if(buttonMap[value.properties.moveInput[0]] && buttonMap[value.properties.moveInput[1]])
+			    {
+				    if((gatling && hit) || (!gatling && !hit) || (cancel && cancellable)){
+						SetState(key);
+						break;
+				    }
+			    }
+			}
+		}
+
+		if(value.properties.moveInput.size() == 1){
+			if(buttonMap[value.properties.moveInput[0]])
+			{
+			    if((gatling && hit) || (!gatling && !hit) || (cancel && cancellable)){
+					SetState(key);
+					break;
+			    }
+			}
+		}
+	}
+}
+
+void Character::callSubroutine(std::string subroutine)
+{
+	if(subroutine == "cmnFDash"){
+		velocity.x = initDashFSpeed;
+	}
+	subroutines.append(subroutine);
+}
+
+void Character::runSubroutines()
+{
+	if(subroutines.find("cmnHighGuard") != std::string::npos){
+		if(hitstun > 0){
+	    	// std::cout << hitstun << std::endl;
+	    	// std::cout << currentState << std::endl;
+			hitstun--;
+			if(!firstFrameHit)
+				velocity.x -= (highBlockstunDecay * velocity.x);
+		} else{
+			if(currentState == "CmnActHighGuardLoop"){
+				SetState("CmnActHighGuardEnd");
+				velocity = {0.0f, 0.0f};
+		   		acceleration = {0.0f, 0.0f};
+			}
+		}
+	}
+
+	if(subroutines.find("cmnFDashStop") != std::string::npos){
+		std::cout << velocity.x << std::endl;
+		velocity.x -= velocity.x * dashSkidDecay; //Dash skidding has no acceleration and is just friction til the end
+		if(velocity.x < 0.2)
+			velocity.x = 0;
+	} else if(subroutines.find("cmnFDash") != std::string::npos){
+		if(inputHandler->checkCommand(FK_Input_Buttons.FORWARD, true)){
+			velocity.x = std::round((velocity.x + fDashAccelSpeed - (velocity.x / fDashFriction)) * 1000.0) / 1000.0;
+			if(velocity.x > dashMaxVelocity)
+				velocity.x = dashMaxVelocity;
+		} else
+		{
+			SetState("CmnActFDashStop");
+		}
+	}
+}
+
+void Character::updateScript(int tick, Character* opponent)
+{
+	if(currentState == "CmnActStand"){
+		if(inputHandler->checkCommand(FK_Input_Buttons.FORWARD, true)){
+			SetState("CmnActFWalk");
+		} else if(inputHandler->checkCommand(FK_Input_Buttons.BACK, true)){
+			SetState("CmnActBWalk");
+		}
+	}
+
+	if(currentState == "CmnActFWalk"){
+		if(inputHandler->checkCommand(FK_Input_Buttons.FORWARD, true)){
+			velocity.x = walkFSpeed;
+		} else{
+			SetState("CmnActStand");
+			velocity.x = 0;
+		}
+	}
+
+	if(currentState == "CmnActBWalk"){
+		if(inputHandler->checkCommand(FK_Input_Buttons.BACK, true)){
+			velocity.x = -walkBSpeed;
+		} else{
+			SetState("CmnActStand");
+			velocity.x = 0;
+		}
+	}
+	// std::cout << health << std::endl;
+	for (const auto& [key, value] : motionInputs) {
+		buttonMap[key] = false;
+		if(inputHandler->checkCommand(motionInputs[key]))
+	    	buttonMap[key] = true;
+	}
+
+	for (const auto& [key, value] : buttons) {
+		buttonMap[key] = false;
+		if(inputHandler->checkCommand(buttons[key].ID, buttons[key].hold))
+	    	buttonMap[key] = true;
+	}
+
+	checkCommands();
+
+	if(yCollision){
+		handleEvent(currentState, "TOUCH_GROUND");
+		if(currentState == "CmnActStand"){
+			if(centerPos.x > opponent->centerPos.x)
+			{
+				SetFlipped(true);
+			} else if(centerPos.x < opponent->centerPos.x)
+			{
+				SetFlipped(false);
+			}
+		}
+		// velocity.x = 0;
+		// velocity.y = 0;
+	}
+
+	if(slowdown > 0){
+    	slowdown--;
+    	if(slowdown % 2 == 0){
+    		if(hitstop > 0)
+        		hitstop--;
+    		return;
+    	}
+    }
+
+	if(hitstop > 0) {
+        hitstop--;
+        return;
+    } else {
+    	cancellable = false;
+    }
+
+    if(firstFrameHit)
+		firstFrameHit = false;
+
+	executeCommands();
+	update(tick);
+	runSubroutines();
+	checkCollision(opponent);
+
+	velocity.y += gravity;
+	   velocity.y += acceleration.y;
+	   velocity.x += acceleration.x;
 	MoveX(velocity.x * sign);
 	MoveY(velocity.y);
+
+	if(!firstFrame)
+		bbscriptFrameCount++;
+	firstFrame = false;
 }
 
 void Character::SetFrame(const int frame)
@@ -218,15 +500,6 @@ rect Character::ProcessRect(const rect& r)
 
 }
 
-// void Character::PlayAnimation(const Animation& anim)
-// {
-// 	currentAnim = anim;
-// 	currentAnim.finished = false;
-//     animCount = 0;
-//     currentIndex = 0;
-//     SetFrame(currentAnim.frames[0]);
-// }
-
 void Character::draw(Renderer* renderer)
 {
 	drawPosition = pos - posOffset - glm::vec2(width, height);
@@ -268,6 +541,7 @@ void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& pal
 	int vertCrossHeight = 40;
 	int horiCrossWidth = 32;
 	int horiCrossHeight = 2;
+	centerPos = pos + posOffset + glm::vec2(width/2, height);
 	renderer->DrawOutline(pos + posOffset, glm::vec2(width, height), 0, glm::vec4(pushboxColor, 1.0f), 1);
 	renderer->DrawQuad(pos + posOffset + glm::vec2(width/2 - vertCrossWidth/2, height - vertCrossHeight/2), glm::vec2(vertCrossWidth, vertCrossHeight), 0, glm::vec4(1.0f));
 	renderer->DrawQuad(pos + posOffset + glm::vec2(width/2 - horiCrossWidth/2, height - horiCrossHeight/2), glm::vec2(horiCrossWidth, horiCrossHeight), 0, glm::vec4(1.0f));

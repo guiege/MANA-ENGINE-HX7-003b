@@ -10,10 +10,14 @@ class GameState
 {
 	public:
 		bool doneLoading;
+		bool paused = false;
+		bool advanceFrame = false;
 		bool	Keys[1024];
 		bool leftMouse, rightMouse, middleMouse;
 		double mouseX, mouseY;
 		int tick = 0;
+		int desiredState = 0;
+		
 		//State Transitions
 		virtual bool enter() = 0;
 		virtual bool exit() = 0;

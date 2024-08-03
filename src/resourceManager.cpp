@@ -31,6 +31,19 @@ void ResourceManager::LoadTexture(const char *file, bool alpha, std::string name
     TextureQueue.push_back(data);
 }
 
+void ResourceManager::LoadTexture(const char *file, bool alpha, unsigned int FILTER_MIN, unsigned int FILTER_MAX, std::string name)
+{
+    TextureData data;
+
+    data.name = name;
+    data.alpha = alpha;
+    data.file = file;
+    data.Filter_Min = FILTER_MIN;
+    data.Filter_Max = FILTER_MAX;
+
+    TextureQueue.push_back(data);
+}
+
 Texture& ResourceManager::GetTexture(std::string name)
 {
     return Textures[name];
@@ -70,6 +83,8 @@ void ResourceManager::UploadToGPU()
     for(int i = 0; i < TextureQueue.size(); i++)
     {
         Texture texture;
+        texture.Filter_Min = TextureQueue[i].Filter_Min;
+        texture.Filter_Max = TextureQueue[i].Filter_Max;
         if(TextureQueue[i].alpha)
         {
             texture.Internal_Format = GL_RGBA;

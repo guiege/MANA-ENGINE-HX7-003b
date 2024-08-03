@@ -31,6 +31,7 @@ public:
     static void UploadToRAM();
     
     static void LoadTexture(const char *file, bool alpha, std::string name);
+    static void LoadTexture(const char *file, bool alpha, unsigned int FILTER_MIN, unsigned int FILTER_MAX, std::string name);
     // retrieves a stored texture
     static Texture& GetTexture(std::string name);
     // properly de-allocates all loaded resources

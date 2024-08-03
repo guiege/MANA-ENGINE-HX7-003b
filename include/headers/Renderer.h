@@ -85,7 +85,7 @@ class Renderer
 		void DrawQuad(const glm::vec2& position, const glm::vec2& size, float rotation, uint32_t textureID);
 		void DrawQuad(const glm::vec2& position, const glm::vec2& size, float rotation, uint32_t textureID, const glm::vec3& cameraPosition, float parallaxFactor);
 		void DrawOutline(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color, float lineThickness);
-		void DrawQuadAtlas(Texture& texture, const glm::vec2& clipPos, const glm::vec2& clipSize, bool rotated, const glm::vec2& position, const glm::vec4& color);
+		void DrawQuadAtlas(Texture& texture, const glm::vec2& clipPos, const glm::vec2& clipSize, bool rotated, const glm::vec2& position, const glm::vec4& color, const glm::vec2& size = glm::vec2(1.0f));
 		void DrawFlippedQuadAtlas(Texture& texture, const glm::vec2& clipPos, const glm::vec2& clipSize, bool rotated, const glm::vec2& position, bool flipX, bool flipY, const glm::vec4& color);
 
 		void RotateQuad(const glm::vec2& position, const glm::vec2& size, float rotation, glm::vec2* rotatedPositions);

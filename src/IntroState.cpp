@@ -1,18 +1,5 @@
 #include "IntroState.h"
 
-std::vector<Solid> solids;
-std::vector<Actor*> actors;
-
-int testCharFrame = 0;
-
-// PostProcessor *post;
-
-int crouchingjabtimer = 0;
-
-
-std::vector<int> spdH{-1, 1, 1, 1};
-std::vector<std::bitset<4>> spdC{FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK, FK_Input_Buttons.UP};
-
 bool IntroState::exit()
 {
 	delete testChar;
@@ -49,13 +36,8 @@ bool IntroState::enter()
 	//Loading success flag
 	bool success = true;
 
-	testCharFrame = 0;
-
 	m_Camera = new Camera(0, 1920, 1080, 0);
-	cameraXPos = -960;
-	cameraYPos = 0;
-	cameraRot = 0.0f;
-	cameraScale = 0.75f;
+	//0.3333(3x), 0.4(2.5x), 0.5(2x), 0.6667(1.5x), 1.0(1x)
 
     ResourceManager::LoadShader("res/shaders/post.vert", "res/shaders/post.frag", "post");
     ResourceManager::LoadShader("res/shaders/default.vert", "res/shaders/palette.frag", "palette");
@@ -64,7 +46,8 @@ bool IntroState::enter()
     ResourceManager::LoadTexture("res/textures/hydesheetindexed.png", true, "hydesheet");
     ResourceManager::LoadTexture("res/textures/hydepal.png", true, "hydepal");
     ResourceManager::LoadTexture("res/textures/hydepalp2.png", true, "hydepalp2");
-    ResourceManager::LoadTexture("res/textures/glyphs/icons-capcom-32.png", true, "icons-capcom-32");
+    ResourceManager::LoadTexture("res/textures/ui/icons-capcom-32.png", true, GL_LINEAR, GL_NEAREST, "icons-capcom-32");
+    ResourceManager::LoadTexture("res/textures/ui/gauge_00.png", GL_LINEAR, GL_LINEAR, true, "gauge");
     // ResourceManager::LoadTexture("res/textures/ryu.png", true, "ryusheet");
     // ResourceManager::LoadTexture("res/textures/ffviir-zoom-midgar-city.jpg", false, "midgar");
     
@@ -82,8 +65,12 @@ bool IntroState::enter()
 	inputHandler = new InputHandler();
 	inputHandler2 = new InputHandler();
 
-	icons = new Spritesheet(ResourceManager::GetTexture("icons-capcom-32"), "res/textures/glyphs/icons-capcom-32.json", 0, 0, 32, 32, 0);
+	icons = new Spritesheet(ResourceManager::GetTexture("icons-capcom-32"), "res/textures/ui/icons-capcom-32.json", 0, 0, 32, 32, 0);
 	icons->SetFrame(0);
+
+	gauge = new Spritesheet(ResourceManager::GetTexture("gauge"), "res/textures/ui/gauge_00.json", 0, 0, 1024, 1024, 0);
+	gauge->SetFrame(0);
+	gauge->SetScale({1.0f, 1.0f});
 
 	testChar = new TestCharacter(inputHandler, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", -950, 0, 4296, 15673, 0, solids);
 	testChar->init();
@@ -94,10 +81,15 @@ bool IntroState::enter()
 	testChar2->SetFlipped(true);
 	actors.push_back(testChar2);
 
-	Solid platform(1000, 700, 800, 800, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	Solid platform(0, 700, 800, 800, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	Solid floor(-2000, 980, 4000, 1000, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	// solids.push_back(platform);
 	solids.push_back(floor);
+
+	cameraXPos = ((testChar2->GetCenterPos().x - (testChar2->GetCenterPos().x - testChar->GetCenterPos().x)/2) - cameraXPos);
+	cameraYPos = 180;
+	cameraRot = 0.0f;
+	cameraScale = 0.6f;
 
 	// post->Chromatic = true;
 
@@ -219,11 +211,6 @@ void IntroState::update(float dt)
 		}
 	}
 
-	if(this->Keys[GLFW_KEY_F])
-		testChar->SetFlipped(true);
-	if(this->Keys[GLFW_KEY_G])
-		testChar->SetFlipped(false);
-
 	if(Keys[GLFW_KEY_U])
 	{
 		inputHandler2->registerInput(FK_Input_Buttons.LP);
@@ -274,12 +261,12 @@ void IntroState::update(float dt)
 	}
 	if(this->Keys[GLFW_KEY_LEFT])
 	{
-		cameraXPos -= 5;
+		cameraXPos -= 1;
 		// solids[0].Move(-20, 0);
 	}
 	if(this->Keys[GLFW_KEY_RIGHT])
 	{
-		cameraXPos += 5;
+		cameraXPos += 1;
 		// solids[0].Move(20, 0);
 	}
 	if(this->Keys[GLFW_KEY_UP])
@@ -293,10 +280,10 @@ void IntroState::update(float dt)
 		// solids[0].Move(0, 20);
 	}
 	if (this->Keys[GLFW_KEY_Z]){
-		cameraScale -= .1;
+		cameraScale -= .01;
 	}
 	if (this->Keys[GLFW_KEY_X]){
-		cameraScale += .1;
+		cameraScale += .01;
 	}
 
 	if(Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_S]){
@@ -306,41 +293,25 @@ void IntroState::update(float dt)
 	if(Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_L]){
 		load_char();
 	}
-	// //check shoryu first then command normals and then hadou
-	// if(inputHandler->checkCommand(FK_Input_Buttons.DOWN_FORWARD, true) || inputHandler->checkCommand(FK_Input_Buttons.DOWN, true))
-	// {
-	// 	if(inputHandler->checkCommand(FK_Input_Buttons.LP, false)){
-	// 		crouchingjabtimer = 10;
-	// 		std::cout << "LOW" << std::endl;
-	// 	}
-	// }
 
-	// if(inputHandler->checkCommand(spd))
-	// {
-	// 	std::cout << "SPD" << std::endl;
-	// 	if(inputHandler->checkCommand(FK_Input_Buttons.LP, false))
-	// 		testChar->MoveY(250);
-	// } 
-	// else if(inputHandler->checkCommand(hadoken))
-	// {
-	// 	std::cout << "HADOKEN" << std::endl;
-	// 	if(inputHandler->checkCommand(FK_Input_Buttons.LP, false) && crouchingjabtimer == 0)
-	// 		testChar->MoveX(250);
-	// }
-
-	if(this->Keys[GLFW_KEY_N]){
-		testCharFrame--;
+	if(testChar->GetRequestedShake() > 0.0f){
+		trauma += testChar->GetRequestedShake();
+		testChar->SetRequestedShake(0.0f);
 	}
-	if(this->Keys[GLFW_KEY_M]){
-		testCharFrame++;
+
+	if(testChar2->GetRequestedShake() > 0.0f){
+		trauma += testChar2->GetRequestedShake();
+		testChar2->SetRequestedShake(0.0f);
 	}
-	// std::cout << inputHandler->currentInputTimer  << " " << inputHandler->currentDirection << std::endl;
 
-	if(crouchingjabtimer > 0)
-		crouchingjabtimer--;
+	if(trauma > 1){
+		trauma = 1;
+	}
 
-	testChar->MoveY(10);
-	testChar2->MoveY(10);
+	if(trauma > 0)
+		trauma -= 0.02;
+
+	trauma = std::max(0.0f, std::min(trauma, 1.0f));
 
 	std::vector<int> inputNumbers;
 
@@ -352,25 +323,27 @@ void IntroState::update(float dt)
 	if((newButtonState & FK_Input_Buttons.MK) != 0) inputNumbers.push_back(12);
 	if((newButtonState & FK_Input_Buttons.HK) != 0) inputNumbers.push_back(13);
 
-	if (inputHandler->currentDirection == "UP") {
-	    inputNumbers.push_back(2);
-	} if (inputHandler->currentDirection == "BACK") {
-	    inputNumbers.push_back(0);
-	} if (inputHandler->currentDirection == "FORWARD") {
-		inputNumbers.push_back(1);
-	} if (inputHandler->currentDirection == "DOWN") {
-	    inputNumbers.push_back(3);
-	} if (inputHandler->currentDirection == "UP_FORWARD") {
-	    inputNumbers.push_back(5);
-	} if (inputHandler->currentDirection == "UP_BACK") {
-	    inputNumbers.push_back(4);
-	} if (inputHandler->currentDirection == "DOWN_BACK") {
-	    inputNumbers.push_back(6);
-	} if (inputHandler->currentDirection == "DOWN_FORWARD") {
-	    inputNumbers.push_back(7);
-	} 
+	if(inputHandler->inputChanged){
+		if (inputHandler->currentDirection == "UP") {
+		    inputNumbers.push_back(2);
+		} if (inputHandler->currentDirection == "BACK") {
+		    inputNumbers.push_back(0);
+		} if (inputHandler->currentDirection == "FORWARD") {
+			inputNumbers.push_back(1);
+		} if (inputHandler->currentDirection == "DOWN") {
+		    inputNumbers.push_back(3);
+		} if (inputHandler->currentDirection == "UP_FORWARD") {
+		    inputNumbers.push_back(5);
+		} if (inputHandler->currentDirection == "UP_BACK") {
+		    inputNumbers.push_back(4);
+		} if (inputHandler->currentDirection == "DOWN_BACK") {
+		    inputNumbers.push_back(6);
+		} if (inputHandler->currentDirection == "DOWN_FORWARD") {
+		    inputNumbers.push_back(7);
+		}
+	}
 
-	if (inputHistory.empty() || inputHistory[currentIndex] != inputNumbers || inputHandler->inputChanged) {
+	if (!inputNumbers.empty()) {
 	    currentIndex = (currentIndex + 1) % MAX_HISTORY_SIZE;
 	    
 	    inputHistory[currentIndex] = inputNumbers;
@@ -381,53 +354,74 @@ void IntroState::update(float dt)
 	    }
 	}
 
-	testChar->update(tick);
-	testChar2->update(tick);
-	testChar->scriptSubroutine(tick, testChar2);
-	testChar2->scriptSubroutine(tick, testChar);
+	testChar->updateScript(tick, testChar2);
+	testChar2->updateScript(tick, testChar);
 	inputHandler->update(tick);
 	inputHandler2->update(tick);
+
+	cameraXPos += ((testChar2->GetCenterPos().x - (testChar2->GetCenterPos().x - testChar->GetCenterPos().x)/2) - cameraXPos) * .1;
 
 
 }
 
 void IntroState::render()
 {
-	m_Camera->SetPosition(glm::vec3(cameraXPos, cameraYPos, 0));
-	m_Camera->SetRotation(cameraRot);
-	m_Camera->SetScale(glm::vec3(cameraScale, cameraScale, cameraScale));
+	float shake = (trauma * trauma * trauma);
+	float offsetX = maxOffset.x * shake * perlin.noise1D(tick);
+	float offsetY = maxOffset.y * shake * perlin.noise1D(tick + 1);
+	float angle = maxAngle * shake * perlin.noise1D(tick + 2);
 
-	ResourceManager::GetShader("batch").Use().SetMatrix4("projection", m_Camera->GetViewProjectionMatrix());
-	ResourceManager::GetShader("palette").Use().SetMatrix4("projection", m_Camera->GetViewProjectionMatrix());
+	//Camera Params for Scene Rendering
+	m_Camera->SetCenter(glm::vec3(960, 540, 0));
+	m_Camera->SetPosition(glm::vec3(cameraXPos + offsetX - 960, cameraYPos + offsetY, 0));
+	m_Camera->SetRotation(angle);
+	m_Camera->SetScale(cameraScale);
+	worldProj = m_Camera->GetViewProjectionMatrix();
+	ResourceManager::GetShader("batch").Use().SetMatrix4("projection", worldProj);//Set Projection Matrix to World
+	ResourceManager::GetShader("palette").Use().SetMatrix4("projection", worldProj);
+
+	//Camera Params for UI
+	m_Camera->SetPosition(glm::vec3(0, 0, 0));
+	m_Camera->SetRotation(0);
+	m_Camera->SetCenter(glm::vec3(0, 0, 0));
+	m_Camera->SetScale(0.6667); //1.5x scale because mbtl assets are for 720p
+	uiProj = m_Camera->GetViewProjectionMatrix();
+
 	// post->BeginRender();
 
 	batchRenderer->ResetStats();
-	batchRenderer->BeginBatch();
 
-
+	batchRenderer->BeginBatch(); //BG pass
 
 	for (auto& solid : solids){
 		solid.draw(batchRenderer);
 	}
-	// for (int i = 0; i < actors.size(); i++){
-    // 	actors[i]->draw(renderer);
-    // }
-
-    testChar->draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepal"));
-    testChar2->draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepalp2"));
 
     batchRenderer->EndBatch();
+	batchRenderer->Flush(); //End BG pass
 
-	batchRenderer->Flush();
+	ResourceManager::GetShader("batch").Use().SetMatrix4("projection", uiProj); //Set Projection Matrix to UI
 
-	ResourceManager::GetShader("batch").Use().SetMatrix4("projection", proj);
+	batchRenderer->BeginBatch(); //UI Pass
 
-	batchRenderer->BeginBatch();
+	gauge->SetFrame(0);
+	gauge->pos.x = 0;
+	gauge->draw(batchRenderer);
+	gauge->SetFrame(1);
+	gauge->draw(batchRenderer);
+	gauge->SetFrame(2);
+	gauge->draw(batchRenderer);
+	gauge->SetFrame(3);
+	gauge->draw(batchRenderer);
+	gauge->SetFrame(4);
+	gauge->draw(batchRenderer);
+
+	// batchRenderer->DrawQuad({100, 50}, {(testChar2->GetHealth() / 420.0f) * 100.0f, 50.0f}, 0, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
 	for (int i = 0; i < MAX_HISTORY_SIZE; ++i) {
 	    int index = (currentIndex - i + MAX_HISTORY_SIZE) % MAX_HISTORY_SIZE;
-	    
-	    if (inputHistory.find(index) != inputHistory.end() && !inputHistory[index].empty()) {
+
+	    if (inputHistory.find(index) != inputHistory.end()) {
 	        icons->pos.y = i * 32 + dirHistoryPos.y;
 	        
 	        // Sort the input numbers from least to greatest
@@ -447,16 +441,23 @@ void IntroState::render()
 	        }
 	    }
 	}
-
 	batchRenderer->EndBatch();
+	batchRenderer->Flush(); //End UI Pass
 
-	batchRenderer->Flush();
+	ResourceManager::GetShader("batch").Use().SetMatrix4("projection", worldProj); //Set Projection Matrix to World
+	ResourceManager::GetShader("palette").Use().SetMatrix4("projection", worldProj);
 
+	batchRenderer->BeginBatch(); //Character Pass
 
+	testChar->draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepal"));
+    testChar2->draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepalp2"));
 
-	const Stats& stats = batchRenderer->GetStats();
-    ImGui::Text("Draw Calls: %d", stats.DrawCount);
-    ImGui::Text("Quads Rendered: %d", stats.QuadCount);
+    batchRenderer->EndBatch();
+	batchRenderer->Flush(); //End Character Pass
+
+	// const Stats& stats = batchRenderer->GetStats();
+    // ImGui::Text("Draw Calls: %d", stats.DrawCount);
+    // ImGui::Text("Quads Rendered: %d", stats.QuadCount);
 
 
 	// post->EndRender();

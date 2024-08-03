@@ -7,7 +7,7 @@
 #include <bitset>
 #include <algorithm>
 
-const int buffer = 3;
+const int buffer = 4;
 
 class InputHandler {
 public:

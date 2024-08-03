@@ -24,7 +24,6 @@ struct Animation{
     int currentIndex = 0;
     bool repeat = false;
     bool finished = false;
-
 };
 
 struct Vertex
@@ -60,6 +59,18 @@ struct CommandSequence{
 
 };
 
+struct Button {
+    std::bitset<7> ID;
+    bool hold;
+
+    Button()
+    {}
+
+    Button(std::bitset<7> but, bool h)
+    :ID(but), hold(h)
+    {}
+};
+
 struct rect
 {
     int x, y, width, height;
@@ -78,8 +89,6 @@ struct rect
     }
 };
 
-bool intersect(const rect& r1, const rect& r2);
-
 struct TextureData
 {
     std::string file;
@@ -87,6 +96,8 @@ struct TextureData
     bool alpha;
     int width, height, nrChannels;
     unsigned char* data;
+    unsigned int Filter_Min = GL_NEAREST; // filtering mode if texture pixels < screen pixels
+    unsigned int Filter_Max = GL_NEAREST; // filtering mode if texture pixels > screen pixels
 };
 
 template <typename T> int sgn(T val) {
@@ -101,6 +112,8 @@ static std::string trim(const std::string& str) {
     size_t last = str.find_last_not_of(" \t");
     return str.substr(first, (last - first + 1));
 }
+
+bool intersect(const rect& r1, const rect& r2);
 
 void writeHurtboxesToFile(const std::map<int, std::vector<rect>>& hurtboxes, const std::string& filename);
 

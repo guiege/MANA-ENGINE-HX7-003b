@@ -64,7 +64,7 @@ void BatchState::render()
 {
 	camera->SetPosition(glm::vec3(cX, cY, 0));
 	camera->SetRotation(cR);
-	camera->SetScale(glm::vec3(cS));
+	camera->SetScale(cS);
 
 	ResourceManager::GetShader("batch").Use().SetMatrix4("projection", camera->GetViewProjectionMatrix());
 

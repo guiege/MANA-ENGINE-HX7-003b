@@ -1,12 +1,9 @@
 #include "TestCharacter.h"
 
-
 void TestCharacter::start()
 {
-	readHurtboxesFromFile(hurtboxes, hitboxes, pushboxes, "res/hitboxes/testBoxes.hbox");
-	SetFrame(0);
-
-	loadScript("scripts/test.rose");
+	readHurtboxesFromFile(hurtboxes, hitboxes, pushboxes, "scripts/hitboxes/testBoxes.hbox");
+	loadScript("scripts/ROSE/test.rose");
 
 	// animID = 0;
 }
@@ -17,29 +14,6 @@ void TestCharacter::update(int tick)
 	case idle:
 		// std::cout << "in idle state" << std::endl;
 		
-		if(inputHandler->checkCommand(FK_Input_Buttons.BACK, true))
-			MoveX(-20 * sign);
-		if(inputHandler->checkCommand(FK_Input_Buttons.FORWARD, true))
-			MoveX(20 * sign);
-		if(inputHandler->checkCommand(FK_Input_Buttons.UP, true)){
-			MoveY(-100 * sign);
-			// bbscriptFrameCount = 0;
-			// framesUntilNextCommand = 0;
-			// currentLine = 0;
-			// lastCommandExecuted = 0;
-			// currentState = "BanditBringer";
-		}
-
-		if(inputHandler->checkCommand(FK_Input_Buttons.LP, false)){
-			// bbscriptFrameCount = 0;
-			// framesUntilNextCommand = 0;
-			// currentLine = 0;
-			// lastCommandExecuted = 0;
-			// currentState = "GunFlame";
-			// PlayAnimation(jabAnim);
-			// animID = 1;
-			// enterState(atk, state);
-		}
 		break;
 	case atk:
 		// std::cout << "in atk state" << std::endl;

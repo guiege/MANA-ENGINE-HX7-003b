@@ -20,6 +20,13 @@ struct Properties {
     std::string moveType;
     std::string characterState;
     std::vector<std::string> moveInput;
+    int hitstop = 0;
+    int slowdown = 0;
+    int hitstun = 0;
+    int damage = 0;
+
+    glm::vec2 pushbackVelocity = {0.0f, 0.0f};
+    float pushbackMultiplier = 1.0f;
 };
 
 struct Instruction {
@@ -27,22 +34,21 @@ struct Instruction {
     std::vector<std::string> parameters;
 };
 
-struct State {
-    std::string name;
+struct EventHandler {
+    std::string event;
     std::vector<Instruction> instructions;
-    Properties properties;
 };
 
-struct Button {
-    std::bitset<7> ID;
-    bool hold;
+struct State {
+    std::string name;
+    Properties properties;
+    std::vector<Instruction> instructions;
+    std::vector<EventHandler> eventHandlers;
+    std::unordered_map<std::string, size_t> labels;
 
-    Button()
-    {}
-
-    Button(std::bitset<7> but, bool h)
-    :ID(but), hold(h)
-    {}
+    std::vector<std::string> gatlingOptions; //Guilty Gear style gatling system, can cancel any time after the move hits
+    std::vector<std::string> cancelOptions; //Street Fighter style cancel system, can cancel only during hitstop after the move hits
+    std::vector<std::string> whiffCancelOptions;
 };
 
 class Character : public Actor {
@@ -54,10 +60,7 @@ public:
 
     void init();
 
-    int state = 0;
-
-
-    int currentIndex = 0;
+    int state = 0; // Deprecated
 
     virtual void start() = 0;
 
@@ -67,8 +70,11 @@ public:
 
     virtual void exitState(int oldstate, int newstate) = 0;
 
-    void scriptSubroutine(int tick, Character* opponent);
-    void runScript();
+    void updateScript(int tick, Character* opponent);
+    void runSubroutines();
+    void checkCommands();
+    void checkCollision(Character* opponent);
+    void executeCommands();
 
     void draw(Renderer* renderer);
     void draw(Renderer* renderer, Renderer* paletteRenderer, Texture& palette);
@@ -77,24 +83,53 @@ public:
 
     void SetFlipped(bool flop);
 
+    const glm::vec2& GetCenterPos() const {
+        return centerPos;
+    }
+
+    int GetHealth(){
+        return health;
+    }
+
     bool GetFlipped(){
         return flipped;
+    }
+
+    float GetRequestedShake(){
+        return requestedShake;
+    }
+
+    void SetRequestedShake(float shake){
+        requestedShake = shake;
     }
 
     void SetPushbox();
 
     void SetState(std::string state);
 
-    // void PlayAnimation(const Animation& anim);
+    void addWhiffCancelOption(std::string state){
+        states[currentState].whiffCancelOptions.push_back(state);
+    }
+
+    void callSubroutine(std::string subroutine);
 
     rect ProcessRect(const rect& r);
 
-    int currentFrame = 0;
-
-    // Animation getAnimFromJson(json& file, const int index)
-    // {
-    //     return Animation(file["animationList"][index]["keyframes"], file["animationList"][index]["frames"], file["animationList"][index]["repeat"]);
-    // }
+    void handleEvent(const std::string& stateName, const std::string& eventName) {
+        if (states.find(stateName) != states.end()) {
+            for (const auto& handler : states[stateName].eventHandlers) {
+                if (handler.event == eventName) {
+                    for (const auto& inst : handler.instructions) {
+                        if (commandMap.find(inst.command) != commandMap.end()) {
+                            commandMap[inst.command](inst.parameters);
+                        } else {
+                            std::cout << "Unknown command: " << inst.command << std::endl;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     void loadScript(const std::string& filename) {
         std::ifstream file(filename);
@@ -102,6 +137,8 @@ public:
 
         bool inStateBlock = false;
         bool inAddBlock = false;
+        bool inEventBlock = false;
+        std::string currentEvent;
         std::string currentStateBlock;
         std::string currentAddBlock;
         Properties prop;
@@ -139,8 +176,20 @@ public:
                 inAddBlock = false;
                 currentStateBlock = "";
                 currentAddBlock = "";
+            } else if(line.find("upon:") != std::string::npos){
+                inEventBlock = true;
+                EventHandler newHandler;
+                newHandler.event = line.substr(6);
+                states[currentStateBlock].eventHandlers.push_back(newHandler);
+            } else if(line.find("endUpon") != std::string::npos){
+                inEventBlock = false;
+                currentEvent = "";
+            } else if (line.find("beginLabel:") != std::string::npos) {
+                std::string labelName = line.substr(12);
+                states[currentStateBlock].labels[labelName] = states[currentStateBlock].instructions.size();
+                std::cout << "Label created called: " << labelName << " at line: " << states[currentStateBlock].instructions.size();
             } else {
-                if(inStateBlock){
+                if(inStateBlock && !inEventBlock){
                     size_t colonPos = line.find(':');
                     if (colonPos == std::string::npos) continue; 
 
@@ -175,53 +224,92 @@ public:
                     } else if(function == "moveInput"){
                         states[currentAddBlock].properties.moveInput.push_back(paramsStr);
                     }
-                    
+                }
+
+                if(inEventBlock){
+                    Instruction inst;
+                    size_t colonPos = line.find(':');
+                    if (colonPos != std::string::npos) {
+                        inst.command = trim(line.substr(0, colonPos));
+                        std::string paramsStr = line.substr(colonPos + 1);
+                        std::istringstream iss(paramsStr);
+                        std::string param;
+                        while (std::getline(iss, param, ',')) {
+                            inst.parameters.push_back(trim(param));
+                        }
+                        states[currentStateBlock].eventHandlers.back().instructions.push_back(inst);
+                        }
+                    }
                 }
             }
         }
-    }
 
 protected:
+    //Components
+    InputHandler* inputHandler;
+    Spritesheet spritesheet;
 
+    //Input Variables
     std::unordered_map<std::string, CommandSequence> motionInputs;
     std::unordered_map<std::string, Button> buttons;
+    std::unordered_map<std::string, bool> buttonMap;
+
+    //State Variables
     std::unordered_map<std::string, State> states;
     std::unordered_map<std::string, std::function<void(const std::vector<std::string>&)>> commandMap;
+    bool cancellable = false;
+    bool hit = false;
+    std::string subroutines;
 
+    //Animation Variables
+    int currentFrame = 0;
     int currentLine = 0;
-
     int bbscriptFrameCount = 0;
     int lastCommandExecuted = 0;
     int framesUntilNextCommand = 0;
+    bool firstFrame = false;
+    bool firstFrameHit = false;
     std::string currentState = "";
+    std::string queuedState = "";
 
-    Spritesheet spritesheet;
-
+    //Hitboxes
+    std::map<int, std::vector<rect>> hurtboxes;
+    std::map<int, std::vector<rect>> hitboxes;
+    std::vector<rect> pushboxes;
+    rect pushbox;
     glm::vec3 hurtboxColor = {10/(float)255, 185/(float)255, 230/(float)255};
     glm::vec3 pushboxColor = {130/(float)255, 1, 150/(float)255};
     glm::vec3 hitboxColor = {1, 175/(float)255, 175/(float)255};
 
-    rect pushbox;
-
-    std::map<int, std::vector<rect>> hurtboxes;
-    std::map<int, std::vector<rect>> hitboxes;
-    std::vector<rect> pushboxes;
-
-    // int animCount = 0;
-    // Animation currentAnim;
-
+    //Drawing Variables
+    glm::vec2 drawPosition = {0.0f, 0.0f};
+    glm::vec2 centerPos = {0.0f, 0.0f};
     bool flipped = false;
     int sign = 0;
 
-    glm::vec2 drawPosition = {0.0f, 0.0f};
-
-    InputHandler* inputHandler;
-
-
-    //MOVEMENT VARIABLES
+    //Movement Variables
     glm::vec2 velocity = {0.0f, 0.0f};
     glm::vec2 acceleration = {0.0f, 0.0f};
-    float gravity = 0;
+    float gravity = 20.0f;
+    float walkFSpeed = 7.0f;
+    float walkBSpeed = 5.0f;
+    float fDashFriction = 6.0f; // Friction for dashing
+    float fDashAccelSpeed = 5.0f;
+    float initDashFSpeed = 10.0f; // 13.1
+    const float dashMaxVelocity = 38.51f; // v cannot exceed 38.5
+    float dashSkidDecay = 0.25f;
+
+    //Battle Variables
+    unsigned int health = 420;
+    unsigned int hitstun = 0;
+    unsigned int hitstop = 0;
+    unsigned int slowdown = 0;
+
+    int karaFrames = 2;
+    float requestedShake = 0.0f;
+
+    //Parameters
+    const float highBlockstunDecay = .12;
 
 };
 

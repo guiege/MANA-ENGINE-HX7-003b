@@ -35,11 +35,13 @@ uniform bool lightsOut;
 
 void main()
 {
-        vec4 rValue = texture(scene, TexCoords - rOffset);  
-        vec4 gValue = texture(scene, TexCoords - gOffset);
-        vec4 bValue = texture(scene, TexCoords - bOffset);  
+        // vec4 rValue = texture(scene, TexCoords - rOffset);  
+        // vec4 gValue = texture(scene, TexCoords - gOffset);
+        // vec4 bValue = texture(scene, TexCoords - bOffset);  
 
-        color = vec4(rValue.r, gValue.g, bValue.b, 1.0);
+         vec4 sceneColor = texture(scene, TexCoords);
+         vec4 fadeColor = vec4(0.0, 0.0, 0.0, 1.0);
+         color = mix(fadeColor, sceneColor, fadeFactor);
     // color = vec4(0.0f);
     // vec3 sample[9];
     // // sample from texture offsets if using convolution matrix

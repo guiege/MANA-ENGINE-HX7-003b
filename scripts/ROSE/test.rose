@@ -1,0 +1,250 @@
+addMove: CmnActStand
+	characterState: STANDING
+	endMove:
+
+addMove: CmnActHighGuardLoop
+    moveType: NORMAL
+    characterState: STANDING
+	endMove:
+
+addMove: CmnActHighGuardEnd
+    moveType: NORMAL
+    characterState: STANDING
+	endMove:
+
+addMove: CloseJab
+    moveType: NORMAL
+    characterState: STANDING
+    moveInput: INPUT_PRESS_LP
+	endMove:
+
+addMove: BanditBringer
+	moveType: NORMAL
+    characterState: STANDING
+    moveInput: INPUT_PRESS_MP
+	endMove:
+
+addMove: GunFlame
+    moveType: SPECIAL
+    characterState: STANDING
+    moveInput: INPUT_623
+    moveInput: INPUT_PRESS_LP
+	endMove:
+
+addMove: CmnActFDash
+	moveInput: INPUT_66
+	endMove:
+
+//eventually add declarative subroutines(ex. beginSubroutine: s32'RoundInit')
+beginState: RoundInit
+	upon:IMMEDIATE
+		walkFSpeed: 7900
+		walkBSpeed: 4800
+		initDashFSpeed: 13100
+		fDashAccelSpeed: 560
+		fDashFriction: 95
+	endUpon:
+
+	endState:
+
+beginState: CloseJab
+	upon:IMMEDIATE
+		cmn_AtkLv1:
+		addGatlingOption: CloseJab
+		addCancelOption: GunFlame
+		addGatlingOption: BanditBringer
+		damage: 0, 56
+		hitStop: 8
+		pushbackX: 200
+		hitstunAmount: 10
+	endUpon:
+
+	upon: HIT
+		cmn_screenshake: 55
+	endUpon:
+
+	sprite: 31, 2
+	sprite: 32, 2
+	sprite: 33, 2
+	sprite: 34, 2
+	sprite: 35, 2
+	sprite: 36, 2
+	sprite: 37, 2
+	sprite: 38, 2
+	
+	endState:
+
+beginState: CmnActHighGuardLoop
+	upon:IMMEDIATE
+		callSubroutine: cmnHighGuard
+	endUpon:
+
+	beginLabel: loop
+	sprite: 406, 4
+	sprite: 407, 4
+	gotoLabel: loop
+
+	endState:
+
+beginState: CmnActHighGuardEnd
+
+	sprite: 408, 4
+	sprite: 409, 4
+
+	endState:
+
+beginState: CmnActStand
+	upon: IMMEDIATE
+	endUpon:
+
+	beginLabel: loop
+	sprite: 0, 6
+	sprite: 1, 6
+	sprite: 2, 6
+	sprite: 3, 6
+	sprite: 4, 6
+	sprite: 5, 6
+	sprite: 6, 6
+	sprite: 7, 6
+	sprite: 8, 6
+	sprite: 9, 6
+	sprite: 10, 6
+	sprite: 11, 6
+	sprite: 12, 6
+	sprite: 13, 6
+	sprite: 14, 6
+	sprite: 15, 6
+	sprite: 16, 6
+	sprite: 17, 6
+	gotoLabel: loop
+
+	endState:
+
+beginState: CmnActFWalk
+	upon: IMMEDIATE
+	endUpon:
+
+	beginLabel: loop
+	sprite: 343, 9
+	sprite: 344, 9
+	sprite: 345, 9
+	sprite: 346, 9
+	sprite: 347, 9
+	sprite: 348, 9
+	sprite: 349, 9
+	sprite: 350, 9
+	sprite: 351, 9
+	sprite: 352, 9
+	gotoLabel: loop
+	
+	endState:
+
+beginState: CmnActBWalk
+
+	beginLabel: loop
+	sprite: 353, 9
+	sprite: 354, 9
+	sprite: 355, 9
+	sprite: 356, 9
+	sprite: 357, 9
+	sprite: 358, 9
+	sprite: 359, 9
+	sprite: 360, 9
+	gotoLabel: loop
+	
+	endState:
+
+beginState: CmnActFDash
+	upon: IMMEDIATE
+		addWhiffCancelOption: GunFlame
+		callSubroutine: cmnFDash
+	endUpon:
+
+	sprite: 361, 6
+
+	beginLabel: loop
+	sprite: 362, 3
+	sprite: 363, 3
+	sprite: 364, 3
+	sprite: 365, 3
+	sprite: 366, 3
+	sprite: 367, 3
+	sprite: 368, 3
+	sprite: 369, 3
+	gotoLabel: loop
+
+	endState:
+
+beginState: CmnActFDashStop
+	upon: IMMEDIATE
+		addWhiffCancelOption: GunFlame
+		callSubroutine: cmnFDashStop
+	endUpon:
+
+	sprite: 370, 9
+	sprite: 371, 9
+
+	endState:
+
+beginState: GunFlame
+	upon: IMMEDIATE
+		cmn_AtkLv3:
+		pushbackX: 100
+		addCancelOption: GunFlame
+		damage: 0, 40
+		hitStop: 15
+		hitstunAmount: 20
+	endUpon:
+
+	upon: TOUCH_GROUND
+		clearRegisteredUponCode: 0
+	endUpon:
+
+	upon: HIT
+		cmn_screenshake: 80
+		// slowdown: 100
+	endUpon:
+
+	sprite: 259, 6
+	physicsYImpulse: 40000
+	setGravity: 2500
+	physicsXImpulse: 5499
+	sprite: 260, 3
+	cmn_screenshake: 4
+	sprite: 261, 8
+	setGravity: 3500
+	sprite: 262, 2
+	sprite: 263, 2
+	sprite: 264, 2
+	sprite: 265, 2
+	sprite: 266, 2
+	sprite: 267, 2
+	sprite: 268, 2
+	sprite: 11, 2
+	sprite: 12, 2
+	sprite: 8, 5
+	sprite: 9, 5
+	sprite: 10, 3
+	sprite: 11, 3
+	endState:
+
+beginState: BanditBringer
+	upon: IMMEDIATE
+		damage: 0, 100
+		hitStop: 7
+	endUpon:
+
+	physicsXImpulse: 40000
+
+	sprite: 32, 5
+	physicsXImpulse: 0
+
+	beginLabel: loop
+	sprite: 33, 5
+	sprite: 34, 5
+	sprite: 35, 5
+	sprite: 36, 5
+
+	sprite: 37, 5
+	sprite: 38, 5
+	endState:

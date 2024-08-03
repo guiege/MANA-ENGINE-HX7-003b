@@ -16,6 +16,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "PerlinNoise.h"
 
 #include "Shader.h"
 #include "Renderer.h"
@@ -38,6 +39,7 @@ public:
 	TestCharacter* testChar2;
 
 	Spritesheet* icons;
+	Spritesheet* gauge;
 
 	//Static accessor
 	static IntroState* get();
@@ -98,12 +100,25 @@ private:
 	Camera* m_Camera;
 
 	glm::mat4 proj;
+	glm::mat4 worldProj;
+	glm::mat4 uiProj;
 
+	// int buttonCount;
+	// const unsigned char *buttons;
+
+	//Camera Shake Variables
+	glm::vec2 maxOffset = {80.0f, 80.0f};
+	float maxAngle = 5.0f; // 10 Degrees max shake angle
+	float trauma = 0.0f; // shake is trauma^2 or trauma^3
+	const siv::PerlinNoise::seed_type seed = 123456u;
+	const siv::PerlinNoise perlin{ seed };
+
+	//Input History Display Variables
 	std::unordered_map<int, std::vector<int>> inputHistory;
 	static const int MAX_HISTORY_SIZE = 22;
 	int currentIndex = 0;
-	glm::vec2 dirHistoryPos = {20, 188};
-	glm::vec2 butHistoryPos = {52, 188};
+	glm::vec2 dirHistoryPos = {20, 125};
+	glm::vec2 butHistoryPos = {52, 125};
 
 	//CAMERA CONTROLS
 	float cameraXPos = 0;
@@ -112,6 +127,12 @@ private:
 	float cameraScale = 1.0f;
 	double lastX = 0.0, lastY = 0.0;
 	bool isPanning = false;
+
+	std::vector<Solid> solids;
+	std::vector<Actor*> actors;
+
+	std::vector<int> spdH{-1, 1, 1, 1};
+	std::vector<std::bitset<4>> spdC{FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK, FK_Input_Buttons.UP};
 };
 
 #endif

@@ -47,7 +47,6 @@ void Spritesheet::recalculateAnchor()
 	anchorPosition = curClip.sourceX*2 + curClip.w*1.5;
 }
 
-
 void Spritesheet::draw(Renderer* renderer) 
 {
 	if(renderer->isBatch){

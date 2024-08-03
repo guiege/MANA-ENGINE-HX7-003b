@@ -822,7 +822,7 @@ void Renderer::DrawOutline(const glm::vec2& position, const glm::vec2& size, flo
     );
 }
 
-void Renderer::DrawQuadAtlas(Texture& texture, const glm::vec2& clipPos, const glm::vec2& clipSize, bool rotated, const glm::vec2& position, const glm::vec4& color)
+void Renderer::DrawQuadAtlas(Texture& texture, const glm::vec2& clipPos, const glm::vec2& clipSize, bool rotated, const glm::vec2& position, const glm::vec4& color, const glm::vec2& size)
 {
     if (s_Data.IndexCount >= MaxIndexCount || s_Data.TextureSlotIndex > 31)
     {
@@ -862,6 +862,7 @@ void Renderer::DrawQuadAtlas(Texture& texture, const glm::vec2& clipPos, const g
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     }
     model = glm::scale(model, glm::vec3(width, height, 1.0f));
+    model = glm::scale(model, glm::vec3(size, 1.0f));
 
     glm::vec4 topLeft = model * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
     glm::vec4 topRight = model * glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);

@@ -42,28 +42,86 @@
 #include "IntroState.h"
 #include "HitboxEditorState.h"
 #include "BatchState.h"
+#include "SplashState.h"
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
-const unsigned int width = 1920;
-const unsigned int height = 1080;
-
 GameState* gCurrentState = NULL;
 GameState* gNextState = NULL;
 
-GLFWwindow* window;
-
 GGPOSession *ggpo = NULL;
+
+GLFWwindow* window;
+int windowWidth = 1920;
+int windowHeight = 1080;
+int monitorWidth, monitorHeight;
+bool isFullscreen = false;
+
+void updateViewport()
+{
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+
+    if (isFullscreen)
+    {
+        // Calculate the viewport to maintain 1080p aspect ratio
+        float targetAspectRatio = (float)windowWidth / windowHeight;
+        int viewportWidth = width;
+        int viewportHeight = (int)(width / targetAspectRatio);
+        
+        if (viewportHeight > height)
+        {
+            viewportHeight = height;
+            viewportWidth = (int)(height * targetAspectRatio);
+        }
+
+        int vpX = (width - viewportWidth) / 2;
+        int vpY = (height - viewportHeight) / 2;
+
+        glViewport(vpX, vpY, viewportWidth, viewportHeight);
+    }
+    else
+    {
+        glViewport(0, 0, windowWidth, windowHeight);
+    }
+}
+
+void toggleFullscreen()
+{
+    if (!isFullscreen)
+    {
+        // Get the primary monitor
+        GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+
+        // Store the monitor's resolution
+        monitorWidth = mode->width;
+        monitorHeight = mode->height;
+
+        // Create a fullscreen window
+        glfwSetWindowMonitor(window, primaryMonitor, 0, 0, monitorWidth, monitorHeight, mode->refreshRate);
+        
+        isFullscreen = true;
+    }
+    else
+    {
+        // Calculate position to center the window
+        int xpos = (monitorWidth - windowWidth) / 2;
+        int ypos = (monitorHeight - windowHeight) / 2;
+
+        // Restore windowed mode
+        glfwSetWindowMonitor(window, nullptr, xpos, ypos, windowWidth, windowHeight, 0);
+        
+        isFullscreen = false;
+    }
+
+    // Update viewport
+    updateViewport();
+}
 
 void setNextState( GameState* newState )
 {
-    // //If the user doesn't want to exit
-    // if( gNextState != ExitState::get() )
-    // {
-    //     //Set the next state
-    //     gNextState = newState;
-    // }
     gNextState = newState;
 }
 
@@ -88,30 +146,29 @@ void changeState()
     }
 }
 
-
 int main()
 {
-
-    glfwInit(); //Initialize GLFW
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); //Tell GLFW what version of OpenGL we are using(3.3)
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //Tell GLFW we are using the core profile
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-
-    window = glfwCreateWindow(width, height, "MANA ENGINE HX7-003b", NULL, NULL); //Create a GLFWwindow object of 800 x 800 with the name "OpenGL"
+    window = glfwCreateWindow(windowWidth, windowHeight, "MANA ENGINE HX7-003b", NULL, NULL);
     
-    if(window == NULL) //Error check if the window fails to create
+    if (window == NULL)
     {
-       
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
-    glfwMakeContextCurrent(window); //Introduce the window into the current context
 
-    gladLoadGL(); //Load GLAD so it configures OpenGL
+    glfwMakeContextCurrent(window);
+    glfwSetKeyCallback(window, key_callback);
+
+    gladLoadGL();
+
+    updateViewport();
 
     HWND hwnd = glfwGetWin32Window(window);
 
@@ -129,7 +186,7 @@ int main()
 
     glfwSetKeyCallback(window, key_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glViewport(0, 0, width, height); //Specify the viewport of OpenGL in the window from origin corner to bottom right corner
+    glViewport(0, 0, windowWidth, windowHeight); //Specify the viewport of OpenGL in the window from origin corner to bottom right corner
 
     // glEnable(GL_DEPTH_TEST); ENABLE FOR 3D STUFFs
     glEnable(GL_BLEND);
@@ -142,20 +199,20 @@ int main()
     unsigned int counter = 0;
     unsigned int tick = 0;
 
-    bool show_demo_window = true;
+    bool show_demo_window = false;
 
     glfwSwapInterval(0);
 
     Shader loadingShader("res/shaders/default.vert", "res/shaders/default.frag");
     Shader textShader("res/shaders/text.vert", "res/shaders/text.frag");
-    glm::mat4 proj = glm::ortho(0.0f, (float)(width), (float)(height), 0.0f, -1.0f, 1.0f);
+    glm::mat4 proj = glm::ortho(0.0f, (float)(windowWidth), (float)(windowHeight), 0.0f, -1.0f, 1.0f);
     loadingShader.Use().SetInteger("image", 0);
     loadingShader.SetMatrix4("projection", proj);
     Renderer loadingRenderer(loadingShader);
-    TextRenderer loadingText(width, height, textShader);
+    TextRenderer loadingText(windowWidth, windowHeight, textShader);
     loadingText.Load("res/fonts/FOTNewRodin Pro B.otf", 24);
 
-    gCurrentState = HitboxEditorState::get();
+    gCurrentState = SplashState::get();
     gCurrentState->enter();
     std::thread loadingThread(ResourceManager::UploadToRAM);
     loadingThread.detach();
@@ -218,12 +275,32 @@ int main()
             dt = 1.0/30.0;
         }
 
-        while(accumulator >= 1.0 / 60.0){
-            if(gCurrentState->doneLoading)
-                gCurrentState->tick++;
+        while(accumulator >= 1.0 / 60.0 && (!gCurrentState->paused || gCurrentState->advanceFrame)){
             gCurrentState->update(dt);
+            if(gCurrentState->doneLoading){
+                gCurrentState->tick++;
+                if(gCurrentState->desiredState > 0){
+                    if(gCurrentState->desiredState == 1){
+                        setNextState(IntroState::get());
+                        changeState();
+                    }
+                    if(gCurrentState->desiredState == 2){
+                        setNextState(HitboxEditorState::get());
+                        changeState();
+                    }
+                    if(gCurrentState->desiredState == 3){
+                        setNextState(BatchState::get());
+                        changeState();
+                    }
+                }
+            }
             accumulator -= 1.0 / 60.0;
             tick++;
+
+            if(gCurrentState->advanceFrame){
+                gCurrentState->advanceFrame = false;
+                break;
+            }
         }
 
         if(ResourceManager::doneLoading && gCurrentState->doneLoading == false){
@@ -242,7 +319,7 @@ int main()
         if(gCurrentState->doneLoading){
             //Specify the color of the background
             // glClearColor(48/(float)255, 56/(float)255, 65/(float)255, 1.0f);
-            glClearColor(39/(float)255, 39/(float)255, 39/(float)255, 1.0f);
+            glClearColor(55/(float)255, 55/(float)255, 55/(float)255, 1.0f);
 
             // Clean the back buffer and assign the new color to it
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -266,12 +343,9 @@ int main()
         glfwSwapBuffers(window);
     }
 
-    //Delete all the objects we've created
     ResourceManager::Clear();
 
     gCurrentState->exit();
-    // delete gCurrentState;
-    // delete gNextState;
 
     // FMOD_System_Release(system);
     // channel->stop();
@@ -312,9 +386,13 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
 }
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     // when a user presses the escape key, we set the WindowShouldClose property to true, closing the application
+    if (key == GLFW_KEY_ENTER && mods == GLFW_MOD_ALT && action == GLFW_PRESS)
+    {
+        toggleFullscreen();
+    }
     if (key == GLFW_KEY_F1 && action == GLFW_PRESS && gCurrentState->doneLoading){
         setNextState(IntroState::get());
         changeState();
@@ -332,7 +410,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
     if (key >= 0 && key < 1024)
     {
-
         if (action == GLFW_PRESS){
             gCurrentState->Keys[key] = true;
         }

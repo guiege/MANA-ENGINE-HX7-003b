@@ -20,12 +20,25 @@ public:
 
     void draw(Renderer* renderer, Texture& palette);
 
+    void draw(Renderer* renderer, glm::vec2 scale);
+
     int GetFrame()
     {
         return currentFrame;
     }
 
     void SetFrame(const int frame);
+
+    void SetClipSize(const int width, const int height)
+    {
+        curClip.w = width;
+        curClip.h = height;
+    }
+
+    void SetScale(glm::vec2 s)
+    {
+        scale = s;
+    }
 
     glm::vec2 getCurrentSize();
 
@@ -46,6 +59,8 @@ private:
     unsigned int currentFrame = 0;
 
     int anchorPosition;
+
+    glm::vec2 scale = {1.0f, 1.0f};
 
 };
 
