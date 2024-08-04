@@ -346,12 +346,19 @@ void IntroState::update(float dt)
 	    }
 	}
 
-	if(Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_S]){
-		save_char();
+	if(!Keys[GLFW_KEY_LEFT_CONTROL] && (!Keys[GLFW_KEY_S] || !Keys[GLFW_KEY_L]))
+	{
+		savingLoading = false;
 	}
 
-	if(Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_L]){
+	if(!savingLoading && Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_S]){
+		save_char();
+		savingLoading = true;
+	}
+
+	if(!savingLoading && Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_L]){
 		load_char();
+		savingLoading = true;
 	}
 
 	testChar->updateScript(tick, testChar2);

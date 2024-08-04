@@ -80,7 +80,7 @@ public:
     unsigned int hitstun = 0;
     unsigned int hitstop = 0;
     unsigned int slowdown = 0;
-    std::string currentState = "";
+    int currentState = 0;
     std::string subroutines = "";
 
     virtual void start() = 0;
@@ -108,6 +108,8 @@ public:
         return centerPos;
     }
 
+    std::string GetCurrentState();
+
     int GetHealth(){
         return health;
     }
@@ -129,7 +131,7 @@ public:
     void SetState(const std::string& state);
 
     void addWhiffCancelOption(const std::string& state){
-        states[currentState].whiffCancelOptions.push_back(state);
+        states[GetCurrentState()].whiffCancelOptions.push_back(state);
     }
 
     void callSubroutine(const std::string& subroutine);
@@ -278,6 +280,9 @@ protected:
     std::deque<AfterImage> afterImages;
 
     //State Variables
+    std::unordered_map<std::string, int> stateIDs;
+    std::unordered_map<int, std::string> stateNames;
+
     std::unordered_map<std::string, State> states;
     std::unordered_map<std::string, std::function<void(const std::vector<std::string>&)>> commandMap;
     bool cancellable = false;
@@ -316,14 +321,14 @@ protected:
     float fDashFriction = 6.0f; // Friction for dashing
     float fDashAccelSpeed = 5.0f;
     float initDashFSpeed = 10.0f; // 13.1
-    const float dashMaxVelocity = 38.51f; // v cannot exceed 38.5
+    float dashMaxVelocity = 38.51f; // v cannot exceed 38.5
     float dashSkidDecay = 0.25f;
 
     int karaFrames = 2;
     float requestedShake = 0.0f;
 
     //Parameters
-    const float highBlockstunDecay = .12;
+    float highBlockstunDecay = .12;
 
 
 
