@@ -286,14 +286,6 @@ void IntroState::update(float dt)
 		cameraScale += .01;
 	}
 
-	if(Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_S]){
-		save_char();
-	}
-
-	if(Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_L]){
-		load_char();
-	}
-
 	if(testChar->GetRequestedShake() > 0.0f){
 		trauma += testChar->GetRequestedShake();
 		testChar->SetRequestedShake(0.0f);
@@ -354,12 +346,21 @@ void IntroState::update(float dt)
 	    }
 	}
 
+	if(Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_S]){
+		save_char();
+	}
+
+	if(Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_L]){
+		load_char();
+	}
+
 	testChar->updateScript(tick, testChar2);
 	testChar2->updateScript(tick, testChar);
 	inputHandler->update(tick);
 	inputHandler2->update(tick);
 
 	cameraXPos += ((testChar2->GetCenterPos().x - (testChar2->GetCenterPos().x - testChar->GetCenterPos().x)/2) - cameraXPos) * .1;
+
 
 
 }

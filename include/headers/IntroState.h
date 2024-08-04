@@ -45,7 +45,13 @@ public:
 	static IntroState* get();
 
 	int len;
+	int len2;
 	unsigned char *buffer;
+	unsigned char *buffer2;
+	std::string charSavedState = ""; // Save these to avoid string corruption with the shallow copy
+	std::string charSavedSubroutines = "";
+	std::string charSavedState2 = "";
+    std::string charSavedSubroutines2 = "";
 
     bool save_char()
     {
@@ -55,12 +61,25 @@ public:
         }
         len = sizeof(TestCharacter);
         buffer = new unsigned char[len];
+        charSavedState = testChar->currentState;
+        charSavedSubroutines = testChar->subroutines;
         if (!buffer)
         {
             std::cout << "save failed: memory allocation error\n";
             return false;
         }
         memcpy(buffer, testChar, len);
+
+        len2 = sizeof(TestCharacter);
+        buffer2 = new unsigned char[len];
+        charSavedState2 = testChar2->currentState;
+        charSavedSubroutines2 = testChar2->subroutines;
+        if (!buffer2)
+        {
+            std::cout << "save failed: memory allocation error\n";
+            return false;
+        }
+        memcpy(buffer2, testChar2, len2);
         std::cout << "save complete\n";
         return true;
     }
@@ -72,6 +91,16 @@ public:
             return false;
         }
         memcpy(testChar, buffer, len);
+        testChar->currentState = charSavedState;
+        testChar->subroutines = charSavedSubroutines;
+
+        if (!buffer2 || len2 == 0) {
+            std::cout << "load failed: no data to load\n";
+            return false;
+        }
+        memcpy(testChar2, buffer2, len2);
+        testChar2->currentState = charSavedState2;
+        testChar2->subroutines = charSavedSubroutines2;
         std::cout << "load complete\n";
         return true;
     }

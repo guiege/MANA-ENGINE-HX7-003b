@@ -10,27 +10,6 @@ void TestCharacter::start()
 
 void TestCharacter::update(int tick)
 {
-	switch(state) {
-	case idle:
-		// std::cout << "in idle state" << std::endl;
-		
-		break;
-	case atk:
-		// std::cout << "in atk state" << std::endl;
-		// if(currentAnim.finished){
-		// 	enterState(idle, state);
-		// }
-		break;
-	}
-
-	// switch(animID){
-	// 	case 0:
-	// 		currentAnim = idleAnim;
-	// 		break;
-	// 	case 1:
-	// 		currentAnim = jabAnim;
-	// 		break;
-	// }
 
 }
 

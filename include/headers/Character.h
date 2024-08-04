@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <deque>
 #include <unordered_map>
 
 #include "Actor.h"
@@ -51,6 +52,18 @@ struct State {
     std::vector<std::string> whiffCancelOptions;
 };
 
+struct AfterImage {
+
+    glm::vec2 pos = {0.0f, 0.0f};
+    int ID = 0;
+
+    AfterImage(glm::vec2 p, int sprite)
+    {
+        pos = p;
+        ID = sprite;
+    }
+};
+
 class Character : public Actor {
 public:
 
@@ -61,6 +74,14 @@ public:
     void init();
 
     int state = 0; // Deprecated
+
+    //Battle Variables
+    unsigned int health = 420;
+    unsigned int hitstun = 0;
+    unsigned int hitstop = 0;
+    unsigned int slowdown = 0;
+    std::string currentState = "";
+    std::string subroutines = "";
 
     virtual void start() = 0;
 
@@ -105,13 +126,13 @@ public:
 
     void SetPushbox();
 
-    void SetState(std::string state);
+    void SetState(const std::string& state);
 
-    void addWhiffCancelOption(std::string state){
+    void addWhiffCancelOption(const std::string& state){
         states[currentState].whiffCancelOptions.push_back(state);
     }
 
-    void callSubroutine(std::string subroutine);
+    void callSubroutine(const std::string& subroutine);
 
     rect ProcessRect(const rect& r);
 
@@ -187,7 +208,7 @@ public:
             } else if (line.find("beginLabel:") != std::string::npos) {
                 std::string labelName = line.substr(12);
                 states[currentStateBlock].labels[labelName] = states[currentStateBlock].instructions.size();
-                std::cout << "Label created called: " << labelName << " at line: " << states[currentStateBlock].instructions.size();
+                // std::cout << "Label created called: " << labelName << " at line: " << states[currentStateBlock].instructions.size();
             } else {
                 if(inStateBlock && !inEventBlock){
                     size_t colonPos = line.find(':');
@@ -254,12 +275,13 @@ protected:
     std::unordered_map<std::string, Button> buttons;
     std::unordered_map<std::string, bool> buttonMap;
 
+    std::deque<AfterImage> afterImages;
+
     //State Variables
     std::unordered_map<std::string, State> states;
     std::unordered_map<std::string, std::function<void(const std::vector<std::string>&)>> commandMap;
     bool cancellable = false;
     bool hit = false;
-    std::string subroutines;
 
     //Animation Variables
     int currentFrame = 0;
@@ -269,8 +291,6 @@ protected:
     int framesUntilNextCommand = 0;
     bool firstFrame = false;
     bool firstFrameHit = false;
-    std::string currentState = "";
-    std::string queuedState = "";
 
     //Hitboxes
     std::map<int, std::vector<rect>> hurtboxes;
@@ -299,17 +319,13 @@ protected:
     const float dashMaxVelocity = 38.51f; // v cannot exceed 38.5
     float dashSkidDecay = 0.25f;
 
-    //Battle Variables
-    unsigned int health = 420;
-    unsigned int hitstun = 0;
-    unsigned int hitstop = 0;
-    unsigned int slowdown = 0;
-
     int karaFrames = 2;
     float requestedShake = 0.0f;
 
     //Parameters
     const float highBlockstunDecay = .12;
+
+
 
 };
 

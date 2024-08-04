@@ -82,6 +82,9 @@ beginState: CmnActHighGuardLoop
 	beginLabel: loop
 	sprite: 406, 4
 	sprite: 407, 4
+	sprite: 407, 4
+	sprite: 407, 4
+	sprite: 407, 4
 	gotoLabel: loop
 
 	endState:

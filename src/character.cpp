@@ -184,8 +184,9 @@ void Character::init()
 	SetState("RoundInit");
 }
 
-void Character::SetState(std::string state)
+void Character::SetState(const std::string& state)
 {
+	// std::cout << "setting state to: " << state << std::endl;
 	bbscriptFrameCount = 0;
 	framesUntilNextCommand = 0;
 	currentLine = 0;
@@ -234,7 +235,7 @@ void Character::executeCommands()
 	        return; 
 	    }
 	    //current state animation has finished
-	    SetState("CmnActStand");
+		SetState("CmnActStand");
 	}
 }
 
@@ -255,8 +256,8 @@ void Character::checkCollision(Character* opponent)
 						// handleEvent(currentState, "HIT_OR_GUARD");
 						cancellable = true;
 						hit = true;
-						hitstop = states[currentState].properties.hitstop;
 						opponent->SetState("CmnActHighGuardLoop");
+						hitstop = states[currentState].properties.hitstop;
 						opponent->velocity.x = -(states[currentState].properties.pushbackVelocity.x * 0.0154f * states[currentState].properties.pushbackMultiplier);
 						opponent->health -= states[currentState].properties.damage;
 						opponent->hitstop = states[currentState].properties.hitstop;
@@ -318,7 +319,7 @@ void Character::checkCommands()
 	}
 }
 
-void Character::callSubroutine(std::string subroutine)
+void Character::callSubroutine(const std::string& subroutine)
 {
 	if(subroutine == "cmnFDash"){
 		velocity.x = initDashFSpeed;
@@ -332,20 +333,16 @@ void Character::runSubroutines()
 		if(hitstun > 0){
 	    	// std::cout << hitstun << std::endl;
 	    	// std::cout << currentState << std::endl;
-			hitstun--;
 			if(!firstFrameHit)
 				velocity.x -= (highBlockstunDecay * velocity.x);
 		} else{
-			if(currentState == "CmnActHighGuardLoop"){
-				SetState("CmnActHighGuardEnd");
 				velocity = {0.0f, 0.0f};
 		   		acceleration = {0.0f, 0.0f};
-			}
+				SetState("CmnActHighGuardEnd");
 		}
 	}
 
 	if(subroutines.find("cmnFDashStop") != std::string::npos){
-		std::cout << velocity.x << std::endl;
 		velocity.x -= velocity.x * dashSkidDecay; //Dash skidding has no acceleration and is just friction til the end
 		if(velocity.x < 0.2)
 			velocity.x = 0;
@@ -363,6 +360,14 @@ void Character::runSubroutines()
 
 void Character::updateScript(int tick, Character* opponent)
 {
+
+	// if (afterImages.size() > 8){
+	//     afterImages.pop_back();
+	// } else{
+	// 	if(tick % 10 == 0)
+	// 		afterImages.push_front(AfterImage(pos, spritesheet.GetFrame()));
+	// }
+
 	if(currentState == "CmnActStand"){
 		if(inputHandler->checkCommand(FK_Input_Buttons.FORWARD, true)){
 			SetState("CmnActFWalk");
@@ -396,7 +401,7 @@ void Character::updateScript(int tick, Character* opponent)
 	}
 
 	for (const auto& [key, value] : buttons) {
-		buttonMap[key] = false;
+		buttonMap[key] = false; 
 		if(inputHandler->checkCommand(buttons[key].ID, buttons[key].hold))
 	    	buttonMap[key] = true;
 	}
@@ -433,6 +438,9 @@ void Character::updateScript(int tick, Character* opponent)
     } else {
     	cancellable = false;
     }
+
+    if(hitstun > 0)
+    	hitstun--;
 
     if(firstFrameHit)
 		firstFrameHit = false;
@@ -533,9 +541,19 @@ void Character::draw(Renderer* renderer)
 
 void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& palette)
 {
-	drawPosition = pos - posOffset - glm::vec2(width, height);
-	spritesheet.SetFrame(currentFrame);
+	// drawPosition = pos - posOffset - glm::vec2(width, height);
+
+	for(int i = afterImages.size() - 1; i >= 0; i--){
+		spritesheet.pos = afterImages[i].pos;
+		spritesheet.SetFrame(afterImages[i].ID);
+	    float opacity = static_cast<float>(i) / (afterImages.size() - 1);
+	    spritesheet.color = {0.5f, 0.8f, 1.0f, 1.0f - opacity};
+		spritesheet.draw(paletteRenderer, palette);
+	}
+
+	spritesheet.color = glm::vec4(1.0f);
 	spritesheet.pos = pos;
+	spritesheet.SetFrame(currentFrame);
 	spritesheet.draw(paletteRenderer, palette);
 	int vertCrossWidth = 2;
 	int vertCrossHeight = 40;
