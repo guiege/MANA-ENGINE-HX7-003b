@@ -61,21 +61,21 @@ public:
 
 struct {
 
-	std::bitset<4> UP = 1 << 3;
-	std::bitset<4> DOWN = 1 << 2; 
-	std::bitset<4> BACK = 1 << 1;
-	std::bitset<4> FORWARD = 1;
-	std::bitset<4> UP_FORWARD = UP | FORWARD;
-	std::bitset<4> UP_BACK = UP | BACK;
-	std::bitset<4> DOWN_FORWARD = DOWN | FORWARD;
-	std::bitset<4> DOWN_BACK = DOWN | BACK;
+	std::bitset<4> UP 			= (1 << 3);
+	std::bitset<4> DOWN 		= (1 << 2); 
+	std::bitset<4> BACK 		= (1 << 1);
+	std::bitset<4> FORWARD 		= (1);
+	std::bitset<4> UP_FORWARD 	= (UP | FORWARD);
+	std::bitset<4> UP_BACK 		= (UP | BACK);
+	std::bitset<4> DOWN_FORWARD = (DOWN | FORWARD);
+	std::bitset<4> DOWN_BACK 	= (DOWN | BACK);
 
-	std::bitset<7> LP = 1 << 6;
-	std::bitset<7> MP = 1 << 5;
-	std::bitset<7> HP = 1 << 4;
-	std::bitset<7> START = 1 << 3;
-	std::bitset<7> LK = 1 << 2;
-	std::bitset<7> MK = 1 << 1;
-	std::bitset<7> HK = 1;
+	std::bitset<7> LP 			= (1 << 6);
+	std::bitset<7> MP 			= (1 << 5);
+	std::bitset<7> HP 			= (1 << 4);
+	std::bitset<7> START 		= (1 << 3);
+	std::bitset<7> LK 			= (1 << 2);
+	std::bitset<7> MK 			= (1 << 1);
+	std::bitset<7> HK 			= 1;
 
 } FK_Input_Buttons;

@@ -6,6 +6,8 @@ struct GameState {
 	void Init();
 	void ParseInputs();
 	void Update(int inputs[], int disconnect_flags);
+
+	int _framenumber;
 };
 
 #endif

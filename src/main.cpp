@@ -21,8 +21,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "ggponet.h"
-
 // Graphics Includes
 #include "Texture.h"
 #include "Shader.h"
@@ -49,8 +47,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
 Scene* gCurrentState = NULL;
 Scene* gNextState = NULL;
-
-GGPOSession *ggpo = NULL;
 
 GLFWwindow* window;
 int windowWidth = 1920;
