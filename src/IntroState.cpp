@@ -72,21 +72,25 @@ bool IntroState::enter()
 	gauge->SetFrame(0);
 	gauge->SetScale({1.0f, 1.0f});
 
-	testChar = new TestCharacter(inputHandler, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", -950, 0, 4296, 15673, 0, solids);
+	testChar = new TestCharacter(inputHandler, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 1500, 0, 4296, 15673, 0, solids);
 	testChar->init();
-	actors.push_back(testChar);
+	// actors.push_back(testChar);
 
-	testChar2 = new TestCharacter(inputHandler2, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 50, 0, 4296, 15673, 0, solids);
+	testChar2 = new TestCharacter(inputHandler2, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 2500, 0, 4296, 15673, 0, solids);
 	testChar2->init();
 	testChar2->SetFlipped(true);
-	actors.push_back(testChar2);
+	// actors.push_back(testChar2);
 
 	Solid platform(0, 700, 800, 800, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	Solid floor(-2000, 980, 4000, 1000, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	Solid floor(0, 980, 4000, 1000, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	Solid wallL(0, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	Solid wallR(3960, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	// solids.push_back(platform);
 	solids.push_back(floor);
+	solids.push_back(wallL);
+	solids.push_back(wallR);
 
-	cameraXPos = ((testChar2->GetCenterPos().x - (testChar2->GetCenterPos().x - testChar->GetCenterPos().x)/2) - cameraXPos);
+	cameraXPos = 0;
 	cameraYPos = 180;
 	cameraRot = 0.0f;
 	cameraScale = 0.6f;
@@ -237,6 +241,12 @@ void IntroState::update(float dt)
 		inputHandler2->registerInput(FK_Input_Buttons.HK);
 	}
 
+	if(Keys[GLFW_KEY_R])
+	{
+		testChar->pos.x = 1500;
+		testChar2->pos.x = 2500;
+	}
+
 	if (this->Keys[GLFW_KEY_D])
 	{
 		if(testChar2->GetFlipped())
@@ -301,9 +311,16 @@ void IntroState::update(float dt)
 	}
 
 	if(trauma > 0)
-		trauma -= 0.02;
+		trauma -= 0.01;
 
 	trauma = std::max(0.0f, std::min(trauma, 1.0f));
+
+	float frequency = 0.40f;
+
+	shake = (trauma * trauma);
+	offsetX = maxOffset.x * shake * perlin.noise1D(tick * frequency);
+	offsetY = maxOffset.y * shake * perlin.noise1D((tick + 1) * frequency);
+	angle = maxAngle * shake * perlin.noise1D((tick + 2) * frequency);
 
 	std::vector<int> inputNumbers;
 
@@ -361,12 +378,30 @@ void IntroState::update(float dt)
 		savingLoading = true;
 	}
 
-	testChar->updateScript(tick, testChar2);
 	testChar2->updateScript(tick, testChar);
+	testChar->updateScript(tick, testChar2);
 	inputHandler->update(tick);
 	inputHandler2->update(tick);
 
-	cameraXPos += ((testChar2->GetCenterPos().x - (testChar2->GetCenterPos().x - testChar->GetCenterPos().x)/2) - cameraXPos) * .1;
+	float distance = testChar2->GetCenterPos().x - testChar->GetCenterPos().x;
+	float distanceY = testChar2->GetCenterPos().y - testChar->GetCenterPos().y;
+
+	cameraXPos += (abs(testChar2->GetCenterPos().x - (distance)/2) - cameraXPos) * .1f;
+	cameraYPos += (abs(testChar2->GetCenterPos().y - (distanceY)/2) - cameraYPos) * .1f;
+
+	if(cameraXPos < cameraMinPos)
+		cameraXPos = cameraMinPos;
+
+	if(cameraXPos > cameraMaxPos)
+		cameraXPos = cameraMaxPos;
+
+    float baseScale = 0.6f;
+    float maxScale = 2.0f;
+    float scale = 0.6f;
+    if(distance > 960)
+    	scale = baseScale + (distance / 5000.0f); // Adjust 1000.0f as needed
+    
+    cameraScale += (glm::clamp(scale, baseScale, maxScale) - cameraScale) * .1f;
 
 
 
@@ -374,14 +409,9 @@ void IntroState::update(float dt)
 
 void IntroState::render()
 {
-	float shake = (trauma * trauma * trauma);
-	float offsetX = maxOffset.x * shake * perlin.noise1D(tick);
-	float offsetY = maxOffset.y * shake * perlin.noise1D(tick + 1);
-	float angle = maxAngle * shake * perlin.noise1D(tick + 2);
-
 	//Camera Params for Scene Rendering
 	m_Camera->SetCenter(glm::vec3(960, 540, 0));
-	m_Camera->SetPosition(glm::vec3(cameraXPos + offsetX - 960, cameraYPos + offsetY, 0));
+	m_Camera->SetCenterPosition(glm::vec3(cameraXPos + offsetX, cameraYPos + offsetY - (380 * cameraScale), 0));
 	m_Camera->SetRotation(angle);
 	m_Camera->SetScale(cameraScale);
 	worldProj = m_Camera->GetViewProjectionMatrix();
@@ -412,6 +442,9 @@ void IntroState::render()
 
 	batchRenderer->BeginBatch(); //UI Pass
 
+	float percentage = 1 - (testChar2->GetHealth() / 420);
+	int value = (420 - testChar2->GetHealth());
+
 	gauge->SetFrame(0);
 	gauge->pos.x = 0;
 	gauge->draw(batchRenderer);
@@ -420,7 +453,9 @@ void IntroState::render()
 	gauge->SetFrame(2);
 	gauge->draw(batchRenderer);
 	gauge->SetFrame(3);
-	gauge->draw(batchRenderer);
+	gauge->pos = {150, 58};
+	gauge->drawclip(batchRenderer, 0, 322, testChar2->GetHealth(), 20, false);
+	gauge->pos = {0, 0};
 	gauge->SetFrame(4);
 	gauge->draw(batchRenderer);
 

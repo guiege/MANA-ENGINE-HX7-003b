@@ -20,7 +20,7 @@ public:
 
     void draw(Renderer* renderer, Texture& palette);
 
-    void draw(Renderer* renderer, glm::vec2 scale);
+    void drawclip(Renderer* renderer, const int x, const int y, const int w, const int h, bool rotated);
 
     int GetFrame()
     {

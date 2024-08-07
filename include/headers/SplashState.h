@@ -2,7 +2,7 @@
 
 #include "imgui.h"
 
-#include "GameState.h"
+#include "Scene.h"
 #include "PostProcessor.h"
 
 struct Keyframe {
@@ -10,7 +10,7 @@ struct Keyframe {
     float value;
 };
 
-class SplashState : public GameState
+class SplashState : public Scene
 {
 public:
 	static SplashState* get();

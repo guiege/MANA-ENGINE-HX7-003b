@@ -38,7 +38,7 @@
 
 //Engine Includes
 #include "ResourceManager.h"
-#include "GameState.h"
+#include "Scene.h"
 #include "IntroState.h"
 #include "HitboxEditorState.h"
 #include "BatchState.h"
@@ -47,8 +47,8 @@
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 
-GameState* gCurrentState = NULL;
-GameState* gNextState = NULL;
+Scene* gCurrentState = NULL;
+Scene* gNextState = NULL;
 
 GGPOSession *ggpo = NULL;
 
@@ -120,7 +120,7 @@ void toggleFullscreen()
     updateViewport();
 }
 
-void setNextState( GameState* newState )
+void setNextState( Scene* newState )
 {
     gNextState = newState;
 }

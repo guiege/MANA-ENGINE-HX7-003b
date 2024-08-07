@@ -3,7 +3,7 @@
 
 #include "imgui.h"
 
-#include "GameState.h"
+#include "Scene.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -31,7 +31,7 @@
 
 #include "TestCharacter.h"
 
-class IntroState : public GameState
+class IntroState : public Scene
 {
 public:
 
@@ -126,10 +126,10 @@ private:
 	// const unsigned char *buttons;
 
 	//Camera Shake Variables
-	glm::vec2 maxOffset = {80.0f, 80.0f};
+	glm::vec2 maxOffset = {150.0f, 150.0f};
 	float maxAngle = 5.0f; // 10 Degrees max shake angle
 	float trauma = 0.0f; // shake is trauma^2 or trauma^3
-	const siv::PerlinNoise::seed_type seed = 123456u;
+	const siv::PerlinNoise::seed_type seed = 654321u;
 	const siv::PerlinNoise perlin{ seed };
 
 	//Input History Display Variables
@@ -146,6 +146,12 @@ private:
 	float cameraScale = 1.0f;
 	double lastX = 0.0, lastY = 0.0;
 	bool isPanning = false;
+	int cameraMinPos = 40;
+	int cameraMaxPos = 3960;
+	float shake = 0.0f;
+	float offsetX = 0.0f;
+	float offsetY = 0.0f;
+	float angle = 0.0f;
 
 	std::vector<Solid> solids;
 	std::vector<Actor*> actors;

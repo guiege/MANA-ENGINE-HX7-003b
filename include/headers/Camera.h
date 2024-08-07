@@ -11,6 +11,7 @@ class Camera {
 
 		const glm::vec3& GetPosition() const { return m_Position; }
 		void SetPosition(const glm::vec3& position) { m_Position = position; RecalculateViewMatrix(); }
+		void SetCenterPosition(const glm::vec3 & position) { m_Position = {position.x - center.x, position.y - center.y, 0.0f}; }
 
 		float GetRotation() const {return m_Rotation; }
 		void SetRotation(float rotation) { m_Rotation = rotation; RecalculateViewMatrix(); }

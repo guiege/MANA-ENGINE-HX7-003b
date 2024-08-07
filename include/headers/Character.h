@@ -24,6 +24,7 @@ struct Properties {
     int hitstop = 0;
     int slowdown = 0;
     int hitstun = 0;
+    int blockstun = 0;
     int damage = 0;
 
     glm::vec2 pushbackVelocity = {0.0f, 0.0f};
@@ -73,15 +74,7 @@ public:
 
     void init();
 
-    int state = 0; // Deprecated
-
-    //Battle Variables
-    unsigned int health = 420;
-    unsigned int hitstun = 0;
-    unsigned int hitstop = 0;
-    unsigned int slowdown = 0;
-    int currentState = 0;
-    std::string subroutines = "";
+    int sign = 0;
 
     virtual void start() = 0;
 
@@ -108,7 +101,10 @@ public:
         return centerPos;
     }
 
-    std::string GetCurrentState();
+    bool isColliding(Character* opponent)
+    {
+        return intersect(GetPushbox(), opponent->GetPushbox());
+    }
 
     int GetHealth(){
         return health;
@@ -126,7 +122,16 @@ public:
         requestedShake = shake;
     }
 
+    rect GetPushbox(){
+        rect movedPushbox = pushbox;
+        movedPushbox.x += pos.x;
+        movedPushbox.y += pos.y;
+        return movedPushbox;
+    }
+
     void SetPushbox();
+
+    std::string GetCurrentState();
 
     void SetState(const std::string& state);
 
@@ -297,6 +302,8 @@ protected:
     bool firstFrame = false;
     bool firstFrameHit = false;
 
+
+
     //Hitboxes
     std::map<int, std::vector<rect>> hurtboxes;
     std::map<int, std::vector<rect>> hitboxes;
@@ -310,12 +317,20 @@ protected:
     glm::vec2 drawPosition = {0.0f, 0.0f};
     glm::vec2 centerPos = {0.0f, 0.0f};
     bool flipped = false;
-    int sign = 0;
+
+    //Battle Variables
+    unsigned int health = 420;
+    unsigned int hitstun = 0;
+    unsigned int hitstop = 0;
+    unsigned int slowdown = 0;
+    int currentState = 0;
+    std::string subroutines = "";
 
     //Movement Variables
     glm::vec2 velocity = {0.0f, 0.0f};
     glm::vec2 acceleration = {0.0f, 0.0f};
     float gravity = 20.0f;
+    float carriedMomentumPercentage = 1.0f;
     float walkFSpeed = 7.0f;
     float walkBSpeed = 5.0f;
     float fDashFriction = 6.0f; // Friction for dashing

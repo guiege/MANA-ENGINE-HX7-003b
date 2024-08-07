@@ -3,7 +3,7 @@
 
 #include "imgui.h"
 
-#include "GameState.h"
+#include "Scene.h"
 #include "Shader.h"
 #include "Renderer.h"
 #include "Texture.h"
@@ -20,7 +20,7 @@
 using json = nlohmann::json;
 
 
-class HitboxEditorState : public GameState
+class HitboxEditorState : public Scene
 {
 public:
 	//Static accessor

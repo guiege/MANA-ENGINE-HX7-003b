@@ -48,7 +48,7 @@ void Character::init()
 	};
 
 	commandMap["setCarriedMomentumPercentage"] = [this](const std::vector<std::string>& params) {
-		if (params.empty()) return;
+		carriedMomentumPercentage = stoi(params[0]) / (float)100;
         // std::cout << "Setting carried momentum percentage to " << params[0] << std::endl;
     };
 
@@ -125,22 +125,37 @@ void Character::init()
 
     commandMap["cmn_AtkLv0"] = [this](const std::vector<std::string>& params) {
     	states[GetCurrentState()].properties.pushbackVelocity.x = 1250;
+    	states[GetCurrentState()].properties.hitstop = 11;
+    	states[GetCurrentState()].properties.hitstun = 12;
+    	states[GetCurrentState()].properties.blockstun = 9;
     };
 
     commandMap["cmn_AtkLv1"] = [this](const std::vector<std::string>& params) {
     	states[GetCurrentState()].properties.pushbackVelocity.x = 1375;
+    	states[GetCurrentState()].properties.hitstop = 12;
+    	states[GetCurrentState()].properties.hitstun = 14;
+    	states[GetCurrentState()].properties.blockstun = 11;
     };
 
     commandMap["cmn_AtkLv2"] = [this](const std::vector<std::string>& params) {
     	states[GetCurrentState()].properties.pushbackVelocity.x = 1500;
+    	states[GetCurrentState()].properties.hitstop = 13;
+    	states[GetCurrentState()].properties.hitstun = 16;
+    	states[GetCurrentState()].properties.blockstun = 13;
     };
 
     commandMap["cmn_AtkLv3"] = [this](const std::vector<std::string>& params) {
     	states[GetCurrentState()].properties.pushbackVelocity.x = 1750;
+    	states[GetCurrentState()].properties.hitstop = 14;
+    	states[GetCurrentState()].properties.hitstun = 19;
+    	states[GetCurrentState()].properties.blockstun = 16;
     };
 
     commandMap["cmn_AtkLv4"] = [this](const std::vector<std::string>& params) {
     	states[GetCurrentState()].properties.pushbackVelocity.x = 2000;
+    	states[GetCurrentState()].properties.hitstop = 15;
+    	states[GetCurrentState()].properties.hitstun = 21;
+    	states[GetCurrentState()].properties.blockstun = 18;
     };
 
     commandMap["callSubroutine"] = [this](const std::vector<std::string>& params) {
@@ -167,6 +182,11 @@ void Character::init()
 	commandMap["fDashFriction"] = [this](const std::vector<std::string>& params) {
     	fDashFriction = stoi(params[0]);
     };
+
+    commandMap["hit"] = [this](const std::vector<std::string>& params) {
+    	hit = false;
+    };
+
 
 	// Add entries for motionInputs
 	for (const auto& [key, value] : motionInputs) {
@@ -275,9 +295,9 @@ void Character::checkCollision(Character* opponent)
 						hit = true;
 						opponent->SetState("CmnActHighGuardLoop");
 						hitstop = states[curstate].properties.hitstop;
+						opponent->hitstop = states[curstate].properties.hitstop;
 						opponent->velocity.x = -(states[curstate].properties.pushbackVelocity.x * 0.0154f * states[curstate].properties.pushbackMultiplier);
 						opponent->health -= states[curstate].properties.damage;
-						opponent->hitstop = states[curstate].properties.hitstop;
 						opponent->hitstun = states[curstate].properties.hitstun;
 						opponent->slowdown = states[curstate].properties.slowdown;
 						opponent->firstFrameHit = true;
@@ -300,14 +320,14 @@ void Character::checkCommands()
 		if((std::find(states[curstate].gatlingOptions.begin(), states[curstate].gatlingOptions.end(), key) != states[curstate].gatlingOptions.end()) 
 			|| (std::find(states[curstate].gatlingOptions.begin(), states[curstate].gatlingOptions.end(), "cmnNandemoCancel") != states[curstate].gatlingOptions.end())){
 			gatling = true;
+		} else if((std::find(states[curstate].cancelOptions.begin(), states[curstate].cancelOptions.end(), key) != states[curstate].cancelOptions.end()) 
+			|| (std::find(states[curstate].cancelOptions.begin(), states[curstate].cancelOptions.end(), "cmnNandemoCancel") != states[curstate].cancelOptions.end())){
+			cancel = true;
 		} else if((std::find(states[curstate].whiffCancelOptions.begin(), states[curstate].whiffCancelOptions.end(), key) != states[curstate].whiffCancelOptions.end()) 
 			|| (std::find(states[curstate].whiffCancelOptions.begin(), states[curstate].whiffCancelOptions.end(), "cmnNandemoCancel") != states[curstate].whiffCancelOptions.end())
 			|| (bbscriptFrameCount < karaFrames && states[key].properties.moveType == "SPECIAL" && states[curstate].properties.moveType == "NORMAL")
 			){
 			gatling = false;
-		} else if((std::find(states[curstate].cancelOptions.begin(), states[curstate].cancelOptions.end(), key) != states[curstate].cancelOptions.end()) 
-			|| (std::find(states[curstate].cancelOptions.begin(), states[curstate].cancelOptions.end(), "cmnNandemoCancel") != states[curstate].cancelOptions.end())){
-			cancel = true;
 		} else{
 			continue;
 		}
@@ -315,12 +335,14 @@ void Character::checkCommands()
 		if(value.properties.moveInput.size() == 2){
 			if (!value.properties.moveInput.empty())
 			{
-			    if(buttonMap[value.properties.moveInput[0]] && buttonMap[value.properties.moveInput[1]])
+			    if(buttonMap[value.properties.moveInput[0]])
 			    {
-				    if((gatling && hit) || (!gatling && !hit) || (cancel && cancellable)){
-						SetState(key);
-						break;
-				    }
+			    	if(buttonMap[value.properties.moveInput[1]]){
+					    if((gatling && hit) || (!gatling && !hit && !cancel) || (cancel && cancellable)){
+							SetState(key);
+							break;
+					    }
+					}
 			    }
 			}
 		}
@@ -328,7 +350,7 @@ void Character::checkCommands()
 		if(value.properties.moveInput.size() == 1){
 			if(buttonMap[value.properties.moveInput[0]])
 			{
-			    if((gatling && hit) || (!gatling && !hit) || (cancel && cancellable)){
+			    if((gatling && hit) || (!gatling && !hit && !cancel) || (cancel && cancellable)){
 					SetState(key);
 					break;
 			    }
@@ -378,6 +400,15 @@ void Character::runSubroutines()
 
 void Character::updateScript(int tick, Character* opponent)
 {
+	if(isColliding(opponent)){
+		std::cout << "pushbox collision" << std::endl;
+		if(velocity.x > 0){
+			if(sign > 0)
+				opponent->MoveX(((GetPushbox().x + width) - (opponent->pos.x + opponent->posOffset.x)) + 1);
+			else
+				opponent->MoveX((GetPushbox().x - (opponent->pos.x + opponent->posOffset.x + opponent->width)) - 1);
+		}
+	}
 
 	// if (!afterImages.empty()) {
 	//     if (afterImages.size() > 8) {
@@ -472,7 +503,7 @@ void Character::updateScript(int tick, Character* opponent)
 	velocity.y += gravity;
 	   velocity.y += acceleration.y;
 	   velocity.x += acceleration.x;
-	MoveX(velocity.x * sign);
+	MoveX(velocity.x * sign * carriedMomentumPercentage);
 	MoveY(velocity.y);
 
 	if(!firstFrame)
@@ -496,11 +527,7 @@ void Character::SetFrame(const int frame)
 void Character::SetPushbox()
 {
 	if (currentFrame >= 0 && currentFrame < pushboxes.size()) {
-		rect pushbox = pushboxes[currentFrame];
-
-		if(flipped)
-			pushbox = ProcessRect(pushboxes[currentFrame]);
-
+		pushbox = ProcessRect(pushboxes[currentFrame]);
 		width = pushbox.width;
 		height = pushbox.height;
 		posOffset = glm::vec2(pushbox.x, pushbox.y);
@@ -562,13 +589,13 @@ void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& pal
 {
 	// drawPosition = pos - posOffset - glm::vec2(width, height);
 
-	for(int i = afterImages.size() - 1; i >= 0; i--){
-		spritesheet.pos = afterImages[i].pos;
-		spritesheet.SetFrame(afterImages[i].ID);
-	    float opacity = static_cast<float>(i) / (afterImages.size() - 1);
-	    spritesheet.color = {0.5f, 0.8f, 1.0f, 1.0f - opacity};
-		spritesheet.draw(paletteRenderer, palette);
-	}
+	// for(int i = afterImages.size() - 1; i >= 0; i--){
+	// 	spritesheet.pos = afterImages[i].pos;
+	// 	spritesheet.SetFrame(afterImages[i].ID);
+	//     float opacity = static_cast<float>(i) / (afterImages.size() - 1);
+	//     spritesheet.color = {0.5f, 0.8f, 1.0f, 1.0f - opacity};
+	// 	spritesheet.draw(paletteRenderer, palette);
+	// }
 
 	spritesheet.color = glm::vec4(1.0f);
 	spritesheet.pos = pos;

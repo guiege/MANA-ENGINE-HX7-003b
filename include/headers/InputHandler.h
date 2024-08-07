@@ -51,7 +51,7 @@ public:
 
 	bool checkBuffer(const std::bitset<4> &direction, bool hold);
 
-	bool checkCommand(const std::bitset<7> &direction, bool hold);
+	bool checkCommand(const std::bitset<7> &button, bool hold);
 
 	void update(const int &tick);
 

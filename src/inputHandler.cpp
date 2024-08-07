@@ -108,7 +108,7 @@ bool InputHandler::checkCommand(const std::bitset<7> &button, bool hold)
 
 	for(int i = 0; i <= buffer; i++)
 	{
-		if(std::bitset<7>((butCheck.to_ullong() >> (7 * i))) == button)
+		if ((butCheck.to_ullong() >> (7 * i)) & button.to_ullong())
 			executed = true;
 	}
 

@@ -79,6 +79,16 @@ void Spritesheet::draw(Renderer* renderer, Texture& palette)
 	}
 }
 
+void Spritesheet::drawclip(Renderer* renderer, const int x, const int y, const int w, const int h, bool rotated)
+{
+	if(renderer->isBatch){
+		renderer->DrawQuadAtlas(texture, glm::vec2(x, y), glm::vec2(w, h), rotated, pos, color);
+	}
+	else{
+		renderer->DrawTextureAtlas(texture, glm::vec2(x, y), glm::vec2(w, h), rotated, pos, color);
+	}
+}
+
 int Spritesheet::getLength()
 {
 	return (sheetindex.size() -1);

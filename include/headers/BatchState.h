@@ -2,11 +2,11 @@
 
 #include "imgui.h"
 
-#include "GameState.h"
+#include "Scene.h"
 
 #include "Camera.h"
 
-class BatchState : public GameState
+class BatchState : public Scene
 {
 public:
 	//Static accessor
