@@ -150,13 +150,13 @@ void Rollback_Init(unsigned short localport, int num_players, GGPOPlayer *player
 	gs.Init();
 
 	GGPOSessionCallbacks cb = { 0 };
-    cb.begin_game      = vw_begin_game_callback;
-    cb.advance_frame	 = vw_advance_frame_callback;
-    cb.load_game_state = vw_load_game_state_callback;
-    cb.save_game_state = vw_save_game_state_callback;
-    cb.free_buffer     = vw_free_buffer;
-    cb.on_event        = vw_on_event_callback;
-    cb.log_game_state  = vw_log_game_state;
+   cb.begin_game      = vw_begin_game_callback;
+   cb.advance_frame	 = vw_advance_frame_callback;
+   cb.load_game_state = vw_load_game_state_callback;
+   cb.save_game_state = vw_save_game_state_callback;
+   cb.free_buffer     = vw_free_buffer;
+   cb.on_event        = vw_on_event_callback;
+   cb.log_game_state  = vw_log_game_state;
 
 
     ggpo_set_disconnect_timeout(ggpo, 3000);
@@ -166,11 +166,17 @@ void Rollback_Init(unsigned short localport, int num_players, GGPOPlayer *player
 
 void Rollback_DrawCurrentFrame()
 {
+   if(renderer != nullptr){
+
+   }
 
 }
 
 void Rollback_AdvanceFrame(int inputs[], int disconnect_flags)
 {
+   gs.update(inputs, disconnect_flags);
+
+   ggpo_advance_frame(ggpo);
 
 }
 
@@ -192,4 +198,9 @@ void Rollback_DisconnectPlayer(int player)
 void Rollback_Exit()
 {
 
+}
+
+void RollbackState::enter()
+{
+   Rollback_Init();
 }
