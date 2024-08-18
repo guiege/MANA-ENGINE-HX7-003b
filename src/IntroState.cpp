@@ -100,10 +100,68 @@ bool IntroState::enter()
 	return success;
 }
 
+int IntroState::ReadInputs()
+{
+	int inputs = 0;
+
+   	if(Keys[GLFW_KEY_U])
+	{
+		inputs |= ButtonIDs::LP;
+	}
+	if(Keys[GLFW_KEY_I])
+	{
+		inputs |= ButtonIDs::MP;
+	}
+	if(Keys[GLFW_KEY_O])
+	{
+		inputs |= ButtonIDs::HP;
+	}
+
+	if(Keys[GLFW_KEY_J])
+	{
+		inputs |= ButtonIDs::LK;
+	}
+	if(Keys[GLFW_KEY_K])
+	{
+		inputs |= ButtonIDs::MK;
+	}
+	if(Keys[GLFW_KEY_L])
+	{
+		inputs |= ButtonIDs::HK;
+	}
+
+	if (Keys[GLFW_KEY_D])
+	{
+		if(testChar2->GetFlipped())
+			inputs |= ButtonIDs::BACK;
+		else
+			inputs |= ButtonIDs::FORWARD;
+	}
+	if (Keys[GLFW_KEY_A])
+	{
+		if(testChar2->GetFlipped())
+			inputs |= ButtonIDs::FORWARD;
+		else
+			inputs |= ButtonIDs::BACK;
+	}
+	if (Keys[GLFW_KEY_S])
+	{
+		inputs |= ButtonIDs::DOWN;
+	}
+	if (Keys[GLFW_KEY_SPACE])
+	{
+		inputs |= ButtonIDs::UP;
+	}
+
+	return inputs;
+}
+
 void IntroState::update(float dt)
 {
 	int present = glfwJoystickPresent(GLFW_JOYSTICK_1);
 	// std::cout << "Stick 1 is here: " << present << std::endl;
+
+	inputHandler2->registerInputs(ReadInputs());
 
 	if(1 == present)
 	{
@@ -215,60 +273,13 @@ void IntroState::update(float dt)
 		}
 	}
 
-	if(Keys[GLFW_KEY_U])
-	{
-		inputHandler2->registerInput(FK_Input_Buttons.LP);
-	}
-	if(Keys[GLFW_KEY_I])
-	{
-		inputHandler2->registerInput(FK_Input_Buttons.MP);
-	}
-	if(Keys[GLFW_KEY_O])
-	{
-		inputHandler2->registerInput(FK_Input_Buttons.HP);
-	}
-
-	if(Keys[GLFW_KEY_J])
-	{
-		inputHandler2->registerInput(FK_Input_Buttons.LK);
-	}
-	if(Keys[GLFW_KEY_K])
-	{
-		inputHandler2->registerInput(FK_Input_Buttons.MK);
-	}
-	if(Keys[GLFW_KEY_L])
-	{
-		inputHandler2->registerInput(FK_Input_Buttons.HK);
-	}
-
 	if(Keys[GLFW_KEY_R])
 	{
 		testChar->pos.x = 1500;
 		testChar2->pos.x = 2500;
 	}
 
-	if (this->Keys[GLFW_KEY_D])
-	{
-		if(testChar2->GetFlipped())
-			inputHandler2->registerInput(FK_Input_Buttons.BACK);
-		else
-			inputHandler2->registerInput(FK_Input_Buttons.FORWARD);
-	}
-	if (this->Keys[GLFW_KEY_A])
-	{
-		if(testChar2->GetFlipped())
-			inputHandler2->registerInput(FK_Input_Buttons.FORWARD);
-		else
-			inputHandler2->registerInput(FK_Input_Buttons.BACK);
-	}
-	if (this->Keys[GLFW_KEY_S])
-	{
-		inputHandler2->registerInput(FK_Input_Buttons.DOWN);
-	}
-	if (this->Keys[GLFW_KEY_SPACE])
-	{
-		inputHandler2->registerInput(FK_Input_Buttons.UP);
-	}
+
 	if(this->Keys[GLFW_KEY_LEFT])
 	{
 		cameraXPos -= 1;

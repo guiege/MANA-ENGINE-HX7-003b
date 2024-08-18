@@ -41,6 +41,8 @@ public:
 
 	void init();
 
+	void registerInputs(const int inputs);
+
 	void registerInput(const std::bitset<4> &input);
 
 	void registerInput(const std::bitset<7> &input);
@@ -59,12 +61,30 @@ public:
 
 };
 
+enum ButtonIDs {
+    UP          = (1 << 3),
+    DOWN        = (1 << 2),
+    BACK        = (1 << 1),
+    FORWARD     = (1 << 0),
+    UP_FORWARD  = UP | FORWARD,
+    UP_BACK     = UP | BACK,
+    DOWN_FORWARD = DOWN | FORWARD,
+    DOWN_BACK   = DOWN | BACK,
+    LP          = (1 << 10),
+    MP          = (1 << 9),
+    HP          = (1 << 8),
+    START       = (1 << 7),
+    LK          = (1 << 6),
+    MK          = (1 << 5),
+    HK          = (1 << 4)
+};
+
 struct {
 
 	std::bitset<4> UP 			= (1 << 3);
 	std::bitset<4> DOWN 		= (1 << 2); 
 	std::bitset<4> BACK 		= (1 << 1);
-	std::bitset<4> FORWARD 		= (1);
+	std::bitset<4> FORWARD 		= (1 << 0);
 	std::bitset<4> UP_FORWARD 	= (UP | FORWARD);
 	std::bitset<4> UP_BACK 		= (UP | BACK);
 	std::bitset<4> DOWN_FORWARD = (DOWN | FORWARD);
@@ -76,6 +96,6 @@ struct {
 	std::bitset<7> START 		= (1 << 3);
 	std::bitset<7> LK 			= (1 << 2);
 	std::bitset<7> MK 			= (1 << 1);
-	std::bitset<7> HK 			= 1;
+	std::bitset<7> HK 			= (1 << 0);
 
 } FK_Input_Buttons;

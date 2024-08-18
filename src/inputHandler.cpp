@@ -9,6 +9,15 @@ InputHandler::~InputHandler()
 void InputHandler::init()
 {}
 
+void InputHandler::registerInputs(const int inputs) //(buttons)0000000 (dirs)0000
+{
+	std::bitset<4> directions(inputs);
+	std::bitset<7> buttons(inputs >> 4);
+
+	registerInput(directions);
+	registerInput(buttons);
+}
+
 void InputHandler::registerInput(const std::bitset<4> &input)
 {
 	if((std::bitset<(buffer * 4)>(input.to_ullong()) << 4 & dirHold) == 0)
@@ -28,7 +37,6 @@ void InputHandler::registerInput(const std::bitset<7> &input)
 	butHold = butHold | std::bitset<(buffer * 7)>(input.to_ullong());
 
 }
-
 
 bool InputHandler::checkCommand(CommandSequence &c)
 {

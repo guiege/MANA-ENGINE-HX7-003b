@@ -77,7 +77,7 @@ void TextRenderer::Load(std::string font, unsigned int fontSize)
             texture,
             glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
             glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
-            face->glyph->advance.x
+            static_cast<unsigned int>(face->glyph->advance.x)
         };
         TextCharacters.insert(std::pair<char, TextCharacter>(c, character));
     }

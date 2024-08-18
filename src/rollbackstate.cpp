@@ -174,7 +174,7 @@ void Rollback_DrawCurrentFrame()
 
 void Rollback_AdvanceFrame(int inputs[], int disconnect_flags)
 {
-   gs.update(inputs, disconnect_flags);
+   // gs.update(inputs, disconnect_flags);
 
    ggpo_advance_frame(ggpo);
 
@@ -200,7 +200,24 @@ void Rollback_Exit()
 
 }
 
-void RollbackState::enter()
+bool RollbackState::enter()
 {
-   Rollback_Init();
+   // Rollback_Init();
+
+   return true;
+}
+
+bool RollbackState::exit()
+{
+   return true;
+}
+
+void RollbackState::update(float dt)
+{
+
+}
+
+void RollbackState::render()
+{
+   
 }

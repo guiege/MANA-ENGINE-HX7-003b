@@ -400,15 +400,6 @@ void Character::runSubroutines()
 
 void Character::updateScript(int tick, Character* opponent)
 {
-	if(isColliding(opponent)){
-		std::cout << "pushbox collision" << std::endl;
-		if(velocity.x > 0){
-			if(sign > 0)
-				opponent->MoveX(((GetPushbox().x + width) - (opponent->pos.x + opponent->posOffset.x)) + 1);
-			else
-				opponent->MoveX((GetPushbox().x - (opponent->pos.x + opponent->posOffset.x + opponent->width)) - 1);
-		}
-	}
 
 	// if (!afterImages.empty()) {
 	//     if (afterImages.size() > 8) {
@@ -417,6 +408,31 @@ void Character::updateScript(int tick, Character* opponent)
 	//         afterImages.push_front(AfterImage(pos, spritesheet.GetFrame()));
 	//     }
 	// }
+
+	if(isColliding(opponent)){
+		std::cout << "pushbox collision" << std::endl;
+		if(velocity.x != 0){
+			if(sign > 0)
+				opponent->MoveX(((GetPushbox().x + width) - (opponent->pos.x + opponent->posOffset.x)) + 1);
+			else
+				opponent->MoveX((GetPushbox().x - (opponent->pos.x + opponent->posOffset.x + opponent->width)) - 1);
+		}
+	}
+
+	if(yCollision){
+		handleEvent(GetCurrentState(), "TOUCH_GROUND");
+		if(GetCurrentState() == "CmnActStand"){
+			if(centerPos.x > opponent->centerPos.x)
+			{
+				SetFlipped(true);
+			} else if(centerPos.x < opponent->centerPos.x)
+			{
+				SetFlipped(false);
+			}
+		}
+		// velocity.x = 0;
+		// velocity.y = 0;
+	}
 
 	if(GetCurrentState() == "CmnActStand"){
 		if(inputHandler->checkCommand(FK_Input_Buttons.FORWARD, true)){
@@ -457,21 +473,6 @@ void Character::updateScript(int tick, Character* opponent)
 	}
 
 	checkCommands();
-
-	if(yCollision){
-		handleEvent(GetCurrentState(), "TOUCH_GROUND");
-		if(GetCurrentState() == "CmnActStand"){
-			if(centerPos.x > opponent->centerPos.x)
-			{
-				SetFlipped(true);
-			} else if(centerPos.x < opponent->centerPos.x)
-			{
-				SetFlipped(false);
-			}
-		}
-		// velocity.x = 0;
-		// velocity.y = 0;
-	}
 
 	if(slowdown > 0){
     	slowdown--;

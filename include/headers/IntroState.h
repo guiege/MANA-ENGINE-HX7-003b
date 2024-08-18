@@ -97,6 +97,8 @@ public:
 	bool enter();
 	bool exit();
 
+	int ReadInputs();
+
 	//Main loop functions
 	void update(float dt);
 	void render();
