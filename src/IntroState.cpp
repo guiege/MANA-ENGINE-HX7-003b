@@ -78,7 +78,6 @@ bool IntroState::enter()
 
 	testChar2 = new TestCharacter(inputHandler2, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 2500, 0, 4296, 15673, 0, solids);
 	testChar2->init();
-	testChar2->SetFlipped(true);
 	// actors.push_back(testChar2);
 
 	Solid platform(0, 700, 800, 800, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
@@ -158,10 +157,11 @@ int IntroState::ReadInputs()
 
 void IntroState::update(float dt)
 {
+	inputs[0] = ReadInputs();
 	int present = glfwJoystickPresent(GLFW_JOYSTICK_1);
 	// std::cout << "Stick 1 is here: " << present << std::endl;
 
-	inputHandler2->registerInputs(ReadInputs());
+	inputHandler2->registerInputs(inputs[0]);
 
 	if(1 == present)
 	{
@@ -409,8 +409,8 @@ void IntroState::update(float dt)
     float baseScale = 0.6f;
     float maxScale = 2.0f;
     float scale = 0.6f;
-    if(distance > 960)
-    	scale = baseScale + (distance / 5000.0f); // Adjust 1000.0f as needed
+    if(abs(distance) > 960)
+    	scale = baseScale + (abs(distance) / 5000.0f);
     
     cameraScale += (glm::clamp(scale, baseScale, maxScale) - cameraScale) * .1f;
 

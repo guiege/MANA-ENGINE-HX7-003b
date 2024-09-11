@@ -1,2 +1,2 @@
 all:
-	g++ -std=c++17 -Iinclude -Iinclude -Iinclude/GLFW -Iinclude/glad -Iinclude/KHR -Iinclude/fmod -Iinclude/imgui -Iinclude/freetype -Iinclude/headers -Llib -o Main src/*.cpp include/glad/glad.c include/imgui/*.cpp -lglfw3 -lopengl32 -lglu32 -lgdi32 -lfmod -lfreetype -ldwmapi -lggpo
+	g++ -std=c++17 -Iinclude -Iinclude -Iinclude/GLFW -Iinclude/glad -Iinclude/KHR -Iinclude/fmod -Iinclude/imgui -Iinclude/freetype -Iinclude/headers -Llib -o Main src/*.cpp include/glad/glad.c include/imgui/*.cpp -lglfw3 -lopengl32 -lglu32 -lgdi32 -lfmod -lfreetype -ldwmapi -lggpo -lwinmm

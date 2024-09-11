@@ -1,11 +1,13 @@
 #ifndef ROLLBACK_STATE
 #define ROLLBACK_STATE
 
+#include <windows.h>
 #include "ggponet.h"
 
 #include "imgui.h"
 
 #include "GameState.h"
+#include "NonGameState.h"
 
 #include "Scene.h"
 #include "Shader.h"
@@ -31,8 +33,17 @@ public:
 
 	//Main loop functions
 
+	int ReadInputs();
 	void update(float dt);
 	void render();
+
+	void Rollback_Init(unsigned short localport, int num_players, GGPOPlayer *players, int num_spectators);
+	void Rollback_InitSpectator(unsigned short localport, int num_players, char *host_ip, unsigned short host_port);
+	void Rollback_DrawCurrentFrame();
+	void Rollback_RunFrame();
+	void Rollback_Idle(int time);
+	void Rollback_DisconnectPlayer(int player);
+	void Rollback_Exit();
 
 private:
 	//Static instance
@@ -42,14 +53,9 @@ private:
 	RollbackState();
 };
 
-void Rollback_Init(unsigned short localport, int num_players, GGPOPlayer *players, int num_spectators);
-void Rollback_DrawCurrentFrame();
 void Rollback_AdvanceFrame(int inputs[], int disconnect_flags);
-void Rollback_RunFrame();
-void Rollback_Idle(int time);
-void Rollback_DisconnectPlayer(int player);
-void Rollback_Exit();
 
-#define FRAME_DELAY		2;
+#define ARRAY_SIZE(n)      (sizeof(n) / sizeof(n[0]))
+#define FRAME_DELAY		2
 
 #endif

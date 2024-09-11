@@ -61,6 +61,7 @@ beginState: NmlAtk5A
 		addGatlingOption: BanditBringer
 		addCancelOption: GunFlame
 		damage: 0, 56
+		physicsXImpulse: 0
 		// hitStop: 4
 		pushbackX: 100
 		// hitstunAmount: 10
@@ -85,6 +86,7 @@ beginState: NmlAtk5D
 	upon:IMMEDIATE
 		cmn_AtkLv3:
 		damage: 0, 56
+		physicsXImpulse: 0
 		pushbackX: 100
 		addCancelOption: GunFlame
 	endUpon:
@@ -229,7 +231,6 @@ beginState: GunFlame
 		cmn_AtkLv4:
 		pushbackX: 100
 		damage: 0, 40
-		addWhiffCancelOption: GunFlame
 		// hitStop: 15
 		// hitstunAmount: 20
 	endUpon:
@@ -253,6 +254,7 @@ beginState: GunFlame
 	setGravity: 3500
 	sprite: 262, 2
 	sprite: 263, 2
+	velocityXPercentEachFrame: 95
 	sprite: 264, 2
 	sprite: 265, 2
 	sprite: 266, 2

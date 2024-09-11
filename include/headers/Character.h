@@ -329,7 +329,7 @@ protected:
     //Movement Variables
     glm::vec2 velocity = {0.0f, 0.0f};
     glm::vec2 acceleration = {0.0f, 0.0f};
-    float gravity = 20.0f;
+    float gravity = 20.0f; //gravity value varys by character
     float carriedMomentumPercentage = 1.0f;
     float walkFSpeed = 7.0f;
     float walkBSpeed = 5.0f;
@@ -338,6 +338,9 @@ protected:
     float initDashFSpeed = 10.0f; // 13.1
     float dashMaxVelocity = 38.51f; // v cannot exceed 38.5
     float dashSkidDecay = 0.25f;
+
+    float velocityXPercentEachFrame = 1.0f;
+    float velocityYPercentEachFrame = 1.0f;
 
     int karaFrames = 2;
     float requestedShake = 0.0f;

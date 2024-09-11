@@ -1,6 +1,6 @@
 #include "Character.h"
 
-void Character::init()
+void Character::init() //TODO: add commands addPositionX and addPositionY, addNamerakaMoveX and Y, velocityXPercentEachFrame, haltMomentum
 {
 	motionInputs["INPUT_236"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD}, {-1, 1}, 8);
 	motionInputs["INPUT_214"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK}, {-1, 1}, 8);
@@ -187,6 +187,14 @@ void Character::init()
     	hit = false;
     };
 
+    commandMap["velocityXPercentEachFrame"] = [this](const std::vector<std::string>& params) {
+    	velocityXPercentEachFrame = stoi(params[0]) / (float)100;
+    };
+
+    commandMap["velocityYPercentEachFrame"] = [this](const std::vector<std::string>& params) {
+    	velocityYPercentEachFrame = stoi(params[0]) / (float)100;
+    };
+
 
 	// Add entries for motionInputs
 	for (const auto& [key, value] : motionInputs) {
@@ -234,6 +242,8 @@ void Character::SetState(const std::string& state)
 	hit = false;
 	cancellable = false;
 	subroutines.clear();
+	velocityXPercentEachFrame = 1.0f;
+	velocityYPercentEachFrame = 1.0f;
 	handleEvent(GetCurrentState(), "IMMEDIATE");
 
 	if(GetCurrentState() == "CmnActStand")
@@ -502,10 +512,14 @@ void Character::updateScript(int tick, Character* opponent)
 	checkCollision(opponent);
 
 	velocity.y += gravity;
-	   velocity.y += acceleration.y;
-	   velocity.x += acceleration.x;
+	velocity.y += acceleration.y;
+	velocity.x += acceleration.x;
 	MoveX(velocity.x * sign * carriedMomentumPercentage);
 	MoveY(velocity.y);
+	velocity.x *= velocityXPercentEachFrame;
+	velocity.y *= velocityYPercentEachFrame;
+
+	pos = {static_cast<int>(round(pos.x)), static_cast<int>(round(pos.y))};	
 
 	if(!firstFrame)
 		bbscriptFrameCount++;

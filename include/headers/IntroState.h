@@ -44,6 +44,9 @@ public:
 	//Static accessor
 	static IntroState* get();
 
+	int inputs[2] = { 0 };
+	int oldinputs[2] = { 0 };
+
 	int len;
 	int len2;
 	unsigned char *buffer;
@@ -51,6 +54,8 @@ public:
 
     bool save_char()
     {
+    	memcpy(oldinputs, inputs, sizeof(oldinputs));
+    	std::cout << inputs[0] << std::endl;
         if (!testChar) {
             std::cout << "testChar is null\n";
             return false;
@@ -78,6 +83,8 @@ public:
 
     bool load_char()
     {
+    	memcpy(inputs, oldinputs, sizeof(inputs));
+    	std::cout << inputs[0] << std::endl;
         if (!buffer || len == 0) {
             std::cout << "load failed: no data to load\n";
             return false;
@@ -158,8 +165,6 @@ private:
 	std::vector<Solid> solids;
 	std::vector<Actor*> actors;
 
-	std::vector<int> spdH{-1, 1, 1, 1};
-	std::vector<std::bitset<4>> spdC{FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK, FK_Input_Buttons.UP};
 };
 
 #endif
