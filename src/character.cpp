@@ -314,8 +314,47 @@ void Character::checkCollision(Character* opponent)
 						//“When you cross up someone, instead of having them face toward your character, face them the opposite direction from the way that the attacker is facing”
 						//if(crossup)
 						// opponent->SetFlipped(!flipped);
+
 						//Trades
 						//When two players hit each other with the same move. Allow players to stay in attack/active frames, not hit stun frames. This makes it easier to tell what hit they did. Otherwise no commentator would tell which move was used
+						//I think I already do this
+
+						//PREVENT UNBLOCKABLES!!!
+						//For a move that is explicitly unblockable, make sure that if the opponent is already in blockstun they are blockable.
+
+						//For crossups, you should ALWAYS have to block away from the opponent point character no matter what other crazy stuff is going on on the screen. This is to avoid having to block from two directions at once.
+
+						//For high low, light blue hurtboxes = blocking high, dark blue hurtboxes = blocking low. 
+						//During the hitstop from blocking a hit, you get pink hurtboxes meaning that you are blocking both ways, high and low. ONLY DURING THE HITSTOP, it goes back to normal afterwards so you have to guess
+
+						//ONLY ALLOW THE CHARACTER TO BE HIT BY ONE THING PER FRAME. This is to prevent strike throw unblockables.
+
+						//TODO change the character from rectangle collision to a point in space, keep the rectangle as a pushbox.
+						//Have a 'point' that is at the feet of the character. This will determine collision with the ground. During certain(mostly aerial) moves, make it so that the point can go through the floor so you can hit a short character
+
+						//Try playing a hit grunt sound(one of a set) after every hit, it is the way that old games worked and apparently it's better. Test both randomly and every hit.
+
+						//No preblock before hits. Adding a frame of preblock feels awful. Make it so that if you are in a state that can block and you are holding backwards, you are able to block.
+
+						//Stop the clock whenever characters are doing a cinematic
+						//Make it so that you can't die in the middle of cinematics, it ruins the presentation
+
+						//The person throwing another character should not be able to mess with the other character while in the throw(think mvc2 shenanigans)
+
+						//How to handle hitting multiple things: if the attack connects with 2 objects at the same time, it hits both. If the attack connects and then a few frames pass and then it connects with another object, it is used up.
+
+						//Crouch tech: decide whether it should exist(leaning towards no)
+
+						//SOCD cleaning, add it.
+
+						//DP fireball priority problem
+
+						//There is no reason ever to have a player to do a half circle, just use qc in the direction you want. Think donkey kick from SF6. Acceptable move types: qc, dp, 360, and charge up/back.
+
+						//Guard breaks should never open you up if you are blocking correctly. R. I. S. C. from gg is a good solution as it makes the scaling on the next combo greater depending on how much you have blocked. You can block
+						//forever if you guess correctly.
+
+						//Stun: getting hit more for getting hit alot is just not fun. Notable examples of good design: Marvel 2 let you get out of combos if you built enough stun.
 						break;
 					}
 				}
