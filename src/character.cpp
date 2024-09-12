@@ -311,6 +311,11 @@ void Character::checkCollision(Character* opponent)
 						opponent->hitstun = states[curstate].properties.hitstun;
 						opponent->slowdown = states[curstate].properties.slowdown;
 						opponent->firstFrameHit = true;
+						//“When you cross up someone, instead of having them face toward your character, face them the opposite direction from the way that the attacker is facing”
+						//if(crossup)
+						// opponent->SetFlipped(!flipped);
+						//Trades
+						//When two players hit each other with the same move. Allow players to stay in attack/active frames, not hit stun frames. This makes it easier to tell what hit they did. Otherwise no commentator would tell which move was used
 						break;
 					}
 				}
