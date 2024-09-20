@@ -280,6 +280,10 @@ void IntroState::update(float dt)
 	}
 
 
+	if(Keys[GLFW_KEY_U])
+		{
+			inputHandler->registerInput(FK_Input_Buttons.LP);
+		}
 	if(this->Keys[GLFW_KEY_LEFT])
 	{
 		cameraXPos -= 1;
@@ -389,8 +393,23 @@ void IntroState::update(float dt)
 		savingLoading = true;
 	}
 
-	testChar2->updateScript(tick, testChar);
 	testChar->updateScript(tick, testChar2);
+	testChar2->updateScript(tick, testChar);
+	std::string char1state = testChar->GetCurrentState();
+	std::string char2state = testChar2->GetCurrentState();
+
+	if(testChar->checkCollision(testChar2, char1state.c_str()))
+	{
+		std::cout << "Tick: " << tick;
+		testChar->hitOpponent(testChar2, char1state.c_str());
+		collisionCount++;
+	}
+	if(testChar2->checkCollision(testChar, char2state.c_str()))
+	{
+		std::cout << "Tick: " << tick;
+		testChar2->hitOpponent(testChar, char2state.c_str());
+		collisionCount++;
+	}
 	inputHandler->update(tick);
 	inputHandler2->update(tick);
 

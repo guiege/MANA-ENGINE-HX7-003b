@@ -45,6 +45,10 @@ glm::vec3 hitboxColor = {1, 60/(float)255, 40/(float)255};
 glm::vec3 hitboxSecondaryColor = {1, 175/(float)255, 175/(float)255};
 glm::vec3 pushboxColor = {30/(float)255, 220/(float)255, 0};
 glm::vec3 pushboxSecondaryColor = {130/(float)255, 1, 150/(float)255};
+int vertCrossWidth = 2;
+int vertCrossHeight = 40;
+int horiCrossWidth = 32;
+int horiCrossHeight = 1;
 bool writingBoxes = false;
 bool loadingBoxes = false;
 bool copyingBoxes = false;
@@ -426,8 +430,14 @@ void HitboxEditorState::render()
 				batchRenderer->DrawOutline({hurtboxes[spritesheetFrame][i].x, hurtboxes[spritesheetFrame][i].y}, {hurtboxes[spritesheetFrame][i].width, hurtboxes[spritesheetFrame][i].height}, 0, glm::vec4(hurtboxColor, 1.0f), 1);
 			else if(hurtboxes[spritesheetFrame][i].type == 1)
 				batchRenderer->DrawOutline({hurtboxes[spritesheetFrame][i].x, hurtboxes[spritesheetFrame][i].y}, {hurtboxes[spritesheetFrame][i].width, hurtboxes[spritesheetFrame][i].height}, 0, glm::vec4(hitboxColor, 1.0f), 1);
-			else if(hurtboxes[spritesheetFrame][i].type == 2)
-				batchRenderer->DrawOutline({hurtboxes[spritesheetFrame][i].x, hurtboxes[spritesheetFrame][i].y}, {hurtboxes[spritesheetFrame][i].width, hurtboxes[spritesheetFrame][i].height}, 0, glm::vec4(pushboxColor, 1.0f), 1);
+			else if(hurtboxes[spritesheetFrame][i].type == 2){
+				glm::vec2 pos = {hurtboxes[spritesheetFrame][i].x, hurtboxes[spritesheetFrame][i].y};
+				batchRenderer->DrawOutline(pos, {hurtboxes[spritesheetFrame][i].width, hurtboxes[spritesheetFrame][i].height}, 0, glm::vec4(pushboxColor, 1.0f), 1);
+				batchRenderer->DrawQuad(pos + glm::vec2(hurtboxes[spritesheetFrame][i].width/2 - vertCrossWidth/2, 
+										hurtboxes[spritesheetFrame][i].height - vertCrossHeight/2), glm::vec2(vertCrossWidth, vertCrossHeight), 0, glm::vec4(1.0f));
+				batchRenderer->DrawQuad(pos + glm::vec2(hurtboxes[spritesheetFrame][i].width/2 - horiCrossWidth/2,
+										 hurtboxes[spritesheetFrame][i].height - horiCrossHeight/2), glm::vec2(horiCrossWidth, horiCrossHeight), 0, glm::vec4(1.0f));
+			}
 		}
 	}
 

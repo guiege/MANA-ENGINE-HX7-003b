@@ -285,82 +285,90 @@ void Character::executeCommands()
 	}
 }
 
-void Character::checkCollision(Character* opponent)
+void Character::hitOpponent(Character* opponent, const char* curstate)
 {
-	if(!hit && hitboxes.count(currentFrame) > 0){
-		for (int i = 0; i < hitboxes[currentFrame].size(); ++i){
-			rect hitbox = ProcessRect(hitboxes[currentFrame][i]);
-			hitbox.x += pos.x;
-			hitbox.y += pos.y;
-			if(opponent->hurtboxes.count(opponent->currentFrame) > 0){
+	cancellable = true;
+	hit = true;
+	hitstop = states[curstate].properties.hitstop;
+	opponent->hitstop = states[curstate].properties.hitstop;
+	opponent->velocity.x = -(states[curstate].properties.pushbackVelocity.x * 0.0154f * states[curstate].properties.pushbackMultiplier);
+	opponent->health -= states[curstate].properties.damage;
+	opponent->hitstun = states[curstate].properties.hitstun;
+	opponent->slowdown = states[curstate].properties.slowdown;
+	opponent->firstFrameHit = true;
+	handleEvent(GetCurrentState(), "HIT");
+	opponent->SetState("CmnActHighGuardLoop");
+	std::cout << opponent->hitstun << std::endl;
+	// handleEvent(currentState, "HIT_OR_GUARD");
+}
+
+bool Character::checkCollision(Character* opponent, const char* curstate)
+{
+	if(!hit && !opponent->firstFrameHit && hitboxes.count(currentFrame) > 0){ //POTENTIAL BUG WARNING: MULTIHITS DONT WORK IF THEY OCCUR THE FRAME AFTER. PLS FIX
+		if(opponent->hurtboxes.count(opponent->currentFrame) > 0){
+			for(int i = 0; i < hitboxes[currentFrame].size(); i++){
+				rect hitbox = ProcessRect(hitboxes[currentFrame][i]);
+				hitbox.x += pos.x;
+				hitbox.y += pos.y;
 				for (int j = 0; j < opponent->hurtboxes[opponent->currentFrame].size(); ++j){
 					rect hurtbox = opponent->ProcessRect(opponent->hurtboxes[opponent->currentFrame][j]);
 					hurtbox.x += opponent->pos.x;
 					hurtbox.y += opponent->pos.y;
 					if(intersect(hitbox, hurtbox) && !hit){
-						std::string curstate = GetCurrentState();
-						handleEvent(GetCurrentState(), "HIT");
-						// handleEvent(currentState, "HIT_OR_GUARD");
-						cancellable = true;
-						hit = true;
-						opponent->SetState("CmnActHighGuardLoop");
-						hitstop = states[curstate].properties.hitstop;
-						opponent->hitstop = states[curstate].properties.hitstop;
-						opponent->velocity.x = -(states[curstate].properties.pushbackVelocity.x * 0.0154f * states[curstate].properties.pushbackMultiplier);
-						opponent->health -= states[curstate].properties.damage;
-						opponent->hitstun = states[curstate].properties.hitstun;
-						opponent->slowdown = states[curstate].properties.slowdown;
-						opponent->firstFrameHit = true;
-						//“When you cross up someone, instead of having them face toward your character, face them the opposite direction from the way that the attacker is facing”
-						//if(crossup)
-						// opponent->SetFlipped(!flipped);
+						// hitOpponent(opponent, curstate);
+						return true;
+								//“When you cross up someone, instead of having them face toward your character, face them the opposite direction from the way that the attacker is facing”
+								//if(crossup)
+								// opponent->SetFlipped(!flipped);
 
-						//Trades
-						//When two players hit each other with the same move. Allow players to stay in attack/active frames, not hit stun frames. This makes it easier to tell what hit they did. Otherwise no commentator would tell which move was used
-						//I think I already do this
+								//Trades
+								//When two players hit each other with the same move. Allow players to stay in attack/active frames, not hit stun frames. This makes it easier to tell what hit they did. Otherwise no commentator would tell which move was used
+								//I think I already do this
 
-						//PREVENT UNBLOCKABLES!!!
-						//For a move that is explicitly unblockable, make sure that if the opponent is already in blockstun they are blockable.
+								//PREVENT UNBLOCKABLES!!!
+								//For a move that is explicitly unblockable, make sure that if the opponent is already in blockstun they are blockable.
 
-						//For crossups, you should ALWAYS have to block away from the opponent point character no matter what other crazy stuff is going on on the screen. This is to avoid having to block from two directions at once.
+								//For crossups, you should ALWAYS have to block away from the opponent point character no matter what other crazy stuff is going on on the screen. This is to avoid having to block from two directions at once.
 
-						//For high low, light blue hurtboxes = blocking high, dark blue hurtboxes = blocking low. 
-						//During the hitstop from blocking a hit, you get pink hurtboxes meaning that you are blocking both ways, high and low. ONLY DURING THE HITSTOP, it goes back to normal afterwards so you have to guess
+								//For high low, light blue hurtboxes = blocking high, dark blue hurtboxes = blocking low. 
+								//During the hitstop from blocking a hit, you get pink hurtboxes meaning that you are blocking both ways, high and low. ONLY DURING THE HITSTOP, it goes back to normal afterwards so you have to guess
 
-						//ONLY ALLOW THE CHARACTER TO BE HIT BY ONE THING PER FRAME. This is to prevent strike throw unblockables.
+								//ONLY ALLOW THE CHARACTER TO BE HIT BY ONE THING PER FRAME. This is to prevent strike throw unblockables.
 
-						//TODO change the character from rectangle collision to a point in space, keep the rectangle as a pushbox.
-						//Have a 'point' that is at the feet of the character. This will determine collision with the ground. During certain(mostly aerial) moves, make it so that the point can go through the floor so you can hit a short character
+								//TODO change the character from rectangle collision to a point in space, keep the rectangle as a pushbox.
+								//Have a 'point' that is at the feet of the character. This will determine collision with the ground. During certain(mostly aerial) moves, make it so that the point can go through the floor so you can hit a short character
 
-						//Try playing a hit grunt sound(one of a set) after every hit, it is the way that old games worked and apparently it's better. Test both randomly and every hit.
+								//Try playing a hit grunt sound(one of a set) after every hit, it is the way that old games worked and apparently it's better. Test both randomly and every hit.
 
-						//No preblock before hits. Adding a frame of preblock feels awful. Make it so that if you are in a state that can block and you are holding backwards, you are able to block.
+								//No preblock before hits. Adding a frame of preblock feels awful. Make it so that if you are in a state that can block and you are holding backwards, you are able to block.
 
-						//Stop the clock whenever characters are doing a cinematic
-						//Make it so that you can't die in the middle of cinematics, it ruins the presentation
+								//Stop the clock whenever characters are doing a cinematic
+								//Make it so that you can't die in the middle of cinematics, it ruins the presentation
 
-						//The person throwing another character should not be able to mess with the other character while in the throw(think mvc2 shenanigans)
+								//The person throwing another character should not be able to mess with the other character while in the throw(think mvc2 shenanigans)
 
-						//How to handle hitting multiple things: if the attack connects with 2 objects at the same time, it hits both. If the attack connects and then a few frames pass and then it connects with another object, it is used up.
+								//How to handle hitting multiple things: if the attack connects with 2 objects at the same time, it hits both. If the attack connects and then a few frames pass and then it connects with another object, it is used up.
 
-						//Crouch tech: decide whether it should exist(leaning towards no)
+								//Crouch tech: decide whether it should exist(leaning towards no)
 
-						//SOCD cleaning, add it.
+								//SOCD cleaning, add it.
 
-						//DP fireball priority problem
+								//DP fireball priority problem
 
-						//There is no reason ever to have a player to do a half circle, just use qc in the direction you want. Think donkey kick from SF6. Acceptable move types: qc, dp, 360, and charge up/back.
+								//There is no reason ever to have a player to do a half circle, just use qc in the direction you want. Think donkey kick from SF6. Acceptable move types: qc, dp, 360, and charge up/back.
 
-						//Guard breaks should never open you up if you are blocking correctly. R. I. S. C. from gg is a good solution as it makes the scaling on the next combo greater depending on how much you have blocked. You can block
-						//forever if you guess correctly.
+								//Guard breaks should never open you up if you are blocking correctly. R. I. S. C. from gg is a good solution as it makes the scaling on the next combo greater depending on how much you have blocked. You can block
+								//forever if you guess correctly.
 
-						//Stun: getting hit more for getting hit alot is just not fun. Notable examples of good design: Marvel 2 let you get out of combos if you built enough stun.
-						break;
+								//Stun: getting hit more for getting hit alot is just not fun. Notable examples of good design: Marvel 2 let you get out of combos if you built enough stun.
+
+								//TODO: REMAKE THE UNIST PREMATCH VERSUS SCREEN WITH SFX AND EVERYTHINGhandleEvent(GetCurrentState(), "HIT");
 					}
 				}
 			}
 		}
 	}
+	return false;
 
 }
 
@@ -547,13 +555,14 @@ void Character::updateScript(int tick, Character* opponent)
     if(hitstun > 0)
     	hitstun--;
 
-    if(firstFrameHit)
+
+    if(firstFrameHit){
 		firstFrameHit = false;
+    }
 
 	executeCommands();
 	update(tick);
 	runSubroutines();
-	checkCollision(opponent);
 
 	velocity.y += gravity;
 	velocity.y += acceleration.y;

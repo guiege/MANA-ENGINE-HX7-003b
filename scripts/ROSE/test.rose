@@ -68,7 +68,7 @@ beginState: NmlAtk5A
 	endUpon:
 
 	upon: HIT
-		cmn_screenshake: 20
+		cmn_screenshake:10
 	endUpon:
 
 	sprite: 31, 2
@@ -92,17 +92,16 @@ beginState: NmlAtk5D
 	endUpon:
 
 	upon: HIT
-		cmn_screenshake: 60
+		cmn_screenshake: 40
 	endUpon:
 
-	sprite: 39, 4
-	sprite: 40, 4
-	sprite: 41, 4
-	sprite: 42, 4
-	hit:
-	cmn_screenshake: 30
-	sprite: 43, 7
-	sprite: 44, 7
+	sprite: 39, 3
+	sprite: 40, 3
+	sprite: 41, 3
+	sprite: 42, 3
+	cmn_screenshake: 15
+	sprite: 43, 3
+	sprite: 44, 3
 	sprite: 45, 7
 	sprite: 46, 7
 	sprite: 47, 7
@@ -275,6 +274,11 @@ beginState: BanditBringer
 		setCarriedMomentumPercentage: 150
 		addGatlingOption: NmlAtk5D
 		// hitStop: 7
+	endUpon:
+
+	upon: HIT
+		cmn_screenshake: 20
+		// slowdown: 100
 	endUpon:
 
 	//physicsXImpulse: 20000

@@ -52,6 +52,8 @@ public:
 	unsigned char *buffer;
 	unsigned char *buffer2;
 
+	int collisionCount = 0;
+
     bool save_char()
     {
     	memcpy(oldinputs, inputs, sizeof(oldinputs));

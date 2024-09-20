@@ -87,8 +87,10 @@ public:
     void updateScript(int tick, Character* opponent);
     void runSubroutines();
     void checkCommands();
-    void checkCollision(Character* opponent);
+    bool checkCollision(Character* opponent, const char* curstate);
     void executeCommands();
+
+    void hitOpponent(Character* opponent, const char* curstate);
 
     void draw(Renderer* renderer);
     void draw(Renderer* renderer, Renderer* paletteRenderer, Texture& palette);
@@ -301,8 +303,6 @@ protected:
     int framesUntilNextCommand = 0;
     bool firstFrame = false;
     bool firstFrameHit = false;
-
-
 
     //Hitboxes
     std::map<int, std::vector<rect>> hurtboxes;
