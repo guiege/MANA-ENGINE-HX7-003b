@@ -71,7 +71,7 @@ beginState: NmlAtk5A
 		cmn_screenshake:10
 	endUpon:
 
-	sprite: 31, 2
+	sprite: 31, 3
 	sprite: 32, 2
 	sprite: 33, 2
 	sprite: 34, 2
@@ -99,6 +99,7 @@ beginState: NmlAtk5D
 	sprite: 40, 3
 	sprite: 41, 3
 	sprite: 42, 3
+
 	cmn_screenshake: 15
 	sprite: 43, 3
 	sprite: 44, 3

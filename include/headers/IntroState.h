@@ -52,8 +52,6 @@ public:
 	unsigned char *buffer;
 	unsigned char *buffer2;
 
-	int collisionCount = 0;
-
     bool save_char()
     {
     	memcpy(oldinputs, inputs, sizeof(oldinputs));
@@ -155,6 +153,7 @@ private:
 	float cameraYPos = 0;
 	float cameraRot = 0.0f;
 	float cameraScale = 1.0f;
+	float cameraSnap = 0.3f;
 	double lastX = 0.0, lastY = 0.0;
 	bool isPanning = false;
 	int cameraMinPos = 40;

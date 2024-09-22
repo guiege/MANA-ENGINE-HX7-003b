@@ -87,7 +87,7 @@ public:
     void updateScript(int tick, Character* opponent);
     void runSubroutines();
     void checkCommands();
-    bool checkCollision(Character* opponent, const char* curstate);
+    bool checkCollision(Character* opponent);
     void executeCommands();
 
     void hitOpponent(Character* opponent, const char* curstate);
@@ -142,6 +142,10 @@ public:
     }
 
     void callSubroutine(const std::string& subroutine);
+
+    void clearSubroutines(){
+        subroutines = "";
+    }
 
     rect ProcessRect(const rect& r);
 
@@ -295,6 +299,8 @@ protected:
     bool cancellable = false;
     bool hit = false;
 
+    bool blocking = false;
+
     //Animation Variables
     int currentFrame = 0;
     int currentLine = 0;
@@ -312,6 +318,7 @@ protected:
     glm::vec3 hurtboxColor = {10/(float)255, 185/(float)255, 230/(float)255};
     glm::vec3 pushboxColor = {130/(float)255, 1, 150/(float)255};
     glm::vec3 hitboxColor = {1, 175/(float)255, 175/(float)255};
+    glm::vec3 blockingHighColor = {0, 0, 1};
 
     //Drawing Variables
     glm::vec2 drawPosition = {0.0f, 0.0f};

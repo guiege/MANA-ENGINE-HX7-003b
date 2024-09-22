@@ -272,9 +272,9 @@ int main()
         }
 
         while(accumulator >= 1.0 / 60.0 && (!gCurrentState->paused || gCurrentState->advanceFrame)){
-            gCurrentState->update(dt);
+            // gCurrentState->update(dt);
             if(gCurrentState->doneLoading){
-                gCurrentState->tick++;
+                // gCurrentState->tick++;
                 if(gCurrentState->desiredState > 0){
                     if(gCurrentState->desiredState == 1){
                         setNextState(IntroState::get());
@@ -403,6 +403,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    if(key == GLFW_KEY_SPACE && action == GLFW_PRESS){
+        gCurrentState->update(1.0f);
+        gCurrentState->tick++;
+    }
 
     if (key >= 0 && key < 1024)
     {

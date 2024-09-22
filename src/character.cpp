@@ -1,5 +1,52 @@
 #include "Character.h"
 
+//“When you cross up someone, instead of having them face toward your character, face them the opposite direction from the way that the attacker is facing”
+//if(crossup)
+// opponent->SetFlipped(!flipped);
+
+//Trades
+//When two players hit each other with the same move. Allow players to stay in attack/active frames, not hit stun frames. This makes it easier to tell what hit they did. Otherwise no commentator would tell which move was used
+//I think I already do this
+
+//PREVENT UNBLOCKABLES!!!
+//For a move that is explicitly unblockable, make sure that if the opponent is already in blockstun they are blockable.
+
+//For crossups, you should ALWAYS have to block away from the opponent point character no matter what other crazy stuff is going on on the screen. This is to avoid having to block from two directions at once.
+
+//For high low, light blue hurtboxes = blocking high, dark blue hurtboxes = blocking low. 
+//During the hitstop from blocking a hit, you get pink hurtboxes meaning that you are blocking both ways, high and low. ONLY DURING THE HITSTOP, it goes back to normal afterwards so you have to guess
+
+//ONLY ALLOW THE CHARACTER TO BE HIT BY ONE THING PER FRAME. This is to prevent strike throw unblockables.
+
+//TODO change the character from rectangle collision to a point in space, keep the rectangle as a pushbox.
+//Have a 'point' that is at the feet of the character. This will determine collision with the ground. During certain(mostly aerial) moves, make it so that the point can go through the floor so you can hit a short character
+
+//Try playing a hit grunt sound(one of a set) after every hit, it is the way that old games worked and apparently it's better. Test both randomly and every hit.
+
+//No preblock before hits. Adding a frame of preblock feels awful. Make it so that if you are in a state that can block and you are holding backwards, you are able to block.
+
+//Stop the clock whenever characters are doing a cinematic
+//Make it so that you can't die in the middle of cinematics, it ruins the presentation
+
+//The person throwing another character should not be able to mess with the other character while in the throw(think mvc2 shenanigans)
+
+//How to handle hitting multiple things: if the attack connects with 2 objects at the same time, it hits both. If the attack connects and then a few frames pass and then it connects with another object, it is used up.
+
+//Crouch tech: decide whether it should exist(leaning towards no)
+
+//SOCD cleaning, add it.
+
+//DP fireball priority problem
+
+//There is no reason ever to have a player to do a half circle, just use qc in the direction you want. Think donkey kick from SF6. Acceptable move types: qc, dp, 360, and charge up/back.
+
+//Guard breaks should never open you up if you are blocking correctly. R. I. S. C. from gg is a good solution as it makes the scaling on the next combo greater depending on how much you have blocked. You can block
+//forever if you guess correctly.
+
+//Stun: getting hit more for getting hit alot is just not fun. Notable examples of good design: Marvel 2 let you get out of combos if you built enough stun.
+
+//TODO: get the fireball that moves on the beat working in game and see what consequences it has. More ideas will come naturally from there.
+
 void Character::init() //TODO: add commands addPositionX and addPositionY, addNamerakaMoveX and Y, velocityXPercentEachFrame, haltMomentum
 {
 	motionInputs["INPUT_236"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD}, {-1, 1}, 8);
@@ -23,6 +70,9 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 	motionInputs["INPUT_8"] = CommandSequence({FK_Input_Buttons.UP}, {-1}, 8);
 	motionInputs["INPUT_87"] = CommandSequence({FK_Input_Buttons.UP_BACK}, {-1}, 8);
 	motionInputs["INPUT_89"] = CommandSequence({FK_Input_Buttons.UP_FORWARD}, {-1}, 8);
+
+	motionInputs["INPUT_HOLD_4"] = CommandSequence({FK_Input_Buttons.BACK}, {-1}, 8);
+	motionInputs["INPUT_HOLD_6"] = CommandSequence({FK_Input_Buttons.FORWARD}, {-1}, 8);
 
 	buttons["INPUT_PRESS_LP"] = Button(FK_Input_Buttons.LP, false);
 	buttons["INPUT_PRESS_MP"] = Button(FK_Input_Buttons.MP, false);
@@ -254,6 +304,11 @@ void Character::SetState(const std::string& state)
 
 void Character::executeCommands()
 {
+	if (framesUntilNextCommand == 0 && currentLine >= states[GetCurrentState()].instructions.size()) {
+	    //current state animation has finished
+		SetState("CmnActStand");
+	}
+	
     if (framesUntilNextCommand > 0) {
         framesUntilNextCommand--;
         return;
@@ -268,21 +323,13 @@ void Character::executeCommands()
             currentLine++;
 
 	        if (framesUntilNextCommand > 0) {
-	            return;
+	            break;
 	        }
         } else {
             std::cout << "Unknown command: " << states[GetCurrentState()].instructions[currentLine].command << std::endl;
             currentLine++;
         }
     }
-
-	if (currentLine >= states[GetCurrentState()].instructions.size()) {
-	    if (framesUntilNextCommand > 0) {
-	        return; 
-	    }
-	    //current state animation has finished
-		SetState("CmnActStand");
-	}
 }
 
 void Character::hitOpponent(Character* opponent, const char* curstate)
@@ -302,9 +349,9 @@ void Character::hitOpponent(Character* opponent, const char* curstate)
 	// handleEvent(currentState, "HIT_OR_GUARD");
 }
 
-bool Character::checkCollision(Character* opponent, const char* curstate)
+bool Character::checkCollision(Character* opponent)
 {
-	if(!hit && !opponent->firstFrameHit && hitboxes.count(currentFrame) > 0){ //POTENTIAL BUG WARNING: MULTIHITS DONT WORK IF THEY OCCUR THE FRAME AFTER. PLS FIX
+	if(!hit && !opponent->firstFrameHit && hitboxes.count(currentFrame) > 0){
 		if(opponent->hurtboxes.count(opponent->currentFrame) > 0){
 			for(int i = 0; i < hitboxes[currentFrame].size(); i++){
 				rect hitbox = ProcessRect(hitboxes[currentFrame][i]);
@@ -315,54 +362,7 @@ bool Character::checkCollision(Character* opponent, const char* curstate)
 					hurtbox.x += opponent->pos.x;
 					hurtbox.y += opponent->pos.y;
 					if(intersect(hitbox, hurtbox) && !hit){
-						// hitOpponent(opponent, curstate);
 						return true;
-								//“When you cross up someone, instead of having them face toward your character, face them the opposite direction from the way that the attacker is facing”
-								//if(crossup)
-								// opponent->SetFlipped(!flipped);
-
-								//Trades
-								//When two players hit each other with the same move. Allow players to stay in attack/active frames, not hit stun frames. This makes it easier to tell what hit they did. Otherwise no commentator would tell which move was used
-								//I think I already do this
-
-								//PREVENT UNBLOCKABLES!!!
-								//For a move that is explicitly unblockable, make sure that if the opponent is already in blockstun they are blockable.
-
-								//For crossups, you should ALWAYS have to block away from the opponent point character no matter what other crazy stuff is going on on the screen. This is to avoid having to block from two directions at once.
-
-								//For high low, light blue hurtboxes = blocking high, dark blue hurtboxes = blocking low. 
-								//During the hitstop from blocking a hit, you get pink hurtboxes meaning that you are blocking both ways, high and low. ONLY DURING THE HITSTOP, it goes back to normal afterwards so you have to guess
-
-								//ONLY ALLOW THE CHARACTER TO BE HIT BY ONE THING PER FRAME. This is to prevent strike throw unblockables.
-
-								//TODO change the character from rectangle collision to a point in space, keep the rectangle as a pushbox.
-								//Have a 'point' that is at the feet of the character. This will determine collision with the ground. During certain(mostly aerial) moves, make it so that the point can go through the floor so you can hit a short character
-
-								//Try playing a hit grunt sound(one of a set) after every hit, it is the way that old games worked and apparently it's better. Test both randomly and every hit.
-
-								//No preblock before hits. Adding a frame of preblock feels awful. Make it so that if you are in a state that can block and you are holding backwards, you are able to block.
-
-								//Stop the clock whenever characters are doing a cinematic
-								//Make it so that you can't die in the middle of cinematics, it ruins the presentation
-
-								//The person throwing another character should not be able to mess with the other character while in the throw(think mvc2 shenanigans)
-
-								//How to handle hitting multiple things: if the attack connects with 2 objects at the same time, it hits both. If the attack connects and then a few frames pass and then it connects with another object, it is used up.
-
-								//Crouch tech: decide whether it should exist(leaning towards no)
-
-								//SOCD cleaning, add it.
-
-								//DP fireball priority problem
-
-								//There is no reason ever to have a player to do a half circle, just use qc in the direction you want. Think donkey kick from SF6. Acceptable move types: qc, dp, 360, and charge up/back.
-
-								//Guard breaks should never open you up if you are blocking correctly. R. I. S. C. from gg is a good solution as it makes the scaling on the next combo greater depending on how much you have blocked. You can block
-								//forever if you guess correctly.
-
-								//Stun: getting hit more for getting hit alot is just not fun. Notable examples of good design: Marvel 2 let you get out of combos if you built enough stun.
-
-								//TODO: REMAKE THE UNIST PREMATCH VERSUS SCREEN WITH SFX AND EVERYTHINGhandleEvent(GetCurrentState(), "HIT");
 					}
 				}
 			}
@@ -683,7 +683,11 @@ void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& pal
 	if(hurtboxes.count(currentFrame) > 0){
 		for (int i = 0; i < hurtboxes[currentFrame].size(); ++i){
 			rect hurtbox = ProcessRect(hurtboxes[currentFrame][i]);
-			renderer->DrawOutline({pos.x + hurtbox.x, pos.y + hurtbox.y}, {hurtbox.width, hurtbox.height}, 0, glm::vec4(hurtboxColor, 1.0f), 1);
+			glm::vec4 color(hurtboxColor, 1.0f);
+			if(blocking)
+				color = glm::vec4(blockingHighColor, 1.0f);
+
+			renderer->DrawOutline({pos.x + hurtbox.x, pos.y + hurtbox.y}, {hurtbox.width, hurtbox.height}, 0, color, 1);
 		}
 	}
 

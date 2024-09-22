@@ -398,17 +398,13 @@ void IntroState::update(float dt)
 	std::string char1state = testChar->GetCurrentState();
 	std::string char2state = testChar2->GetCurrentState();
 
-	if(testChar->checkCollision(testChar2, char1state.c_str()))
+	if(testChar->checkCollision(testChar2))
 	{
-		std::cout << "Tick: " << tick;
 		testChar->hitOpponent(testChar2, char1state.c_str());
-		collisionCount++;
 	}
-	if(testChar2->checkCollision(testChar, char2state.c_str()))
+	if(testChar2->checkCollision(testChar))
 	{
-		std::cout << "Tick: " << tick;
 		testChar2->hitOpponent(testChar, char2state.c_str());
-		collisionCount++;
 	}
 	inputHandler->update(tick);
 	inputHandler2->update(tick);
@@ -416,8 +412,8 @@ void IntroState::update(float dt)
 	float distance = testChar2->GetCenterPos().x - testChar->GetCenterPos().x;
 	float distanceY = testChar2->GetCenterPos().y - testChar->GetCenterPos().y;
 
-	cameraXPos += (abs(testChar2->GetCenterPos().x - (distance)/2) - cameraXPos) * .1f;
-	cameraYPos += (abs(testChar2->GetCenterPos().y - (distanceY)/2) - cameraYPos) * .1f;
+	cameraXPos += (abs(testChar2->GetCenterPos().x - (distance)/2) - cameraXPos) * cameraSnap;
+	cameraYPos += (abs(testChar2->GetCenterPos().y - (distanceY)/2) - cameraYPos) * cameraSnap;
 
 	if(cameraXPos < cameraMinPos)
 		cameraXPos = cameraMinPos;
