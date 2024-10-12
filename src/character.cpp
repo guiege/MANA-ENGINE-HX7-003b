@@ -45,7 +45,8 @@
 
 //Stun: getting hit more for getting hit alot is just not fun. Notable examples of good design: Marvel 2 let you get out of combos if you built enough stun.
 
-//TODO: get the fireball that moves on the beat working in game and see what consequences it has. More ideas will come naturally from there.
+//TODO: get the fireball that moves on the beat working in game and see what consequences it has. More ideas will come naturally from there. Get overheads working and make it so that overheads only come out when executed off beat. They don't have to
+		//be telegraphed as much because you breaking the rhythm is an indicator.
 
 void Character::init() //TODO: add commands addPositionX and addPositionY, addNamerakaMoveX and Y, velocityXPercentEachFrame, haltMomentum
 {
@@ -94,7 +95,7 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 		if (params.empty()) return;
 		// std::cout << "Setting sprite to " << params[0] << " for " << params[1] << " frames" << std::endl;
 		SetFrame(stoi(params[0]));
-		framesUntilNextCommand = stoi(params[1]) - 1;
+		framesUntilNextCommand = stoi(params[1]); // -1 or no? Make up your mind on a consistent system
 	};
 
 	commandMap["setCarriedMomentumPercentage"] = [this](const std::vector<std::string>& params) {
@@ -128,7 +129,7 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 
     commandMap["gotoLabel"] = [this](const std::vector<std::string>& params) {
     	// std::cout << "Going to label: " << params[0] << " at line: " << states[currentState].labels[params[0]] << std::endl;
-    	currentLine = states[GetCurrentState()].labels[params[0]] - 1;
+    	currentLine = states[GetCurrentState()].labels[params[0]];
     };
 
     commandMap["addCancelOption"] = [this](const std::vector<std::string>& params) {
@@ -170,6 +171,10 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
     };
 
     commandMap["pushbackX"] = [this](const std::vector<std::string>& params) {
+    	states[GetCurrentState()].properties.pushbackMultiplier = stoi(params[0]) / 100.0f;
+    };
+
+    commandMap["hitAirPushbackY"] = [this](const std::vector<std::string>& params) {
     	states[GetCurrentState()].properties.pushbackMultiplier = stoi(params[0]) / 100.0f;
     };
 
@@ -262,7 +267,6 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 	int count = 0;
 
     for (const auto& [key, value] : states) {
-    	std::cout << key << std::endl;
 	    stateIDs[key] = count;
 	    stateNames[count] = key;
 	    count++;
@@ -291,13 +295,17 @@ void Character::SetState(const std::string& state)
 	states[GetCurrentState()].whiffCancelOptions.clear();
 	hit = false;
 	cancellable = false;
+	stateTouchedGround = false;
+	stateLeftGround = false;
 	subroutines.clear();
 	velocityXPercentEachFrame = 1.0f;
 	velocityYPercentEachFrame = 1.0f;
 	handleEvent(GetCurrentState(), "IMMEDIATE");
 
-	if(GetCurrentState() == "CmnActStand")
+	if(GetCurrentState() == "CmnActStand"){
+		actionable = true;
 		addWhiffCancelOption("cmnNandemoCancel");
+	}
 	if(GetCurrentState() == "CmnActFWalk")
 		addWhiffCancelOption("CmnActFDash");
 }
@@ -311,10 +319,9 @@ void Character::executeCommands()
 	
     if (framesUntilNextCommand > 0) {
         framesUntilNextCommand--;
-        return;
     }
 
-    while (currentLine < states[GetCurrentState()].instructions.size()) {
+    while (framesUntilNextCommand == 0 && currentLine < states[GetCurrentState()].instructions.size()) {
         auto it = commandMap.find(states[GetCurrentState()].instructions[currentLine].command);
         if (it != commandMap.end()) {
         	framesUntilNextCommand = 0;
@@ -322,9 +329,8 @@ void Character::executeCommands()
             lastCommandExecuted = bbscriptFrameCount;
             currentLine++;
 
-	        if (framesUntilNextCommand > 0) {
-	            break;
-	        }
+            if(framesUntilNextCommand > 0) 
+	        	break;
         } else {
             std::cout << "Unknown command: " << states[GetCurrentState()].instructions[currentLine].command << std::endl;
             currentLine++;
@@ -338,35 +344,43 @@ void Character::hitOpponent(Character* opponent, const char* curstate)
 	hit = true;
 	hitstop = states[curstate].properties.hitstop;
 	opponent->hitstop = states[curstate].properties.hitstop;
-	opponent->velocity.x = -(states[curstate].properties.pushbackVelocity.x * 0.0154f * states[curstate].properties.pushbackMultiplier);
+	opponent->actionable = false;
+	if(opponent->xCollision)
+		velocity.x = -(states[curstate].properties.pushbackVelocity.x * 0.0154f * states[curstate].properties.pushbackMultiplier);
+	else
+		opponent->velocity.x = -(states[curstate].properties.pushbackVelocity.x * 0.0154f * states[curstate].properties.pushbackMultiplier);
 	opponent->health -= states[curstate].properties.damage;
 	opponent->hitstun = states[curstate].properties.hitstun;
 	opponent->slowdown = states[curstate].properties.slowdown;
 	opponent->firstFrameHit = true;
 	handleEvent(GetCurrentState(), "HIT");
 	opponent->SetState("CmnActHighGuardLoop");
-	std::cout << opponent->hitstun << std::endl;
 	// handleEvent(currentState, "HIT_OR_GUARD");
 }
 
 bool Character::checkCollision(Character* opponent)
 {
-	if(!hit && !opponent->firstFrameHit && hitboxes.count(currentFrame) > 0){
-		if(opponent->hurtboxes.count(opponent->currentFrame) > 0){
-			for(int i = 0; i < hitboxes[currentFrame].size(); i++){
-				rect hitbox = ProcessRect(hitboxes[currentFrame][i]);
-				hitbox.x += pos.x;
-				hitbox.y += pos.y;
-				for (int j = 0; j < opponent->hurtboxes[opponent->currentFrame].size(); ++j){
-					rect hurtbox = opponent->ProcessRect(opponent->hurtboxes[opponent->currentFrame][j]);
-					hurtbox.x += opponent->pos.x;
-					hurtbox.y += opponent->pos.y;
-					if(intersect(hitbox, hurtbox) && !hit){
-						return true;
+	if(hitboxes.count(currentFrame) > 0){
+		hitboxActive = true;
+		if(!hit && !opponent->firstFrameHit){
+			if(opponent->hurtboxes.count(opponent->currentFrame) > 0){
+				for(int i = 0; i < hitboxes[currentFrame].size(); i++){
+					rect hitbox = ProcessRect(hitboxes[currentFrame][i]);
+					hitbox.x += pos.x;
+					hitbox.y += pos.y;
+					for (int j = 0; j < opponent->hurtboxes[opponent->currentFrame].size(); ++j){
+						rect hurtbox = opponent->ProcessRect(opponent->hurtboxes[opponent->currentFrame][j]);
+						hurtbox.x += opponent->pos.x;
+						hurtbox.y += opponent->pos.y;
+						if(intersect(hitbox, hurtbox) && !hit){
+							return true;
+						}
 					}
 				}
 			}
 		}
+	} else{
+		hitboxActive = false;
 	}
 	return false;
 
@@ -374,11 +388,15 @@ bool Character::checkCollision(Character* opponent)
 
 void Character::checkCommands()
 {
+	std::string curstate = GetCurrentState();
+	if(buttonMap["INPUT_HOLD_4"] && std::find(validBlockingStates.begin(), validBlockingStates.end(), curstate) != validBlockingStates.end())
+		blocking = true;
+	else
+		blocking = false;
 
 	for (const auto & [ key, value ] : states) {
 		bool gatling = false;
 		bool cancel = false;
-		std::string curstate = GetCurrentState();
 		if((std::find(states[curstate].gatlingOptions.begin(), states[curstate].gatlingOptions.end(), key) != states[curstate].gatlingOptions.end()) 
 			|| (std::find(states[curstate].gatlingOptions.begin(), states[curstate].gatlingOptions.end(), "cmnNandemoCancel") != states[curstate].gatlingOptions.end())){
 			gatling = true;
@@ -401,8 +419,9 @@ void Character::checkCommands()
 			    {
 			    	if(buttonMap[value.properties.moveInput[1]]){
 					    if((gatling && hit) || (!gatling && !hit && !cancel) || (cancel && cancellable)){
+					    	actionable = false;
 							SetState(key);
-							break;
+							return;
 					    }
 					}
 			    }
@@ -413,8 +432,9 @@ void Character::checkCommands()
 			if(buttonMap[value.properties.moveInput[0]])
 			{
 			    if((gatling && hit) || (!gatling && !hit && !cancel) || (cancel && cancellable)){
+			    	actionable = false;
 					SetState(key);
-					break;
+					return;
 			    }
 			}
 		}
@@ -432,7 +452,7 @@ void Character::callSubroutine(const std::string& subroutine)
 void Character::runSubroutines()
 {
 	if(subroutines.find("cmnHighGuard") != std::string::npos){
-		if(hitstun > 0){
+		if(hitstun > guardEndStart){
 	    	// std::cout << hitstun << std::endl;
 	    	// std::cout << currentState << std::endl;
 			if(!firstFrameHit)
@@ -445,7 +465,7 @@ void Character::runSubroutines()
 	}
 
 	if(subroutines.find("cmnFDashStop") != std::string::npos){
-		velocity.x -= velocity.x * dashSkidDecay; //Dash skidding has no acceleration and is just friction til the end
+		velocity.x *= dashSkidDecay; //Dash skidding has no acceleration and is just friction til the end
 		if(velocity.x < 0.2)
 			velocity.x = 0;
 	} else if(subroutines.find("cmnFDash") != std::string::npos){
@@ -463,6 +483,8 @@ void Character::runSubroutines()
 void Character::updateScript(int tick, Character* opponent)
 {
 
+	// pos = {static_cast<int>(round(pos.x)), static_cast<int>(round(pos.y))};	
+
 	// if (!afterImages.empty()) {
 	//     if (afterImages.size() > 8) {
 	//         afterImages.pop_back();
@@ -472,8 +494,7 @@ void Character::updateScript(int tick, Character* opponent)
 	// }
 
 	if(isColliding(opponent)){
-		std::cout << "pushbox collision" << std::endl;
-		if(velocity.x != 0){
+		if(velocity.x != 0 || xCollision){
 			if(sign > 0)
 				opponent->MoveX(((GetPushbox().x + width) - (opponent->pos.x + opponent->posOffset.x)) + 1);
 			else
@@ -482,7 +503,11 @@ void Character::updateScript(int tick, Character* opponent)
 	}
 
 	if(yCollision){
-		handleEvent(GetCurrentState(), "TOUCH_GROUND");
+		if(!stateTouchedGround && stateLeftGround){
+			handleEvent(GetCurrentState(), "TOUCH_GROUND");
+			stateTouchedGround = true;
+			std::cout << "touched ground" << std::endl;
+		}
 		if(GetCurrentState() == "CmnActStand"){
 			if(centerPos.x > opponent->centerPos.x)
 			{
@@ -494,6 +519,8 @@ void Character::updateScript(int tick, Character* opponent)
 		}
 		// velocity.x = 0;
 		// velocity.y = 0;
+	} else{
+		stateLeftGround = true;
 	}
 
 	if(GetCurrentState() == "CmnActStand"){
@@ -536,14 +563,14 @@ void Character::updateScript(int tick, Character* opponent)
 
 	checkCommands();
 
-	if(slowdown > 0){
-    	slowdown--;
-    	if(slowdown % 2 == 0){
-    		if(hitstop > 0)
-        		hitstop--;
-    		return;
-    	}
-    }
+	// if(slowdown > 0){
+    // 	slowdown--;
+    // 	if(slowdown % 2 == 0){
+    // 		if(hitstop > 0)
+    //     		hitstop--;
+    // 		return;
+    // 	}
+    // }
 
 	if(hitstop > 0) {
         hitstop--;
@@ -562,7 +589,7 @@ void Character::updateScript(int tick, Character* opponent)
 
 	executeCommands();
 	update(tick);
-	runSubroutines();
+ 	runSubroutines();
 
 	velocity.y += gravity;
 	velocity.y += acceleration.y;
@@ -571,8 +598,6 @@ void Character::updateScript(int tick, Character* opponent)
 	MoveY(velocity.y);
 	velocity.x *= velocityXPercentEachFrame;
 	velocity.y *= velocityYPercentEachFrame;
-
-	pos = {static_cast<int>(round(pos.x)), static_cast<int>(round(pos.y))};	
 
 	if(!firstFrame)
 		bbscriptFrameCount++;
@@ -583,12 +608,12 @@ void Character::SetFrame(const int frame)
 {
 	currentFrame = frame;
 
-	if(currentFrame > spritesheet.getLength()){
-		currentFrame = 0;
-	}
-	if(currentFrame < 0){
-		currentFrame = spritesheet.getLength();
-	}
+	// if(currentFrame > spritesheet.getLength()){
+	// 	currentFrame = 0;
+	// }
+	// if(currentFrame < 0){
+	// 	currentFrame = spritesheet.getLength();
+	// }
 	SetPushbox();
 }
 
@@ -681,12 +706,11 @@ void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& pal
 	// renderer->DrawQuad({pos.x + spritesheet.getCurrentOffset().x*2 + spritesheet.getCurrentSize().x*1.5 - 5, pos.y}, glm::vec2(5, 5), 0, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
 	if(hurtboxes.count(currentFrame) > 0){
+		glm::vec4 color(hurtboxColor, 1.0f);
+		if(blocking)
+			color = glm::vec4(blockingHighColor, 1.0f);
 		for (int i = 0; i < hurtboxes[currentFrame].size(); ++i){
 			rect hurtbox = ProcessRect(hurtboxes[currentFrame][i]);
-			glm::vec4 color(hurtboxColor, 1.0f);
-			if(blocking)
-				color = glm::vec4(blockingHighColor, 1.0f);
-
 			renderer->DrawOutline({pos.x + hurtbox.x, pos.y + hurtbox.y}, {hurtbox.width, hurtbox.height}, 0, color, 1);
 		}
 	}

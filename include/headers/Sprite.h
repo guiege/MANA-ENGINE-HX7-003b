@@ -34,6 +34,8 @@ class Sprite
   		void SetFlipped(bool flip);
 
 		void draw(Renderer* renderer);
+
+		void SetRotation(const float r);
 };
 
 

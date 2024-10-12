@@ -48,6 +48,7 @@ bool IntroState::enter()
     ResourceManager::LoadTexture("res/textures/hydepalp2.png", true, "hydepalp2");
     ResourceManager::LoadTexture("res/textures/ui/icons-capcom-32.png", true, GL_LINEAR, GL_NEAREST, "icons-capcom-32");
     ResourceManager::LoadTexture("res/textures/ui/gauge_00.png", GL_LINEAR, GL_LINEAR, true, "gauge");
+    ResourceManager::LoadTexture("res/textures/pop_cat.png", true, "popcat");
     // ResourceManager::LoadTexture("res/textures/ryu.png", true, "ryusheet");
     // ResourceManager::LoadTexture("res/textures/ffviir-zoom-midgar-city.jpg", false, "midgar");
     
@@ -279,11 +280,11 @@ void IntroState::update(float dt)
 		testChar2->pos.x = 2500;
 	}
 
-
-	if(Keys[GLFW_KEY_U])
-		{
-			inputHandler->registerInput(FK_Input_Buttons.LP);
-		}
+	//FOR TESTING TRADES
+	// if(Keys[GLFW_KEY_U])
+	// 	{
+	// 		inputHandler->registerInput(FK_Input_Buttons.LP);
+	// 	}
 	if(this->Keys[GLFW_KEY_LEFT])
 	{
 		cameraXPos -= 1;
@@ -406,6 +407,45 @@ void IntroState::update(float dt)
 	{
 		testChar2->hitOpponent(testChar, char2state.c_str());
 	}
+
+	if(testChar->GetHitstop() == 0){
+		if(!testChar->isActionable())
+			p1UnactionableTimer++;
+		else{
+			if(p1UnactionableTimer != 0)
+				p1Unactionable = p1UnactionableTimer;
+			p1UnactionableTimer = 0;
+		}
+
+		if(testChar->isHitboxActive())
+			p1AtkActiveTimer++;
+		else{
+			if(p1AtkActiveTimer != 0)
+				p1AtkActive = p1AtkActiveTimer;
+			p1AtkActiveTimer = 0;
+		}
+	}
+
+	if(testChar2->GetHitstop() == 0){ //horrible fucking code fix it
+		if(!testChar2->isActionable())
+			p2UnactionableTimer++;
+		else{
+			if(p2UnactionableTimer != 0)
+				p2Unactionable = p2UnactionableTimer;
+			p2UnactionableTimer = 0;
+		}
+
+		if(testChar2->isHitboxActive())
+			p2AtkActiveTimer++;
+		else{
+			if(p2AtkActiveTimer != 0)
+				p2AtkActive = p2AtkActiveTimer;
+			p2AtkActiveTimer = 0;
+		}
+	}
+
+	// std::cout << "Active: " << p2AtkActive << "/ " << "Advantage: " << (p1Unactionable - p2Unactionable) << std::endl;
+
 	inputHandler->update(tick);
 	inputHandler2->update(tick);
 
@@ -460,6 +500,9 @@ void IntroState::render()
 	for (auto& solid : solids){
 		solid.draw(batchRenderer);
 	}
+
+	batchRenderer->DrawQuad({500, 500}, {500.0f, 500.0f}, tick, ResourceManager::GetTexture("popcat").ID);
+
 
     batchRenderer->EndBatch();
 	batchRenderer->Flush(); //End BG pass

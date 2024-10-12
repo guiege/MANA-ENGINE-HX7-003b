@@ -22,6 +22,11 @@ void Sprite::draw(Renderer* renderer)
 	}
 }
 
+void Sprite::SetRotation(const float r)
+{
+	rot = r;
+}
+
 void Sprite::SetFlipped(bool flip)
 {
 	flipped = flip;

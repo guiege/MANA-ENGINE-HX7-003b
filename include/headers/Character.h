@@ -26,7 +26,10 @@ struct Properties {
     int hitstun = 0;
     int blockstun = 0;
     int damage = 0;
+    int juggleLimit = 0;
+    int juggleStart = 0; //Later add support for multihits where each hit results in a different juggle start.
 
+    float hitAirPushbackY = 0.0f;
     glm::vec2 pushbackVelocity = {0.0f, 0.0f};
     float pushbackMultiplier = 1.0f;
 };
@@ -108,8 +111,26 @@ public:
         return intersect(GetPushbox(), opponent->GetPushbox());
     }
 
+    bool isActionable()
+    {
+        return actionable;
+    }
+
+    bool isHitboxActive()
+    {
+        return hitboxActive;
+    }
+
     int GetHealth(){
         return health;
+    }
+
+    int GetHitstun(){
+        return hitstun;
+    }
+
+    int GetHitstop(){
+        return hitstop;
     }
 
     bool GetFlipped(){
@@ -302,6 +323,7 @@ protected:
     bool blocking = false;
 
     //Animation Variables
+    int guardEndStart = 9; //Frames that the guard end animation takes so it doesn't mess with hitstun
     int currentFrame = 0;
     int currentLine = 0;
     int bbscriptFrameCount = 0;
@@ -326,12 +348,18 @@ protected:
     bool flipped = false;
 
     //Battle Variables
+    bool actionable = true;
+    bool hitboxActive = false;
+    bool stateTouchedGround = false;
+    bool stateLeftGround = false;
     unsigned int health = 420;
     unsigned int hitstun = 0;
     unsigned int hitstop = 0;
     unsigned int slowdown = 0;
     int currentState = 0;
+    int currentJuggle = 0;
     std::string subroutines = "";
+    std::array<std::string, 2> validBlockingStates = { "CmnActStand", "CmnActBWalk"};
 
     //Movement Variables
     glm::vec2 velocity = {0.0f, 0.0f};
@@ -344,7 +372,7 @@ protected:
     float fDashAccelSpeed = 5.0f;
     float initDashFSpeed = 10.0f; // 13.1
     float dashMaxVelocity = 38.51f; // v cannot exceed 38.5
-    float dashSkidDecay = 0.25f;
+    float dashSkidDecay = 0.6f;
 
     float velocityXPercentEachFrame = 1.0f;
     float velocityYPercentEachFrame = 1.0f;

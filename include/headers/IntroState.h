@@ -10,12 +10,7 @@
 #include <bitset>
 #include <deque>
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <stb/stb_image.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <ctime>
 #include "PerlinNoise.h"
 
 #include "Shader.h"
@@ -141,6 +136,17 @@ private:
 	const siv::PerlinNoise::seed_type seed = 654321u;
 	const siv::PerlinNoise perlin{ seed };
 
+	//Frame Data Display Variables
+	int p1AtkActiveTimer = 0;
+	int p1UnactionableTimer = 0;
+	int p1Unactionable = 0;
+	int p1AtkActive = 0;
+
+	int p2AtkActiveTimer = 0;
+	int p2UnactionableTimer = 0;
+	int p2Unactionable = 0;
+	int p2AtkActive = 0;
+
 	//Input History Display Variables
 	std::unordered_map<int, std::vector<int>> inputHistory;
 	static const int MAX_HISTORY_SIZE = 22;
@@ -153,7 +159,7 @@ private:
 	float cameraYPos = 0;
 	float cameraRot = 0.0f;
 	float cameraScale = 1.0f;
-	float cameraSnap = 0.3f;
+	float cameraSnap = 0.1f;
 	double lastX = 0.0, lastY = 0.0;
 	bool isPanning = false;
 	int cameraMinPos = 40;

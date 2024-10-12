@@ -12,12 +12,6 @@ addMove: CmnActHighGuardEnd
     characterState: STANDING
 	endMove:
 
-addMove: NmlAtk5D
-    moveType: NORMAL
-    characterState: STANDING
-    moveInput: INPUT_PRESS_HP
-	endMove:
-
 addMove: NmlAtk5A
     moveType: NORMAL
     characterState: STANDING
@@ -28,6 +22,12 @@ addMove: BanditBringer
 	moveType: NORMAL
     characterState: STANDING
     moveInput: INPUT_PRESS_MP
+	endMove:
+
+addMove: NmlAtk5D
+    moveType: NORMAL
+    characterState: STANDING
+    moveInput: INPUT_PRESS_HP
 	endMove:
 
 addMove: GunFlame
@@ -55,7 +55,7 @@ beginState: RoundInit
 
 beginState: NmlAtk5A
 	upon:IMMEDIATE
-		cmn_AtkLv1:
+		cmn_AtkLv3:
 		addGatlingOption: NmlAtk5A
 		addGatlingOption: NmlAtk5D
 		addGatlingOption: BanditBringer
@@ -71,20 +71,21 @@ beginState: NmlAtk5A
 		cmn_screenshake:10
 	endUpon:
 
-	sprite: 31, 3
-	sprite: 32, 2
-	sprite: 33, 2
-	sprite: 34, 2
-	sprite: 35, 2
-	sprite: 36, 2
-	sprite: 37, 2
-	sprite: 38, 2
+	//Starts up on the 4th frame, active for 10 frames, recovers for 4 frames
+	sprite: 31, 4
+	sprite: 32, 1
+	sprite: 33, 1
+	sprite: 34, 1
+	sprite: 35, 1
+	sprite: 36, 1
+	sprite: 37, 1
+	sprite: 38, 1
 	
 	endState:
 
 beginState: NmlAtk5D
 	upon:IMMEDIATE
-		cmn_AtkLv3:
+		cmn_AtkLv4:
 		damage: 0, 56
 		physicsXImpulse: 0
 		pushbackX: 100
@@ -103,9 +104,9 @@ beginState: NmlAtk5D
 	cmn_screenshake: 15
 	sprite: 43, 3
 	sprite: 44, 3
-	sprite: 45, 7
-	sprite: 46, 7
-	sprite: 47, 7
+	sprite: 45, 3
+	sprite: 46, 3
+	sprite: 47, 3
 	
 	endState:
 
@@ -233,10 +234,12 @@ beginState: GunFlame
 		damage: 0, 40
 		// hitStop: 15
 		// hitstunAmount: 20
+		addWhiffCancelOption: GunFlame
 	endUpon:
 
 	upon: TOUCH_GROUND
 		clearRegisteredUponCode: 0
+		gotoLabel:landing
 	endUpon:
 
 	upon: HIT
@@ -250,22 +253,30 @@ beginState: GunFlame
 	physicsXImpulse: 10500
 	sprite: 260, 2
 	sprite: 261, 3
-
+	velocityXPercentEachFrame: 95
 	setGravity: 3500
 	sprite: 262, 2
 	sprite: 263, 2
-	velocityXPercentEachFrame: 95
 	sprite: 264, 2
 	sprite: 265, 2
 	sprite: 266, 2
 	sprite: 267, 2
 	sprite: 268, 2
-	sprite: 11, 2
-	sprite: 12, 2
-	sprite: 8, 5
-	sprite: 9, 5
-	sprite: 10, 3
-	sprite: 11, 3
+	sprite: 150, 2
+	sprite: 151, 2
+	beginLabel:loop
+	sprite: 152, 5
+	sprite: 153, 5
+	sprite: 154, 3
+	sprite: 155, 3
+	gotoLabel:loop
+
+	beginLabel:landing
+	sprite: 156, 2
+	sprite: 157, 2
+	sprite: 158, 2
+	sprite: 159, 2
+	sprite: 160, 2
 	endState:
 
 beginState: BanditBringer
@@ -284,15 +295,15 @@ beginState: BanditBringer
 
 	//physicsXImpulse: 20000
 
-	sprite: 32, 5
+	sprite: 31, 5
 	physicsXImpulse: 0
 
 	beginLabel: loop
+	sprite: 32, 5
 	sprite: 33, 5
 	sprite: 34, 5
 	sprite: 35, 5
-	sprite: 36, 5
 
+	sprite: 36, 5
 	sprite: 37, 5
-	sprite: 38, 5
 	endState:

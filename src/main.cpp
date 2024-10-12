@@ -54,6 +54,8 @@ int windowHeight = 1080;
 int monitorWidth, monitorHeight;
 bool isFullscreen = false;
 
+unsigned int tick = 0;
+
 void updateViewport()
 {
     int width, height;
@@ -149,6 +151,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 
     window = glfwCreateWindow(windowWidth, windowHeight, "MANA ENGINE HX7-003b", NULL, NULL);
     
@@ -188,16 +191,44 @@ int main()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    double crntTime = 0.0;
-    double prevTime = 0.0;
-    double dt = prevTime;
-    double accumulator = 0;
-    unsigned int counter = 0;
-    unsigned int tick = 0;
-
     bool show_demo_window = false;
 
     glfwSwapInterval(0);
+
+    double update_rate = 60; //Lock the tickrate to 60 frames per second
+    int update_multiplicity = 1;
+    bool unlock_framerate = false;
+
+    //compute how many ticks per second one update should be
+    int64_t clocks_per_second = glfwGetTimerFrequency();
+    double fixed_deltatime = 1.0 / (update_rate * 10);
+    int64_t desired_frametime = clocks_per_second / (update_rate * 10);
+
+    //these are to snap deltaTime to vsync values if it's close enough
+    int64_t vsync_maxerror = clocks_per_second * .0002;
+
+    //get the refresh rate of the display (you should detect which display the window is on in production)
+    int display_framerate = 60;
+    GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+    display_framerate = mode->refreshRate;
+    int64_t snap_hz = display_framerate;
+    if(snap_hz <= 0) snap_hz = 60;
+
+    //these are to snap deltaTime to vsync values if it's close enough
+    int64_t snap_frequencies[8] = {};
+    for(int i = 0; i<8;i++){
+        snap_frequencies[i] = (clocks_per_second / snap_hz) * (i+1);
+    }
+
+    const int time_history_count = 4;
+    int64_t time_averager[time_history_count] = {desired_frametime, desired_frametime, desired_frametime, desired_frametime};
+    int64_t averager_residual = 0;
+
+    bool running = true;
+    bool resync = true;
+    int64_t prev_frame_time = static_cast<int64_t>(glfwGetTime() * 1000000.0);
+    int64_t frame_accumulator = 0;
 
     Shader loadingShader("res/shaders/default.vert", "res/shaders/default.frag");
     Shader textShader("res/shaders/text.vert", "res/shaders/text.frag");
@@ -235,69 +266,64 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    while(!glfwWindowShouldClose(window)) //Main while loop
+    while(!glfwWindowShouldClose(window)) //Main while loop. Huge thanks to TylerGlaiel for helping to fix my timestep.
     {
         glfwPollEvents();
-
-        crntTime = glfwGetTime();
-        dt = crntTime - prevTime;
-        prevTime = crntTime;
-        accumulator += dt;
-        // counter++;
-
-        // if(dt >= 1.0 / 30.0)
-        // {
-        //     std::string FPS = std::to_string((1.0/ dt) * counter);
-        //     std::string ms = std::to_string((dt / counter) * 1000);
-        //     std::string newTitle = "guiengine 0 - " + FPS + "FPS / " + ms + "ms";
-        //     glfwSetWindowTitle(window, newTitle.c_str());
-        //     prevTime = crntTime;
-        //     counter = 0;
-        // }
-
         double cposx, cposy;
         glfwGetCursorPos(window, &cposx, &cposy);
 
         gCurrentState->mouseX = cposx;
         gCurrentState->mouseY = cposy;
+        
+        int64_t current_frame_time = static_cast<int64_t>(glfwGetTime() * 1000000.0);
+        int64_t delta_time = current_frame_time - prev_frame_time;
+        prev_frame_time = current_frame_time;
 
-        if(abs(dt - 1.0/120.0) < .0002){
-            dt = 1.0/120.0;
+        if(delta_time > desired_frametime*8){
+            delta_time = desired_frametime;
         }
-        if(abs(dt - 1.0/60.0) < .0002){
-            dt = 1.0/60.0;
-        }
-        if(abs(dt - 1.0/30.0) < .0002){
-            dt = 1.0/30.0;
+        if(delta_time < 0){
+            delta_time = 0;
         }
 
-        while(accumulator >= 1.0 / 60.0 && (!gCurrentState->paused || gCurrentState->advanceFrame)){
-            // gCurrentState->update(dt);
-            if(gCurrentState->doneLoading){
-                // gCurrentState->tick++;
-                if(gCurrentState->desiredState > 0){
-                    if(gCurrentState->desiredState == 1){
-                        setNextState(IntroState::get());
-                        changeState();
-                    }
-                    if(gCurrentState->desiredState == 2){
-                        setNextState(HitboxEditorState::get());
-                        changeState();
-                    }
-                    if(gCurrentState->desiredState == 3){
-                        setNextState(BatchState::get());
-                        changeState();
-                    }
-                }
-            }
-            accumulator -= 1.0 / 60.0;
-            tick++;
-
-            if(gCurrentState->advanceFrame){
-                gCurrentState->advanceFrame = false;
+        //vsync time snapping
+        for(int64_t snap : snap_frequencies){
+            if(std::abs(delta_time - snap) < vsync_maxerror){
+                delta_time = snap;
                 break;
             }
         }
+
+        //delta time averaging
+        for(int i = 0; i<time_history_count-1; i++){
+            time_averager[i] = time_averager[i+1];
+        }
+        time_averager[time_history_count-1] = delta_time;
+        int64_t averager_sum = 0;
+        for(int i = 0; i<time_history_count; i++){
+            averager_sum += time_averager[i];
+        }
+        delta_time = averager_sum / time_history_count;
+
+        averager_residual += averager_sum % time_history_count;
+        delta_time += averager_residual / time_history_count;
+        averager_residual %= time_history_count;
+
+        //add to the accumulator
+        frame_accumulator += delta_time;
+
+        //spiral of death protection
+        if(frame_accumulator > desired_frametime*8){
+            resync = true;
+        }
+
+        //timer resync if required
+        if(resync){
+            frame_accumulator = 0;
+            delta_time = desired_frametime;
+            resync = false;
+        }
+
 
         if(ResourceManager::doneLoading && gCurrentState->doneLoading == false){
             std::cout << "DONE LOADING ASSETS" << std::endl;
@@ -305,38 +331,82 @@ int main()
             gCurrentState->doneLoading = true;
         }
 
+        if(unlock_framerate){
+            int64_t consumedDeltaTime = delta_time;
+
+            while(frame_accumulator >= desired_frametime){
+                if(consumedDeltaTime > desired_frametime){
+                    //game.variable_update(fixed_deltatime)
+                    consumedDeltaTime -= desired_frametime;
+                }
+                gCurrentState->update(fixed_deltatime);
+                consumedDeltaTime -= desired_frametime;
+            }
+            frame_accumulator -= desired_frametime;
+
+            //game.variable_update((double)consumedDeltaTime / clocks_per_second);
+            //render
+        } else { //LOCKED FRAMERATE, NO INTERPOLATION
+            while(frame_accumulator >= desired_frametime*update_multiplicity){
+                for(int i = 0; i<update_multiplicity; i++){
+                    gCurrentState->update(fixed_deltatime);
+                    if(gCurrentState->doneLoading){
+                        gCurrentState->tick++;
+                        if(gCurrentState->desiredState > 0){
+                            if(gCurrentState->desiredState == 1){
+                                setNextState(IntroState::get());
+                                changeState();
+                            }
+                            if(gCurrentState->desiredState == 2){
+                                setNextState(HitboxEditorState::get());
+                                changeState();
+                            }
+                            if(gCurrentState->desiredState == 3){
+                                setNextState(BatchState::get());
+                                changeState();
+                            }
+                        }
+                    }
+                    frame_accumulator -= desired_frametime;
+                    tick++;
+                }
+            }
+
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            if(gCurrentState->doneLoading){
+                //Specify the color of the background
+                // glClearColor(48/(float)255, 56/(float)255, 65/(float)255, 1.0f);
+                glClearColor(55/(float)255, 55/(float)255, 55/(float)255, 1.0f);
+
+                // Clean the back buffer and assign the new color to it
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                gCurrentState->render();
+            }
+            else{
+                glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                loadingRenderer.DrawRect(glm::vec2(840, 520), glm::vec2(240 * (ResourceManager::percentLoading), 100), 0, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+                loadingText.RenderText("Loading...", 840, 640, 1.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+                loadingText.RenderText("Loading...", 840, 700, 1.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+                loadingText.RenderText("Loading...", 840, 760, 1.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            }
+
+            if (show_demo_window)
+                ImGui::ShowDemoWindow(&show_demo_window);
+
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            glfwSwapBuffers(window);
+
+        }
+
         // FMOD_Channel_SetLowPassGain(channel, (xpos/width));
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-
-        if(gCurrentState->doneLoading){
-            //Specify the color of the background
-            // glClearColor(48/(float)255, 56/(float)255, 65/(float)255, 1.0f);
-            glClearColor(55/(float)255, 55/(float)255, 55/(float)255, 1.0f);
-
-            // Clean the back buffer and assign the new color to it
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            gCurrentState->render();
-        }
-        else{
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            loadingRenderer.DrawRect(glm::vec2(840, 520), glm::vec2(240 * (ResourceManager::percentLoading), 100), 0, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-            // loadingText.Load("res/fonts/FOTNewRodin Pro B.otf", 24);
-            loadingText.RenderText("Loading...", 840, 640, 1.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-        }
-
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
-
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        glfwSwapBuffers(window);
     }
 
     ResourceManager::Clear();
@@ -404,11 +474,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    if(key == GLFW_KEY_SPACE && action == GLFW_PRESS){
-        gCurrentState->update(1.0f);
-        gCurrentState->tick++;
-    }
-
     if (key >= 0 && key < 1024)
     {
         if (action == GLFW_PRESS){
@@ -417,4 +482,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         else if (action == GLFW_RELEASE)
             gCurrentState->Keys[key] = false;
     }
+
+    // if(key == GLFW_KEY_SPACE && action == GLFW_PRESS){
+    //      gCurrentState->update(1.0f);
+    //     gCurrentState->tick++;
+    // }
 }
