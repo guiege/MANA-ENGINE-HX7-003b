@@ -50,7 +50,7 @@ void Solid::Move(float x, float y)
 		{
 			yRemainder -= moveY;
 			pos.y += moveY;
-			if(moveY > 0) // Carry right
+			if(moveY > 0) // Carry down
 			{
 				for (int i = 0; i < actors.size(); i++){
 					int cnt = count(riding.begin(), riding.end(), actors[i]);
@@ -64,7 +64,7 @@ void Solid::Move(float x, float y)
 					}
 				}
 			}
-			else // Carry left
+			else // Carry up
 			{
 				for (int i = 0; i < actors.size(); i++){
 					int cnt = count(riding.begin(), riding.end(), actors[i]);

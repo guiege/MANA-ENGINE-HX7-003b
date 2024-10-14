@@ -391,8 +391,6 @@ int main()
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 loadingRenderer.DrawRect(glm::vec2(840, 520), glm::vec2(240 * (ResourceManager::percentLoading), 100), 0, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
                 loadingText.RenderText("Loading...", 840, 640, 1.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-                loadingText.RenderText("Loading...", 840, 700, 1.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-                loadingText.RenderText("Loading...", 840, 760, 1.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
             }
 
             if (show_demo_window)

@@ -177,6 +177,7 @@ public:
                     for (const auto& inst : handler.instructions) {
                         if (commandMap.find(inst.command) != commandMap.end()) {
                             commandMap[inst.command](inst.parameters);
+                            framesUntilNextCommand = 0;
                         } else {
                             std::cout << "Unknown command: " << inst.command << std::endl;
                         }
@@ -337,10 +338,10 @@ protected:
     std::map<int, std::vector<rect>> hitboxes;
     std::vector<rect> pushboxes;
     rect pushbox;
-    glm::vec3 hurtboxColor = {10/(float)255, 185/(float)255, 230/(float)255};
+    glm::vec4 hurtboxColor = {10/(float)255, 185/(float)255, 230/(float)255, 1};
     glm::vec3 pushboxColor = {130/(float)255, 1, 150/(float)255};
     glm::vec3 hitboxColor = {1, 175/(float)255, 175/(float)255};
-    glm::vec3 blockingHighColor = {0, 0, 1};
+    glm::vec4 blockingHighColor = {0, 0, 1, 1};
 
     //Drawing Variables
     glm::vec2 drawPosition = {0.0f, 0.0f};

@@ -54,6 +54,13 @@ void BatchState::update(float dt)
 	if (this->Keys[GLFW_KEY_X]){
 		cS += .1f;
 	}
+	if (this->Keys[GLFW_KEY_Q]){
+		cR -= .1f;
+	}
+	if (this->Keys[GLFW_KEY_E]){
+		cR += .1f;
+	}
+
 
 
 

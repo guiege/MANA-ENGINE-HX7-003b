@@ -83,8 +83,8 @@ bool IntroState::enter()
 
 	Solid platform(0, 700, 800, 800, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	Solid floor(0, 980, 4000, 1000, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	Solid wallL(0, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	Solid wallR(3960, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	Solid wallL(-40, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	Solid wallR(4000, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	// solids.push_back(platform);
 	solids.push_back(floor);
 	solids.push_back(wallL);
@@ -497,12 +497,21 @@ void IntroState::render()
 
 	batchRenderer->BeginBatch(); //BG pass
 
+	batchRenderer->DrawQuad({500, 500}, {500.0f, 500.0f}, tick, ResourceManager::GetTexture("popcat").ID);
+
 	for (auto& solid : solids){
 		solid.draw(batchRenderer);
 	}
 
-	batchRenderer->DrawQuad({500, 500}, {500.0f, 500.0f}, tick, ResourceManager::GetTexture("popcat").ID);
-
+	// for(float y = 0; y < 10000; y += 100)
+	// {
+	// 	for(float x = 0; x < 10000; x += 100)
+	// 	{
+	// 		float rot = (x + y) / 2000.0f;
+	// 		glm::vec4 color = { (x + 100) / 20000.0f, 0.2f, (y + 100) / 20000.0f, 1.0f};
+	// 		batchRenderer->DrawQuad({x, y}, {100.0f, 100.0f}, 0.0f, color);
+	// 	}
+	// }
 
     batchRenderer->EndBatch();
 	batchRenderer->Flush(); //End BG pass

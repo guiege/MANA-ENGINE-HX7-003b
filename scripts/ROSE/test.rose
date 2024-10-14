@@ -41,6 +41,10 @@ addMove: CmnActFDash
 	moveInput: INPUT_66
 	endMove:
 
+addMove: CmnActJump
+	moveInput: INPUT_8
+	endMove:
+
 //eventually add declarative subroutines(ex. beginSubroutine: s32'RoundInit')
 beginState: RoundInit
 	upon:IMMEDIATE
@@ -216,6 +220,43 @@ beginState: CmnActFDash
 
 	endState:
 
+beginState: CmnActJump
+	upon: IMMEDIATE
+		addWhiffCancelOption: NmlAtk5A
+	endUpon:
+
+	upon: TOUCH_GROUND
+		clearRegisteredUponCode: 0
+		gotoLabel:landing
+	endUpon:
+
+	upon: HIT
+		cmn_screenshake: 60
+		// slowdown: 100
+	endUpon:
+
+	sprite: 148, 5
+	physicsYImpulse: 35000
+	setGravity: 1400
+	sprite: 149, 2
+	sprite: 150, 3
+	sprite: 151, 2
+	sprite: 152, 2
+	sprite: 153, 2
+	setGravity: 3500
+	beginLabel:loop
+	sprite: 154, 2
+	sprite: 155, 2
+	gotoLabel:loop
+
+	beginLabel:landing
+	sprite: 156, 2
+	sprite: 157, 2
+	sprite: 158, 2
+	sprite: 159, 2
+	sprite: 160, 2
+	endState:
+
 beginState: CmnActFDashStop
 	upon: IMMEDIATE
 		addWhiffCancelOption: GunFlame
@@ -248,7 +289,7 @@ beginState: GunFlame
 	endUpon:
 
 	sprite: 259, 3
-	physicsYImpulse: 60000
+	physicsYImpulse: 50000
 	setGravity: 2500
 	physicsXImpulse: 10500
 	sprite: 260, 2
@@ -285,6 +326,7 @@ beginState: BanditBringer
 		damage: 0, 100
 		setCarriedMomentumPercentage: 150
 		addGatlingOption: NmlAtk5D
+		addCancelOption: GunFlame
 		// hitStop: 7
 	endUpon:
 

@@ -40,9 +40,11 @@ void InputHandler::registerInput(const std::bitset<7> &input)
 
 bool InputHandler::checkCommand(CommandSequence &c)
 {
+	if(c.tE == 0){
+		return checkCommand(c.commandList[0], c.holdList[0]);
+	}
 
 	bool executed = false;
-
 	std::bitset<(buffer * 4)> dirCheck = dirPress;
 
 	if(c.holdList[c.commandNumber] < 0)

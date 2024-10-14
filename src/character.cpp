@@ -72,8 +72,8 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 	motionInputs["INPUT_87"] = CommandSequence({FK_Input_Buttons.UP_BACK}, {-1}, 8);
 	motionInputs["INPUT_89"] = CommandSequence({FK_Input_Buttons.UP_FORWARD}, {-1}, 8);
 
-	motionInputs["INPUT_HOLD_4"] = CommandSequence({FK_Input_Buttons.BACK}, {-1}, 8);
-	motionInputs["INPUT_HOLD_6"] = CommandSequence({FK_Input_Buttons.FORWARD}, {-1}, 8);
+	motionInputs["INPUT_HOLD_4"] = CommandSequence({FK_Input_Buttons.BACK}, {-1}, 0);
+	motionInputs["INPUT_HOLD_6"] = CommandSequence({FK_Input_Buttons.FORWARD}, {-1}, 0);
 
 	buttons["INPUT_PRESS_LP"] = Button(FK_Input_Buttons.LP, false);
 	buttons["INPUT_PRESS_MP"] = Button(FK_Input_Buttons.MP, false);
@@ -388,11 +388,36 @@ bool Character::checkCollision(Character* opponent)
 
 void Character::checkCommands()
 {
+	blocking = false;
 	std::string curstate = GetCurrentState();
+	if(curstate == "CmnActStand"){
+		if(buttonMap["INPUT_HOLD_6"]){
+			SetState("CmnActFWalk");
+		} else if(buttonMap["INPUT_HOLD_4"]){
+			SetState("CmnActBWalk");
+		}
+	}
+
+	if(curstate == "CmnActFWalk"){
+		if(buttonMap["INPUT_HOLD_6"]){
+			velocity.x = walkFSpeed;
+		} else{
+			SetState("CmnActStand");
+			velocity.x = 0;
+		}
+	}
+
+	if(curstate == "CmnActBWalk"){
+		if(buttonMap["INPUT_HOLD_4"]){
+			velocity.x = -walkBSpeed;
+		} else{
+			SetState("CmnActStand");
+			velocity.x = 0;
+		}
+	}
+
 	if(buttonMap["INPUT_HOLD_4"] && std::find(validBlockingStates.begin(), validBlockingStates.end(), curstate) != validBlockingStates.end())
 		blocking = true;
-	else
-		blocking = false;
 
 	for (const auto & [ key, value ] : states) {
 		bool gatling = false;
@@ -469,7 +494,7 @@ void Character::runSubroutines()
 		if(velocity.x < 0.2)
 			velocity.x = 0;
 	} else if(subroutines.find("cmnFDash") != std::string::npos){
-		if(inputHandler->checkCommand(FK_Input_Buttons.FORWARD, true)){
+		if(buttonMap["INPUT_HOLD_6"]){
 			velocity.x = std::round((velocity.x + fDashAccelSpeed - (velocity.x / fDashFriction)) * 1000.0) / 1000.0;
 			if(velocity.x > dashMaxVelocity)
 				velocity.x = dashMaxVelocity;
@@ -492,6 +517,11 @@ void Character::updateScript(int tick, Character* opponent)
 	//         afterImages.push_front(AfterImage(pos, spritesheet.GetFrame()));
 	//     }
 	// }
+
+	blocking = false;
+	std::string curstate = GetCurrentState();
+	if(buttonMap["INPUT_HOLD_4"] && std::find(validBlockingStates.begin(), validBlockingStates.end(), curstate) != validBlockingStates.end())
+		blocking = true;
 
 	if(isColliding(opponent)){
 		if(velocity.x != 0 || xCollision){
@@ -523,42 +553,19 @@ void Character::updateScript(int tick, Character* opponent)
 		stateLeftGround = true;
 	}
 
-	if(GetCurrentState() == "CmnActStand"){
-		if(inputHandler->checkCommand(FK_Input_Buttons.FORWARD, true)){
-			SetState("CmnActFWalk");
-		} else if(inputHandler->checkCommand(FK_Input_Buttons.BACK, true)){
-			SetState("CmnActBWalk");
-		}
-	}
-
-	if(GetCurrentState() == "CmnActFWalk"){
-		if(inputHandler->checkCommand(FK_Input_Buttons.FORWARD, true)){
-			velocity.x = walkFSpeed;
-		} else{
-			SetState("CmnActStand");
-			velocity.x = 0;
-		}
-	}
-
-	if(GetCurrentState() == "CmnActBWalk"){
-		if(inputHandler->checkCommand(FK_Input_Buttons.BACK, true)){
-			velocity.x = -walkBSpeed;
-		} else{
-			SetState("CmnActStand");
-			velocity.x = 0;
-		}
-	}
 	// std::cout << health << std::endl;
 	for (const auto& [key, value] : motionInputs) {
-		buttonMap[key] = false;
 		if(inputHandler->checkCommand(motionInputs[key]))
 	    	buttonMap[key] = true;
+	    else
+	    	buttonMap[key] = false;
 	}
 
 	for (const auto& [key, value] : buttons) {
-		buttonMap[key] = false; 
 		if(inputHandler->checkCommand(buttons[key].ID, buttons[key].hold))
 	    	buttonMap[key] = true;
+	    else
+	    	buttonMap[key] = false;
 	}
 
 	checkCommands();
@@ -666,7 +673,7 @@ void Character::draw(Renderer* renderer)
 	if(hurtboxes.count(currentFrame) > 0){
 		for (int i = 0; i < hurtboxes[currentFrame].size(); ++i){
 			rect hurtbox = ProcessRect(hurtboxes[currentFrame][i]);
-			renderer->DrawOutline({pos.x + hurtbox.x, pos.y + hurtbox.y}, {hurtbox.width, hurtbox.height}, 0, glm::vec4(hurtboxColor, 1.0f), 1);
+			renderer->DrawOutline({pos.x + hurtbox.x, pos.y + hurtbox.y}, {hurtbox.width, hurtbox.height}, 0, hurtboxColor, 1);
 		}
 	}
 
@@ -706,12 +713,12 @@ void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& pal
 	// renderer->DrawQuad({pos.x + spritesheet.getCurrentOffset().x*2 + spritesheet.getCurrentSize().x*1.5 - 5, pos.y}, glm::vec2(5, 5), 0, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
 	if(hurtboxes.count(currentFrame) > 0){
-		glm::vec4 color(hurtboxColor, 1.0f);
-		if(blocking)
-			color = glm::vec4(blockingHighColor, 1.0f);
 		for (int i = 0; i < hurtboxes[currentFrame].size(); ++i){
 			rect hurtbox = ProcessRect(hurtboxes[currentFrame][i]);
-			renderer->DrawOutline({pos.x + hurtbox.x, pos.y + hurtbox.y}, {hurtbox.width, hurtbox.height}, 0, color, 1);
+			if(blocking)
+				renderer->DrawOutline({pos.x + hurtbox.x, pos.y + hurtbox.y}, {hurtbox.width, hurtbox.height}, 0, blockingHighColor, 1);
+			else
+				renderer->DrawOutline({pos.x + hurtbox.x, pos.y + hurtbox.y}, {hurtbox.width, hurtbox.height}, 0, hurtboxColor, 1);
 		}
 	}
 
