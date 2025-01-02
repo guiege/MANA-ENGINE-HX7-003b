@@ -114,6 +114,7 @@ private:
 
 	Renderer* batchRenderer;
 	Renderer* characterRenderer;
+	Renderer* shadowRenderer;
 
 	InputHandler* inputHandler;
 	InputHandler* inputHandler2;

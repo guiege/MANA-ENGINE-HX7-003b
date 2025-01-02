@@ -170,6 +170,8 @@ public:
 
     rect ProcessRect(const rect& r);
 
+    void FaceOpponent(Character* opponent);
+
     void handleEvent(const std::string& stateName, const std::string& eventName) {
         if (states.find(stateName) != states.end()) {
             for (const auto& handler : states[stateName].eventHandlers) {
@@ -324,7 +326,7 @@ protected:
     bool blocking = false;
 
     //Animation Variables
-    int guardEndStart = 9; //Frames that the guard end animation takes so it doesn't mess with hitstun
+    int guardEndStart = 9; //Frames that the guard end animation takes so it doesn't mess with hitstun(MAKE UNIVERSAL FIX FOR THIS LATER THANKS :))
     int currentFrame = 0;
     int currentLine = 0;
     int bbscriptFrameCount = 0;
@@ -373,7 +375,7 @@ protected:
     float fDashAccelSpeed = 5.0f;
     float initDashFSpeed = 10.0f; // 13.1
     float dashMaxVelocity = 38.51f; // v cannot exceed 38.5
-    float dashSkidDecay = 0.6f;
+    float dashSkidDecay = 0.5f;
 
     float velocityXPercentEachFrame = 1.0f;
     float velocityYPercentEachFrame = 1.0f;

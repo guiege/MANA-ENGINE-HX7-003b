@@ -534,18 +534,12 @@ void Character::updateScript(int tick, Character* opponent)
 
 	if(yCollision){
 		if(!stateTouchedGround && stateLeftGround){
+			FaceOpponent(opponent);
 			handleEvent(GetCurrentState(), "TOUCH_GROUND");
 			stateTouchedGround = true;
-			std::cout << "touched ground" << std::endl;
 		}
 		if(GetCurrentState() == "CmnActStand"){
-			if(centerPos.x > opponent->centerPos.x)
-			{
-				SetFlipped(true);
-			} else if(centerPos.x < opponent->centerPos.x)
-			{
-				SetFlipped(false);
-			}
+			FaceOpponent(opponent);
 		}
 		// velocity.x = 0;
 		// velocity.y = 0;
@@ -654,6 +648,14 @@ rect Character::ProcessRect(const rect& r)
 
 }
 
+void Character::FaceOpponent(Character* opponent)
+{
+	if(centerPos.x > opponent->centerPos.x)
+		SetFlipped(true);
+	else if(centerPos.x < opponent->centerPos.x)
+		SetFlipped(false);
+}
+
 void Character::draw(Renderer* renderer)
 {
 	drawPosition = pos - posOffset - glm::vec2(width, height);
@@ -701,6 +703,7 @@ void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& pal
 	spritesheet.pos = pos;
 	spritesheet.SetFrame(currentFrame);
 	spritesheet.draw(paletteRenderer, palette);
+	//RENDER THE SHADOW HERE!!!
 	int vertCrossWidth = 2;
 	int vertCrossHeight = 40;
 	int horiCrossWidth = 32;

@@ -25,6 +25,9 @@ bool IntroState::exit()
 	characterRenderer->Delete();
 	delete characterRenderer;
 
+	shadowRenderer->Delete();
+	delete shadowRenderer;
+
 	// post->Delete();
 	// delete post;
 
@@ -42,6 +45,7 @@ bool IntroState::enter()
     ResourceManager::LoadShader("res/shaders/post.vert", "res/shaders/post.frag", "post");
     ResourceManager::LoadShader("res/shaders/default.vert", "res/shaders/palette.frag", "palette");
     ResourceManager::LoadShader("res/shaders/batch.vert", "res/shaders/batch.frag", "batch");
+    ResourceManager::LoadShader("res/shaders/batch.vert", "res/shaders/shadow.frag", "shadow");
 
     ResourceManager::LoadTexture("res/textures/hydesheetindexed.png", true, "hydesheet");
     ResourceManager::LoadTexture("res/textures/hydepal.png", true, "hydepal");
@@ -56,11 +60,14 @@ bool IntroState::enter()
     proj = glm::ortho(0.0f, (float)(1920), (float)(1080), 0.0f, -1.0f, 1.0f);
     ResourceManager::GetShader("batch").Use().SetMatrix4("projection", proj);
     ResourceManager::GetShader("palette").Use().SetMatrix4("projection", proj);
+    ResourceManager::GetShader("shadow").Use().SetMatrix4("projection", proj);
 
     characterRenderer = new Renderer(ResourceManager::GetShader("palette"));
 
     batchRenderer = new Renderer(ResourceManager::GetShader("batch"));
     batchRenderer->initBatchRenderData();
+
+    shadowRenderer = new Renderer(ResourceManager::GetShader("shadow"));
 
 	// post = new PostProcessor(ResourceManager::GetShader("post"), 1920, 1080);
 	inputHandler = new InputHandler();
@@ -278,6 +285,8 @@ void IntroState::update(float dt)
 	{
 		testChar->pos.x = 1500;
 		testChar2->pos.x = 2500;
+		testChar->xCollision = false;
+		testChar2->xCollision = false;
 	}
 
 	//FOR TESTING TRADES
@@ -497,8 +506,6 @@ void IntroState::render()
 
 	batchRenderer->BeginBatch(); //BG pass
 
-	batchRenderer->DrawQuad({500, 500}, {500.0f, 500.0f}, tick, ResourceManager::GetTexture("popcat").ID);
-
 	for (auto& solid : solids){
 		solid.draw(batchRenderer);
 	}
@@ -567,10 +574,17 @@ void IntroState::render()
 
 	ResourceManager::GetShader("batch").Use().SetMatrix4("projection", worldProj); //Set Projection Matrix to World
 	ResourceManager::GetShader("palette").Use().SetMatrix4("projection", worldProj);
+	ResourceManager::GetShader("shadow").Use().SetMatrix4("projection", worldProj);
+
+	// float skew = 5.0f;
+	// glm::vec2 c1cpos = testChar->GetCenterPos();
+	// int bottompos = (c1cpos.y +(c1cpos.y /2));
+	// shadowRenderer->DrawTexture(ResourceManager::GetTexture("gauge"), c1cpos.x - 50, c1cpos.y, c1cpos.x + 50, c1cpos.y, c1cpos.x + 50 + (100 * skew), bottompos, c1cpos.x - 50 + (100 * skew), bottompos, 0.12, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 
 	batchRenderer->BeginBatch(); //Character Pass
 
 	testChar->draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepal"));
+
     testChar2->draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepalp2"));
 
     batchRenderer->EndBatch();
