@@ -61,6 +61,7 @@ static bool open_save_warning = false;
 int curHitboxType = 0;
 
 Spritesheet* testSheet;
+Spritefont* fontTest;
 
 bool HitboxEditorState::exit()
 {
@@ -106,6 +107,7 @@ bool HitboxEditorState::enter()
     ResourceManager::LoadShader("res/shaders/batch.vert", "res/shaders/batch.frag", "batch");
 
 	ResourceManager::LoadTexture("res/textures/hydesheet.png", true, "hydesheet");
+	ResourceManager::LoadTexture("res/fonts/font1.png", true, "font1");
 	// ResourceManager::LoadTexture("res/textures/Arcueid/000.png", true, "arc");
 	// ResourceManager::LoadTexture("res/textures/arcpal.png", true, "arcpal");
 	// ResourceManager::LoadTexture("res/textures/guiegecustompal.png", true, "guiegepal");
@@ -139,6 +141,7 @@ bool HitboxEditorState::enter()
     // }
 
     testSheet = new Spritesheet(ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 0, 0, 4296, 15673, 0);
+    fontTest = new Spritefont("this is the hitbox editor welcome", ResourceManager::GetTexture("font1"), "res/fonts/font1.json", 0, 0, 900, 600, 0);
 
     post = new PostProcessor(ResourceManager::GetShader("post"), 1920, 1080);
 
@@ -161,9 +164,10 @@ void HitboxEditorState::update(float dt)
 		usePalette = false;
 	}
 
-	// if(this->Keys[GLFW_KEY_J]){
-	// 	post->lightsOut = true;
-	// }
+	if(this->Keys[GLFW_KEY_J]){
+		// post->lightsOut = true;
+		fontTest->playAnim(tick);
+	}
 	// if(this->Keys[GLFW_KEY_K]){
 	// 	post->lightsOut = false;
 	// }
@@ -230,6 +234,7 @@ void HitboxEditorState::update(float dt)
 	// post->lightPosY = mouseY;
 
 	testSheet->SetFrame(spritesheetFrame);
+	fontTest->update(tick);
 	
 
 }
@@ -398,6 +403,7 @@ void HitboxEditorState::render()
 	batchRenderer->BeginBatch();
 
 	testSheet->draw(batchRenderer);
+	fontTest->draw(batchRenderer);
 
 	if(curHitboxType == 0)
 		batchRenderer->DrawQuad({(int)(worldCursorPos.x), (int)(worldCursorPos.y)}, {1, 1}, 0, glm::vec4(hurtboxSecondaryColor, 1.0f));

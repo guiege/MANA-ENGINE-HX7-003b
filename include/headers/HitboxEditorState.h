@@ -9,6 +9,7 @@
 #include "Texture.h"
 #include "Sprite.h"
 #include "Spritesheet.h"
+#include "Spritefont.h"
 #include "Actor.h"
 #include "Solid.h"
 #include "PostProcessor.h"

@@ -50,7 +50,7 @@ public:
 
     int getLength();
 
-private:
+protected:
 
     json sheetindex;
 

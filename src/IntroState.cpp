@@ -576,10 +576,10 @@ void IntroState::render()
 	ResourceManager::GetShader("palette").Use().SetMatrix4("projection", worldProj);
 	ResourceManager::GetShader("shadow").Use().SetMatrix4("projection", worldProj);
 
-	// float skew = 5.0f;
-	// glm::vec2 c1cpos = testChar->GetCenterPos();
-	// int bottompos = (c1cpos.y +(c1cpos.y /2));
-	// shadowRenderer->DrawTexture(ResourceManager::GetTexture("gauge"), c1cpos.x - 50, c1cpos.y, c1cpos.x + 50, c1cpos.y, c1cpos.x + 50 + (100 * skew), bottompos, c1cpos.x - 50 + (100 * skew), bottompos, 0.12, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+	// float skew = 0.0f;
+	// glm::vec2 char1centerpos = testChar
+	// int bottompos = (ypos +(ypos /2));
+	// shadowRenderer->DrawTexture(ResourceManager::GetTexture("popcat"), testChar->pos.x, testChar->pos.y, 960, testChar->pos.y, 960 + (100 * skew), bottompos, (100 * skew), bottompos, 0.12, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 
 	batchRenderer->BeginBatch(); //Character Pass
 

@@ -41,6 +41,10 @@ addMove: CmnActFDash
 	moveInput: INPUT_66
 	endMove:
 
+addMove: CmnActAirDash
+	moveInput: INPUT_66
+	endMove:
+
 addMove: CmnActJump
 	moveInput: INPUT_8
 	endMove:
@@ -228,8 +232,26 @@ beginState: CmnActFDash
 
 	endState:
 
+beginState: CmnActAirDash
+	upon: IMMEDIATE
+	endUpon:
+
+	sprite: 361, 6
+
+	setGravity: 0
+	physicsXImpulse: 35000
+	physicsYImpulse: 0
+	sprite: 362, 3
+	sprite: 363, 3
+	sprite: 364, 3
+	physicsXImpulse: 0
+	setGravity: 3500
+
+	endState:
+
 beginState: CmnActJump
 	upon: IMMEDIATE
+		addWhiffCancelOption: CmnActAirDash
 	endUpon:
 
 	upon: TOUCH_GROUND
@@ -266,6 +288,7 @@ beginState: CmnActJump
 
 beginState: CmnActFJump
 	upon: IMMEDIATE
+		addWhiffCancelOption: CmnActAirDash
 	endUpon:
 
 	upon: TOUCH_GROUND
@@ -303,6 +326,7 @@ beginState: CmnActFJump
 
 beginState: CmnActBJump
 	upon: IMMEDIATE
+		addWhiffCancelOption: CmnActAirDash
 	endUpon:
 
 	upon: TOUCH_GROUND

@@ -75,6 +75,8 @@ void Spritesheet::draw(Renderer* renderer, Texture& palette)
 				pos + glm::vec2(anchorPosition - curClip.sourceX - curClip.w , curClip.sourceY), true, color);
 		} else {
 			renderer->DrawIndexedTextureAtlas(texture, palette, glm::vec2(curClip.x, curClip.y), glm::vec2(curClip.w, curClip.h), curClip.rotated, (pos + glm::vec2(curClip.sourceX, curClip.sourceY)), false, color);
+			// void DrawTexture(Texture &texture, float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4, float textureCropBottom, const glm::vec4& color = glm::vec4(1.0f));
+			//shadowRenderer->DrawTexture(texture, testChar->pos.x, testChar->pos.y, 960, testChar->pos.y, 960 + (100 * skew), bottompos, (100 * skew), bottompos, 0.12, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
 		}
 	}
 }
