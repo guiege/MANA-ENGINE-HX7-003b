@@ -16,7 +16,7 @@ class Sprite
 		float rot;
 		bool flipped = false;
 		bool hasTex;
-		glm::vec2 pos = glm::ivec2(0, 0);
+		glm::vec2 pos = glm::vec2(0, 0);
 		glm::vec4 color = glm::vec4(1.0f);
 
 		Texture& texture;

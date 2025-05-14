@@ -50,30 +50,31 @@
 
 void Character::init() //TODO: add commands addPositionX and addPositionY, addNamerakaMoveX and Y, velocityXPercentEachFrame, haltMomentum
 {
-	motionInputs["INPUT_236"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD}, {-1, 1}, 8);
-	motionInputs["INPUT_214"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK}, {-1, 1}, 8);
-	motionInputs["INPUT_623"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN_FORWARD}, {-1, 1, 1}, 8);
-	motionInputs["INPUT_421"] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK}, {-1, 1, 1}, 8);
+	motionInputs["INPUT_236"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.FORWARD}, {-1,1,1}, {5,10,10});
+	motionInputs["INPUT_214"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.BACK}, {-1,1,1}, {5,10,10});
+	motionInputs["INPUT_623"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN_FORWARD}, {-1,1,1}, {8,12,7});
+	motionInputs["INPUT_421"] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN_BACK}, {-1,1,1}, {8,12,7});
 
-	motionInputs["INPUT_22"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN}, {1, 1}, 8);
-	motionInputs["INPUT_44"] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.BACK}, {1, 1}, 8);
-	motionInputs["INPUT_66"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.FORWARD}, {1, 1}, 8);
+	motionInputs["INPUT_22"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN}, {1,1}, {10,10});
+	motionInputs["INPUT_28"] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.UP}, {1,1}, {12,10});
+	motionInputs["INPUT_44"] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.BACK}, {1,1}, {10,10});
+	motionInputs["INPUT_66"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.FORWARD}, {1, 1}, {10,10});
 
-	motionInputs["INPUT_41236"] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.FORWARD}, {-1, 1, 1, 1}, 8);
-	motionInputs["INPUT_63214"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.BACK}, {-1, 1, 1, 1}, 8);
+	motionInputs["INPUT_41236"] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.FORWARD}, {-1, 1, 1, 1}, {5,12,12,12});
+	motionInputs["INPUT_63214"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.BACK}, {-1, 1, 1, 1}, {5,12,12,12});
 
-	motionInputs["INPUT_632146"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.BACK, FK_Input_Buttons.FORWARD}, {-1, 1, 1, 1, 1}, 8);
+	motionInputs["INPUT_632146"] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.BACK, FK_Input_Buttons.FORWARD}, {-1, 1, 1, 1, 1, 1}, {6,12,12,12,12,12});
 
-	motionInputs["INPUT_2"] = CommandSequence({FK_Input_Buttons.DOWN}, {-1}, 8);
-	motionInputs["INPUT_3"] = CommandSequence({FK_Input_Buttons.DOWN_FORWARD}, {-1}, 8);
-	motionInputs["INPUT_4"] = CommandSequence({FK_Input_Buttons.BACK}, {-1}, 8);
-	motionInputs["INPUT_6"] = CommandSequence({FK_Input_Buttons.FORWARD}, {-1}, 8);
-	motionInputs["INPUT_8"] = CommandSequence({FK_Input_Buttons.UP}, {-1}, 8);
-	motionInputs["INPUT_87"] = CommandSequence({FK_Input_Buttons.UP_BACK}, {-1}, 8);
-	motionInputs["INPUT_89"] = CommandSequence({FK_Input_Buttons.UP_FORWARD}, {-1}, 8);
+	motionInputs["INPUT_2"] = CommandSequence({FK_Input_Buttons.DOWN}, {-1}, {0});
+	motionInputs["INPUT_3"] = CommandSequence({FK_Input_Buttons.DOWN_FORWARD}, {-1}, {0});
+	motionInputs["INPUT_4"] = CommandSequence({FK_Input_Buttons.BACK}, {-1}, {0});
+	motionInputs["INPUT_6"] = CommandSequence({FK_Input_Buttons.FORWARD}, {-1}, {0});
+	motionInputs["INPUT_8"] = CommandSequence({FK_Input_Buttons.UP}, {-1}, {0});
+	motionInputs["INPUT_87"] = CommandSequence({FK_Input_Buttons.UP_BACK}, {-1}, {0});
+	motionInputs["INPUT_89"] = CommandSequence({FK_Input_Buttons.UP_FORWARD}, {-1}, {0});
 
-	motionInputs["INPUT_HOLD_4"] = CommandSequence({FK_Input_Buttons.BACK}, {-1}, 0);
-	motionInputs["INPUT_HOLD_6"] = CommandSequence({FK_Input_Buttons.FORWARD}, {-1}, 0);
+	motionInputs["INPUT_HOLD_4"] = CommandSequence({FK_Input_Buttons.BACK}, {-1}, {0});
+	motionInputs["INPUT_HOLD_6"] = CommandSequence({FK_Input_Buttons.FORWARD}, {-1}, {0});
 
 	buttons["INPUT_PRESS_LP"] = Button(FK_Input_Buttons.LP, false);
 	buttons["INPUT_PRESS_MP"] = Button(FK_Input_Buttons.MP, false);
@@ -201,6 +202,7 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 
     commandMap["cmn_AtkLv3"] = [this](const std::vector<std::string>& params) {
     	states[GetCurrentState()].properties.pushbackVelocity.x = 1750;
+    	states[GetCurrentState()].properties.pushbackVelocity.y = -50;
     	states[GetCurrentState()].properties.hitstop = 14;
     	states[GetCurrentState()].properties.hitstun = 19;
     	states[GetCurrentState()].properties.blockstun = 16;
@@ -349,6 +351,7 @@ void Character::hitOpponent(Character* opponent, const char* curstate)
 		velocity.x = -(states[curstate].properties.pushbackVelocity.x * 0.0154f * states[curstate].properties.pushbackMultiplier);
 	else
 		opponent->velocity.x = -(states[curstate].properties.pushbackVelocity.x * 0.0154f * states[curstate].properties.pushbackMultiplier);
+	opponent->velocity.y = states[curstate].properties.pushbackVelocity.y; //temp testing launches
 	opponent->health -= states[curstate].properties.damage;
 	opponent->hitstun = states[curstate].properties.hitstun;
 	opponent->slowdown = states[curstate].properties.slowdown;
@@ -714,6 +717,8 @@ void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& pal
 	renderer->DrawQuad(pos + posOffset + glm::vec2(width/2 - horiCrossWidth/2, height - horiCrossHeight/2), glm::vec2(horiCrossWidth, horiCrossHeight), 0, glm::vec4(1.0f));
 	// renderer->DrawQuad(pos, glm::vec2(5, 5), 0, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 	// renderer->DrawQuad({pos.x + spritesheet.getCurrentOffset().x*2 + spritesheet.getCurrentSize().x*1.5 - 5, pos.y}, glm::vec2(5, 5), 0, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+
+	// spritesheet.drawShadow(paletteRenderer, (centerPos.x - width/2), centerPos.y, (centerPos.x + width/2), centerPos.y, (centerPos.x - width), centerPos.y + 500,centerPos.x, centerPos.y + 500, 0);
 
 	if(hurtboxes.count(currentFrame) > 0){
 		for (int i = 0; i < hurtboxes[currentFrame].size(); ++i){

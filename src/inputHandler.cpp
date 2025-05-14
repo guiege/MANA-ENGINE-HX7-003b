@@ -40,7 +40,7 @@ void InputHandler::registerInput(const std::bitset<7> &input)
 
 bool InputHandler::checkCommand(CommandSequence &c)
 {
-	if(c.tE == 0){
+	if(c.timingList.size() == 0){
 		return checkCommand(c.commandList[0], c.holdList[0]);
 	}
 
@@ -68,14 +68,14 @@ bool InputHandler::checkCommand(CommandSequence &c)
 		if(c.commandNumber >= 1 && c.commandList[c.commandNumber - 1] == c.commandList[c.commandNumber]){
 			if(std::bitset<4>((dirCheck).to_ullong()) == c.commandList[c.commandNumber])
 			{
-				c.commandTimer = c.tE + 1;
+				c.commandTimer = c.timingList[c.commandNumber] + 1;
 				c.commandNumber++;
 				c.lastInputTick = currentTick;
 			} else if(std::bitset<4>((dirCheck).to_ullong()).any()){
 				c.commandNumber = 0;
 			}
 		} else if(std::bitset<4>((dirCheck | dirHold).to_ullong()) == c.commandList[c.commandNumber]){
-				c.commandTimer = c.tE + 1;
+				c.commandTimer = c.timingList[c.commandNumber] + 1;
 				c.commandNumber++;
 				c.lastInputTick = currentTick;
 		}

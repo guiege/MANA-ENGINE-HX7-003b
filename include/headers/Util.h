@@ -49,9 +49,14 @@ struct CommandSequence{
     std::vector<std::bitset<4>> commandList;
 
     std::vector<int> holdList;
+    std::vector<int> timingList;
 
     CommandSequence(const std::vector<std::bitset<4>> &commandList, const std::vector<int> &holdList, int tE)
     :commandList(commandList), holdList(holdList), tE(tE)
+    {}
+
+    CommandSequence(const std::vector<std::bitset<4>> &commandList, const std::vector<int> &holdList, const std::vector<int> &tL)
+    :commandList(commandList), holdList(holdList), tE(tE), timingList(tL) //AM I RETARDED???????
     {}
 
     CommandSequence()

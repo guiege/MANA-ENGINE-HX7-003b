@@ -14,9 +14,12 @@ void Spritefont::draw(Renderer* renderer)
 	if(renderer->isBatch){
 		int oldx = pos.x;
 		for(int i = 0; i < currentCodes.size(); i++){
+			float yoffset = drawoffsetsin*4;
+			if(i%2 == 0)
+				yoffset = drawoffsetcos*4;
 			if(currentCodes[i] >= 0){
 				SetFrame(currentCodes[i]);
-				renderer->DrawQuadAtlas(texture, glm::vec2(curClip.x, curClip.y), glm::vec2(curClip.w, curClip.h), curClip.rotated, pos + glm::vec2(anchorPosition - curClip.sourceX - curClip.w , curClip.sourceY), color, glm::vec2(scale));
+				renderer->DrawQuadAtlas(texture, glm::vec2(curClip.x, curClip.y), glm::vec2(curClip.w, curClip.h), curClip.rotated, pos + glm::vec2(anchorPosition - curClip.sourceX - curClip.w, curClip.sourceY + yoffset), color, glm::vec2(scale));
 				pos.x += spacing*scale;
 			}else{
 				if(currentCodes[i] == -1)
@@ -40,6 +43,8 @@ void Spritefont::playAnim(int sTick)
 void Spritefont::update(int tick)
 {
 	int diff = tick-startTick;
+	drawoffsetsin = sin(diff/10);
+	drawoffsetcos = cos(diff/10);
 	if(!animated || diff < 0){
 		return;
 	}

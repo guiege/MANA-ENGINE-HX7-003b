@@ -31,6 +31,9 @@ public:
 
 	bool animated = true;
 
+	float drawoffsetsin = 0;
+	float drawoffsetcos = 0;
+
 	Spritefont(const std::string& text, Texture& texture, const char* file, const float xpos, const float ypos, const float width, const float height, const float rot, glm::vec4 color = glm::vec4(1.0f));
 
 	void draw(Renderer* renderer);

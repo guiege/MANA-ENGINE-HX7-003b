@@ -20,6 +20,8 @@ public:
 
     void draw(Renderer* renderer, Texture& palette);
 
+    void drawShadow(Renderer* renderer, float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4, float textureCropBottom, const glm::vec4& color = glm::vec4(1.0f));
+
     void drawclip(Renderer* renderer, const int x, const int y, const int w, const int h, bool rotated);
 
     int GetFrame()
