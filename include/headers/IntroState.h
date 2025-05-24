@@ -100,6 +100,7 @@ public:
 	bool exit();
 
 	int ReadInputs();
+	int ReadControllerInputs();
 
 	//Main loop functions
 	void update(float dt);

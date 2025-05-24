@@ -163,13 +163,10 @@ int IntroState::ReadInputs()
 	return inputs;
 }
 
-void IntroState::update(float dt)
+int IntroState::ReadControllerInputs()
 {
-	inputs[0] = ReadInputs();
+	int inputs = 0;
 	int present = glfwJoystickPresent(GLFW_JOYSTICK_1);
-	// std::cout << "Stick 1 is here: " << present << std::endl;
-
-	inputHandler2->registerInputs(inputs[0]);
 
 	if(1 == present)
 	{
@@ -198,26 +195,26 @@ void IntroState::update(float dt)
 
 		if(GLFW_PRESS == buttons[0])
 		{
-			inputHandler->registerInput(FK_Input_Buttons.LK);
+			inputs |= ButtonIDs::LK;
 		}
 
 		if(GLFW_PRESS == buttons[1])
 		{
-			inputHandler->registerInput(FK_Input_Buttons.MK);
+			inputs |= ButtonIDs::MK;
 		}
 		if(axes[5] == 1)
 		{
-			inputHandler->registerInput(FK_Input_Buttons.HK);
+			inputs |= ButtonIDs::HK;
 		}
 
 		if(GLFW_PRESS == buttons[2])
 		{
-			inputHandler->registerInput(FK_Input_Buttons.LP);
+			inputs |= ButtonIDs::LP;
 		}
 
 		if(GLFW_PRESS == buttons[3])
 		{
-			inputHandler->registerInput(FK_Input_Buttons.MP);
+			inputs |= ButtonIDs::MP;
 		}
 
 		if(GLFW_PRESS == buttons[4])
@@ -231,7 +228,7 @@ void IntroState::update(float dt)
 
 		if(GLFW_PRESS == buttons[5])
 		{
-			inputHandler->registerInput(FK_Input_Buttons.HP);
+			inputs |= ButtonIDs::HP;
 		}
 
 		if(GLFW_PRESS == buttons[6])
@@ -241,7 +238,7 @@ void IntroState::update(float dt)
 
 		if(GLFW_PRESS == buttons[7])
 		{
-			inputHandler->registerInput(FK_Input_Buttons.START);
+			inputs |= ButtonIDs::START;
 		}
 
 		if(GLFW_PRESS == buttons[8])
@@ -256,30 +253,41 @@ void IntroState::update(float dt)
 
 		if(GLFW_PRESS == buttons[10])
 		{
-			inputHandler->registerInput(FK_Input_Buttons.UP);
+			inputs |= ButtonIDs::UP;
 		}
 
 		if(GLFW_PRESS == buttons[11])
 		{
 			if(testChar->GetFlipped())
-				inputHandler->registerInput(FK_Input_Buttons.BACK);
+				inputs |= ButtonIDs::BACK;
 			else
-				inputHandler->registerInput(FK_Input_Buttons.FORWARD);
+				inputs |= ButtonIDs::FORWARD;
 		}
 
 		if(GLFW_PRESS == buttons[12])
 		{
-			inputHandler->registerInput(FK_Input_Buttons.DOWN);
+			inputs |= ButtonIDs::DOWN;
 		}
 
 		if(GLFW_PRESS == buttons[13])
 		{
 			if(testChar->GetFlipped())
-				inputHandler->registerInput(FK_Input_Buttons.FORWARD);
+				inputs |= ButtonIDs::FORWARD;
 			else
-				inputHandler->registerInput(FK_Input_Buttons.BACK);
+				inputs |= ButtonIDs::BACK;
 		}
 	}
+	return inputs;
+}
+
+void IntroState::update(float dt)
+{
+	inputs[0] = ReadInputs();
+	inputs[1] = ReadControllerInputs();
+	// std::cout << "Stick 1 is here: " << present << std::endl;
+
+	inputHandler2->registerInputs(inputs[0]);
+	inputHandler->registerInputs(inputs[1]);
 
 	if(Keys[GLFW_KEY_R])
 	{

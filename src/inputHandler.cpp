@@ -20,11 +20,31 @@ void InputHandler::registerInputs(const int inputs) //(buttons)0000000 (dirs)000
 
 void InputHandler::registerInput(const std::bitset<4> &input)
 {
-	if((std::bitset<(buffer * 4)>(input.to_ullong()) << 4 & dirHold) == 0)
-	{
-		dirPress = dirPress | std::bitset<(buffer * 4)>(input.to_ullong());
+	std::bitset<4> currentInput = input;
+	if((input & FK_Input_Buttons.BACK).any() && (input & FK_Input_Buttons.FORWARD).any()){
+		currentInput &= ~(FK_Input_Buttons.BACK | FK_Input_Buttons.FORWARD);
 	}
-	dirHold = dirHold | std::bitset<(buffer * 4)>(input.to_ullong());
+	if((input & FK_Input_Buttons.UP).any() && (input & FK_Input_Buttons.DOWN).any()){
+		currentInput &= ~(FK_Input_Buttons.UP | FK_Input_Buttons.DOWN);
+	}
+
+	std::bitset<4> oldHeld = std::bitset<4>((dirHold >> 4).to_ulong());
+	std::bitset<4> newPresses = (currentInput & ~oldHeld);
+	std::bitset<4> released = (oldHeld & ~currentInput);
+	std::bitset<4> stillHeld = (currentInput & oldHeld);
+
+	std::bitset<4> reactivePresses;
+	if (released.any()) {
+	    reactivePresses = stillHeld;
+	}
+
+	std::bitset<4> finalPresses = newPresses | reactivePresses;
+
+	if (finalPresses.any()) {
+		dirPress = dirPress | std::bitset<(buffer * 4)>(currentInput.to_ullong());
+	}
+
+	dirHold = dirHold | std::bitset<(buffer * 4)>(currentInput.to_ullong());
 }
 
 void InputHandler::registerInput(const std::bitset<7> &input)
@@ -40,46 +60,51 @@ void InputHandler::registerInput(const std::bitset<7> &input)
 
 bool InputHandler::checkCommand(CommandSequence &c)
 {
-	if(c.timingList.size() == 0){
-		return checkCommand(c.commandList[0], c.holdList[0]);
+	if(c.timingList[0] == 0){
+		return checkCommandStrict(c.commandList[0], 1);
+	}
+
+	if(c.timingList[0] == 50){
+		return checkCommand(c.commandList[0],1);
 	}
 
 	bool executed = false;
 	std::bitset<(buffer * 4)> dirCheck = dirPress;
-
-	if(c.holdList[c.commandNumber] < 0)
+	if(sgn(c.timingList[c.commandNumber]) < 0)
 	{
 		dirCheck = dirHold;
 	}
 
 	if(c.commandNumber == c.commandList.size())
 	{
-		if(c.commandTimer > 0)
-		{
-			executed = true;
-		}
-		else
-		{
-			c.commandTimer = 0;
-			c.commandNumber = 0;
-		}
+		c.executeTimer = c.commandTimer;
+		c.commandTimer = 0;
+		c.commandNumber = 0;
 	}
-	else{
-		if(c.commandNumber >= 1 && c.commandList[c.commandNumber - 1] == c.commandList[c.commandNumber]){
-			if(std::bitset<4>((dirCheck).to_ullong()) == c.commandList[c.commandNumber])
-			{
-				c.commandTimer = c.timingList[c.commandNumber] + 1;
-				c.commandNumber++;
-				c.lastInputTick = currentTick;
-			} else if(std::bitset<4>((dirCheck).to_ullong()).any()){
-				c.commandNumber = 0;
+
+	if(c.executeTimer > 0){
+		executed = true;
+	}
+
+
+	std::bitset<4> checkset((dirCheck).to_ullong());
+	if(checkset == c.commandList[c.commandNumber]){
+		c.commandTimer = abs(c.timingList[c.commandNumber]) + 1;
+		c.commandNumber++;
+	} else{
+		if(checkset.any()){
+			if(c.commandNumber > 0){
+				if(c.commandList[c.commandNumber-1] == 0){
+					std::cout << "aw dang it" << std::endl;
+					c.commandTimer = 0;
+					c.commandNumber = 0;
+				}
 			}
-		} else if(std::bitset<4>((dirCheck | dirHold).to_ullong()) == c.commandList[c.commandNumber]){
-				c.commandTimer = c.timingList[c.commandNumber] + 1;
-				c.commandNumber++;
-				c.lastInputTick = currentTick;
 		}
 	}
+
+	if(c.executeTimer > 0)
+		--c.executeTimer;
 
 	if(c.commandTimer > 0)
 		--c.commandTimer;
@@ -91,7 +116,7 @@ bool InputHandler::checkCommand(CommandSequence &c)
 	return executed;
 }
 
-bool InputHandler::checkCommand(const std::bitset<4> &direction, bool hold)
+bool InputHandler::checkCommandStrict(const std::bitset<4> &direction, bool hold)
 {
 
 	bool executed = false;
@@ -99,6 +124,19 @@ bool InputHandler::checkCommand(const std::bitset<4> &direction, bool hold)
 	std::bitset<(buffer * 4)> dirCheck = hold ? dirHold : dirPress;
 
 	if(std::bitset<4>(dirCheck.to_ullong()) == direction)
+		executed = true;
+
+	return executed;
+}
+
+bool InputHandler::checkCommand(const std::bitset<4> &direction, bool hold)
+{
+
+	bool executed = false;
+	
+	std::bitset<(buffer * 4)> dirCheck = hold ? dirHold : dirPress;
+
+	if ((dirCheck.to_ullong() & direction.to_ullong()))
 		executed = true;
 
 	return executed;
@@ -116,7 +154,7 @@ bool InputHandler::checkCommand(const std::bitset<7> &button, bool hold)
 		butCheck = butHold;
 	}
 
-	for(int i = 0; i <= buffer; i++)
+	for(int i = 0; i < buffer; i++)
 	{
 		if ((butCheck.to_ullong() >> (7 * i)) & button.to_ullong())
 			executed = true;
@@ -127,6 +165,7 @@ bool InputHandler::checkCommand(const std::bitset<7> &button, bool hold)
 
 void InputHandler::update(const int &tick)
 {
+
 	currentTick = tick;
 
 	if(currentInputTimer < 99)
@@ -166,6 +205,8 @@ void InputHandler::update(const int &tick)
 
 	if(oldDirection != currentDirection)
 		inputChanged = true;
+
+	// std::cout<< dirPress << std::endl;
 	
 	dirHold = dirHold << 4;
 	dirPress = dirPress << 4;

@@ -162,6 +162,11 @@ public:
         states[GetCurrentState()].whiffCancelOptions.push_back(state);
     }
 
+    void removeWhiffCancelOption(const std::string& state) {
+        auto& options = states[GetCurrentState()].whiffCancelOptions;
+        options.erase(std::remove(options.begin(), options.end(), state), options.end());
+    }
+
     void callSubroutine(const std::string& subroutine);
 
     void clearSubroutines(){
@@ -189,6 +194,21 @@ public:
         }
     }
 
+    void insertMotionInput(const std::string& key, const std::vector<CommandSequence>& inputs){
+        motionInputPriority.push_back(key);
+        motionInputs[key] = inputs;
+        buttonMap[key] = false;
+    }
+
+    std::string getHighestPriorityInput() {
+        for (const auto& priorityKey : motionInputPriority) {
+            if (std::find(motionInputBuffer.begin(), motionInputBuffer.end(), priorityKey) != motionInputBuffer.end()) {
+                return priorityKey;
+            }
+        }
+        return "";
+    }
+
     void loadScript(const std::string& filename) {
         std::ifstream file(filename);
         std::string line;
@@ -214,6 +234,7 @@ public:
             if(line.find("addMove:") != std::string::npos){
                 State newState;
                 newState.name = line.substr(8);
+                stateOrder.push_back(newState.name);
                 states[newState.name] = newState;
                 inAddBlock = true;
                 inStateBlock = false;
@@ -308,7 +329,10 @@ protected:
     Spritesheet spritesheet;
 
     //Input Variables
-    std::unordered_map<std::string, CommandSequence> motionInputs;
+    std::unordered_map<std::string, std::vector<CommandSequence>> motionInputs;
+    std::vector<std::string> motionInputBuffer;
+    std::vector<std::string> motionInputPriority;
+
     std::unordered_map<std::string, Button> buttons;
     std::unordered_map<std::string, bool> buttonMap;
 
@@ -319,6 +343,7 @@ protected:
     std::unordered_map<int, std::string> stateNames;
 
     std::unordered_map<std::string, State> states;
+    std::vector<std::string> stateOrder;
     std::unordered_map<std::string, std::function<void(const std::vector<std::string>&)>> commandMap;
     bool cancellable = false;
     bool hit = false;
@@ -380,7 +405,7 @@ protected:
     float velocityXPercentEachFrame = 1.0f;
     float velocityYPercentEachFrame = 1.0f;
 
-    int karaFrames = 2;
+    int karaFrames = 3;
     float requestedShake = 0.0f;
 
     //Parameters

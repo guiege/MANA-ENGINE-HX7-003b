@@ -7,7 +7,7 @@
 #include <bitset>
 #include <algorithm>
 
-const int buffer = 4;
+const int buffer = 5;
 
 class InputHandler {
 public:
@@ -51,6 +51,8 @@ public:
 
 	bool checkCommand(const std::bitset<4> &direction, bool hold);
 
+	bool checkCommandStrict(const std::bitset<4> &direction, bool hold);
+
 	bool checkBuffer(const std::bitset<4> &direction, bool hold);
 
 	bool checkCommand(const std::bitset<7> &button, bool hold);
@@ -88,7 +90,7 @@ struct {
 	std::bitset<4> UP_FORWARD 	= (UP | FORWARD);
 	std::bitset<4> UP_BACK 		= (UP | BACK);
 	std::bitset<4> DOWN_FORWARD = (DOWN | FORWARD);
-	std::bitset<4> DOWN_BACK 	= (DOWN | BACK);
+	std::bitset<4> DOWN_BACK	= (DOWN | BACK);
 
 	std::bitset<7> LP 			= (1 << 6);
 	std::bitset<7> MP 			= (1 << 5);
