@@ -86,9 +86,10 @@ bool InputHandler::checkCommand(CommandSequence &c)
 		executed = true;
 	}
 
-
 	std::bitset<4> checkset((dirCheck).to_ullong());
 	if(checkset == c.commandList[c.commandNumber]){
+		if(c.commandList[c.commandNumber] == 0)
+			std::cout << "reset to neutral" << std::endl;
 		c.commandTimer = abs(c.timingList[c.commandNumber]) + 1;
 		c.commandNumber++;
 	} else{

@@ -133,18 +133,20 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 	});
 
 	insertMotionInput("INPUT_22",{
-		CommandSequence({FK_Input_Buttons.DOWN, 0,FK_Input_Buttons.DOWN},{-10,10,10}),
-		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.UP,FK_Input_Buttons.DOWN},{-10,10,10}),
-		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK,FK_Input_Buttons.DOWN},{-10,10,10}),
-		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD,FK_Input_Buttons.DOWN},{-10,10,10}),
-		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.UP_FORWARD,FK_Input_Buttons.DOWN},{-10,10,10}),
-		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.UP_BACK,FK_Input_Buttons.DOWN},{-10,10,10})
+		CommandSequence({FK_Input_Buttons.DOWN, 0,FK_Input_Buttons.DOWN},{-10,-10,10}),
+		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.UP,FK_Input_Buttons.DOWN},{-10,-10,10}),
+		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK,FK_Input_Buttons.DOWN},{-10,-10,10}),
+		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD,FK_Input_Buttons.DOWN},{-10,-10,10}),
+		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.UP_FORWARD,FK_Input_Buttons.DOWN},{-10,-10,10}),
+		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.UP_BACK,FK_Input_Buttons.DOWN},{-10,-10,10})
 	});
 	insertMotionInput("INPUT_44",{
 		CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.BACK},{10,10})
 	});
 	insertMotionInput("INPUT_66",{
-		CommandSequence({FK_Input_Buttons.FORWARD, 0, FK_Input_Buttons.FORWARD},{8,8,8})
+		CommandSequence({FK_Input_Buttons.FORWARD, 0, FK_Input_Buttons.FORWARD},{8,-8,8}),
+		CommandSequence({FK_Input_Buttons.DOWN_FORWARD, 0, FK_Input_Buttons.FORWARD},{8,-8,8}),
+		CommandSequence({FK_Input_Buttons.UP_FORWARD, 0, FK_Input_Buttons.FORWARD},{8,-8,8})
 	});
 	insertMotionInput("INPUT_2",{
 		CommandSequence({FK_Input_Buttons.DOWN},{0})
@@ -703,6 +705,7 @@ void Character::updateScript(int tick, Character* opponent)
 						if(j==i) continue;
 						motionInputs[key][j].commandNumber = 0;
 						motionInputs[key][j].commandTimer = 0;
+						motionInputs[key][j].executeTimer = 0;
 					}
 				}
 				motionInputBuffer.push_back(key);
