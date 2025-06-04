@@ -29,16 +29,16 @@ void InputHandler::registerInput(const std::bitset<4> &input)
 	}
 
 	std::bitset<4> oldHeld = std::bitset<4>((dirHold >> 4).to_ulong());
-	std::bitset<4> newPresses = (currentInput & ~oldHeld);
-	std::bitset<4> released = (oldHeld & ~currentInput);
+	newPressCheck = (currentInput & ~oldHeld);
+	dirRelease = (oldHeld & ~currentInput);
 	std::bitset<4> stillHeld = (currentInput & oldHeld);
 
 	std::bitset<4> reactivePresses;
-	if (released.any()) {
+	if (dirRelease.any()) {
 	    reactivePresses = stillHeld;
 	}
 
-	std::bitset<4> finalPresses = newPresses | reactivePresses;
+	std::bitset<4> finalPresses = newPressCheck | reactivePresses;
 
 	if (finalPresses.any()) {
 		dirPress = dirPress | std::bitset<(buffer * 4)>(currentInput.to_ullong());
@@ -49,13 +49,25 @@ void InputHandler::registerInput(const std::bitset<4> &input)
 
 void InputHandler::registerInput(const std::bitset<7> &input)
 {
+	std::bitset<7> currentInput = input;
 
-	if((std::bitset<(buffer * 7)>(input.to_ullong()) << 7 & butHold) == 0)
-	{
+	std::bitset<7> oldHeld = std::bitset<7>((butHold >> 7).to_ulong());
+	std::bitset<7> newPresses = (currentInput & ~oldHeld);
+	std::bitset<7> released = (oldHeld & ~currentInput);
+	std::bitset<7> stillHeld = (currentInput & oldHeld);
+
+	std::bitset<7> reactivePresses;
+	if (released.any()) {
+	    reactivePresses = stillHeld;
+	}
+
+	std::bitset<7> finalPresses = newPresses | reactivePresses;
+
+	if (finalPresses.any()) {
 		butPress = butPress | std::bitset<(buffer * 7)>(input.to_ullong());
 	}
-	butHold = butHold | std::bitset<(buffer * 7)>(input.to_ullong());
 
+	butHold = butHold | std::bitset<(buffer * 7)>(input.to_ullong());
 }
 
 bool InputHandler::checkCommand(CommandSequence &c)
@@ -72,7 +84,60 @@ bool InputHandler::checkCommand(CommandSequence &c)
 	std::bitset<(buffer * 4)> dirCheck = dirPress;
 	if(sgn(c.timingList[c.commandNumber]) < 0)
 	{
+	
 		dirCheck = dirHold;
+	}
+
+	if(c.commandList[c.commandNumber] == 0){
+		if(newPressCheck.any()){
+				c.commandTimer = 0;
+				c.commandNumber = 0;
+				c.executeTimer = 0;
+		}
+	}
+
+
+	std::bitset<4> checkset((dirCheck).to_ullong());
+	std::bitset<4> holdset((dirHold).to_ullong());
+
+	bool releaseCheck = (dirRelease & c.commandList[c.commandNumber]).any();
+	bool holdCheck = (holdset & c.commandList[c.commandNumber]).any();
+
+	if(c.timingList[c.commandNumber] > 100){
+		if(c.commandTimer == 1){
+			std::cout << "CHARGED" << releaseCheck <<std::endl;
+			c.commandTimer = 2;
+			if(releaseCheck){
+				std::cout << "CHARGE RELEASED" << std::endl;
+				c.commandNumber++;
+				c.commandTimer = 10;
+			}
+		}
+	}
+
+	if(c.timingList[c.commandNumber] > 100){
+		if(!holdCheck){
+			c.commandTimer = 0;
+			c.commandNumber = 0;
+		}
+
+	}
+
+	if(checkset == c.commandList[c.commandNumber]){
+		if(c.timingList[c.commandNumber] > 100){
+			c.commandTimer = abs(c.timingList[c.commandNumber]) - 99;
+		}else{
+			c.commandTimer = abs(c.timingList[c.commandNumber]) + 1;
+			c.commandNumber++;
+		}
+	} else{
+		if(c.commandNumber > 0 && c.commandList[c.commandNumber-1] == 0){
+			if(std::bitset<4>((dirHold).to_ullong()).any()){
+				c.commandTimer = 0;
+		 		c.commandNumber = 0;
+		 		c.executeTimer = 0;
+			}
+		}
 	}
 
 	if(c.commandNumber == c.commandList.size())
@@ -86,23 +151,6 @@ bool InputHandler::checkCommand(CommandSequence &c)
 		executed = true;
 	}
 
-	std::bitset<4> checkset((dirCheck).to_ullong());
-	if(checkset == c.commandList[c.commandNumber]){
-		if(c.commandList[c.commandNumber] == 0)
-			std::cout << "reset to neutral" << std::endl;
-		c.commandTimer = abs(c.timingList[c.commandNumber]) + 1;
-		c.commandNumber++;
-	} else{
-		if(checkset.any()){
-			if(c.commandNumber > 0){
-				if(c.commandList[c.commandNumber-1] == 0){
-					std::cout << "aw dang it" << std::endl;
-					c.commandTimer = 0;
-					c.commandNumber = 0;
-				}
-			}
-		}
-	}
 
 	if(c.executeTimer > 0)
 		--c.executeTimer;

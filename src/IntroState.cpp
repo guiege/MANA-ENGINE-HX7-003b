@@ -50,11 +50,11 @@ bool IntroState::enter()
     ResourceManager::LoadTexture("res/textures/hydesheetindexed.png", true, "hydesheet");
     ResourceManager::LoadTexture("res/textures/hydepal.png", true, "hydepal");
     ResourceManager::LoadTexture("res/textures/hydepalp2.png", true, "hydepalp2");
+    ResourceManager::LoadTexture("res/textures/blackpal.png", true, "shadowpal");
     ResourceManager::LoadTexture("res/textures/ui/icons-capcom-32.png", true, GL_LINEAR, GL_NEAREST, "icons-capcom-32");
     ResourceManager::LoadTexture("res/textures/ui/gauge_00.png", GL_LINEAR, GL_LINEAR, true, "gauge");
     ResourceManager::LoadTexture("res/textures/pop_cat.png", true, "popcat");
     // ResourceManager::LoadTexture("res/textures/ryu.png", true, "ryusheet");
-    // ResourceManager::LoadTexture("res/textures/ffviir-zoom-midgar-city.jpg", false, "midgar");
     
 
     proj = glm::ortho(0.0f, (float)(1920), (float)(1080), 0.0f, -1.0f, 1.0f);
@@ -89,7 +89,7 @@ bool IntroState::enter()
 	// actors.push_back(testChar2);
 
 	Solid platform(0, 700, 800, 800, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	Solid floor(0, 980, 4000, 1000, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	Solid floor(-1000, 980, 6000, 1000, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	Solid wallL(-40, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	Solid wallR(4000, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	// solids.push_back(platform);
@@ -100,7 +100,7 @@ bool IntroState::enter()
 	cameraXPos = 0;
 	cameraYPos = 180;
 	cameraRot = 0.0f;
-	cameraScale = 0.6f;
+	// cameraScale = 0.6f;
 
 	// post->Chromatic = true;
 
@@ -416,6 +416,14 @@ void IntroState::update(float dt)
 	std::string char1state = testChar->GetCurrentState();
 	std::string char2state = testChar2->GetCurrentState();
 
+	// std::cout << plusframestimer <<std::endl;
+	// if(char2state == "CmnActStand"){
+	// 	plusframestimer=0;
+	// } else{
+	// 	if(char1state == "CmnActStand")
+	// 		plusframestimer++;
+	// }
+
 	if(testChar->checkCollision(testChar2))
 	{
 		testChar->hitOpponent(testChar2, char1state.c_str());
@@ -424,6 +432,19 @@ void IntroState::update(float dt)
 	{
 		testChar2->hitOpponent(testChar, char2state.c_str());
 	}
+
+	// Solid wallL(-40, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	// Solid wallR(4000, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	//Solid floor(0, 980, 4000, 1000, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	// if(testChar->pos.x >= 3400)
+	// 	testChar->pos.x = 3400;
+	// if(testChar->pos.x <= -400)
+	// 	testChar->pos.x = -400;
+	// if(testChar2->pos.x >= 3400)
+	// 	testChar2->pos.x = 3400;
+	// if(testChar2->pos.x <= -400)
+	// 	testChar2->pos.x = -400;
+	// std::cout << testChar->pos.x << std::endl;
 
 	if(testChar->GetHitstop() == 0){
 		if(!testChar->isActionable())
@@ -480,7 +501,7 @@ void IntroState::update(float dt)
 
     float baseScale = 0.6f;
     float maxScale = 2.0f;
-    float scale = 0.6f;
+    float scale = 0.8f;
     if(abs(distance) > 960)
     	scale = baseScale + (abs(distance) / 5000.0f);
     
@@ -591,9 +612,9 @@ void IntroState::render()
 
 	batchRenderer->BeginBatch(); //Character Pass
 
-	testChar->draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepal"));
+	testChar->draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepal"), ResourceManager::GetTexture("shadowpal"));
 
-    testChar2->draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepalp2"));
+    testChar2->draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepalp2"),ResourceManager::GetTexture("shadowpal"));
 
     batchRenderer->EndBatch();
 	batchRenderer->Flush(); //End Character Pass

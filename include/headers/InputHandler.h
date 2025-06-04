@@ -30,11 +30,13 @@ public:
 
 	std::bitset<(buffer * 4)> dirHold;
 	std::bitset<(buffer * 4)> dirPress;
-	std::bitset<(buffer * 4)> dirRelease;
+	std::bitset<4> dirRelease;
 
 	std::bitset<(buffer * 7)> butHold;
 	std::bitset<(buffer * 7)> butPress;
 	std::bitset<(buffer * 7)> butRelease;
+
+	std::bitset<4> newPressCheck;
 
 	InputHandler();
 	~InputHandler();

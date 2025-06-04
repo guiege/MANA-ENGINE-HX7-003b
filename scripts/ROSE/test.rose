@@ -1,7 +1,7 @@
 addMove: GunFlame
     moveType: SPECIAL
     characterState: STANDING
-    moveInput: INPUT_41236
+    moveInput: INPUT_236236
     moveInput: INPUT_PRESS_HP
 	endMove:
 
@@ -23,30 +23,41 @@ addMove: NmlAtk5A
     moveInput: INPUT_PRESS_LP
 	endMove:
 
+addMove: NmlAtk2A
+    moveType: NORMAL
+    characterState: CROUCHING
+    moveInput: INPUT_PRESS_LP
+    //moveInput: INPUT_ANY_DOWN commands stack, you need to be pressing down checked after the input
+	endMove:
+
 addMove: CmnActFDash
 	characterState: STANDING
 	moveInput: INPUT_66
 	endMove:
 
 addMove: CmnActAirDash
-	characterState: AIR
+	characterState: JUMPING
 	moveInput: INPUT_66
 	endMove:
 
-addMove: CmnActSuperJump
-	moveInput: INPUT_28
+addMove: CmnActJumpPre
+	characterState: STANDING
+	moveInput: INPUT_ANY_UP
 	endMove:
+
+// addMove: CmnActSuperFJump
+// 	moveInput: INPUT_289
+// 	endMove:
+
+// addMove: CmnActSuperBJump
+// 	moveInput: INPUT_287
+// 	endMove:
+
+// addMove: CmnActSuperJump
+// 	moveInput: INPUT_28
+// 	endMove:
 
 addMove: CmnActJump
-	moveInput: INPUT_8
-	endMove:
-
-addMove: CmnActFJump
-	moveInput: INPUT_89
-	endMove:
-
-addMove: CmnActBJump
-	moveInput: INPUT_87
 	endMove:
 
 addMove: CmnActStand
@@ -78,9 +89,16 @@ addMove: CmnActHighGuardEnd
 //eventually add declarative subroutines(ex. beginSubroutine: s32'RoundInit')
 beginState: RoundInit
 	upon:IMMEDIATE
+		forwardJumpDistance: 7900
+		backwardJumpDistance: 5200
+		jumpHeight: 35000
+		initGravity: 1900
+		forwardSuperJumpDistance: 7900
+		backwardSuperJumpDistance: 5200
+		superJumpHeight: 43700
+		superJumpGravity: 1900
 		walkFSpeed: 4300
 		walkBSpeed: 3700
-		setGravity: 1400
 		initDashFSpeed: 13100
 		fDashAccelSpeed: 560
 		fDashFriction: 95
@@ -91,18 +109,16 @@ beginState: RoundInit
 beginState: NmlAtk5A
 	upon:IMMEDIATE
 		cmn_AtkLv1:
-		addGatlingOption: CmnActJump
-		addGatlingOption: CmnActSuperJump
-		addGatlingOption: CmnActFJump
-		addGatlingOption: CmnActBJump
+		physicsXImpulse: 0
+		addGatlingOption: CmnActJumpPre
 		addGatlingOption: NmlAtk5A
+		addCancelOption: NmlAtk2A
 		addGatlingOption: NmlAtk5D
 		addGatlingOption: BanditBringer
 		addCancelOption: GunFlame
 		damage: 0, 56
-		physicsXImpulse: 0
 		// hitStop: 4
-		pushbackX: 30
+		pushbackX: 70
 		// hitstunAmount: 10
 	endUpon:
 
@@ -122,12 +138,34 @@ beginState: NmlAtk5A
 	
 	endState:
 
+beginState: NmlAtk2A
+	upon:IMMEDIATE
+		cmn_AtkLv1:
+		physicsXImpulse: 0
+		addCancelOption: NmlAtk2A
+		addGatlingOption: NmlAtk5A
+		addGatlingOption: BanditBringer
+		pushbackX: 70
+	endUpon:
+
+	upon: HIT
+		cmn_screenshake:10
+	endUpon:
+
+	sprite: 106, 5
+	sprite: 107, 1
+	sprite: 108, 1
+	sprite: 109, 6
+	sprite: 110, 6
+	
+	endState:
+
 beginState: NmlAtk5D
 	upon:IMMEDIATE
 		cmn_AtkLv4:
 		damage: 0, 56
 		physicsXImpulse: 0
-		pushbackX: 50
+		pushbackX: 100
 		// pushbackX: 1000
 		addCancelOption: GunFlame
 		// addCancelOption: CmnActFDash
@@ -199,7 +237,7 @@ beginState: CmnActStand
 
 beginState: CmnActStand2Crouch
 	upon: IMMEDIATE
-		addWhiffCancelOption: GunFlame
+		addWhiffCancelOption: cmnNandemoCancel
 	endUpon:
 
 	sprite: 90, 8
@@ -210,7 +248,7 @@ beginState: CmnActStand2Crouch
 
 beginState: CmnActCrouch
 	upon: IMMEDIATE
-		addWhiffCancelOption: GunFlame
+		addWhiffCancelOption: cmnNandemoCancel
 	endUpon:
 
 	beginLabel: loop
@@ -229,7 +267,7 @@ beginState: CmnActCrouch
 
 beginState: CmnActCrouch2Stand
 	upon: IMMEDIATE
-		addWhiffCancelOption: GunFlame
+		addWhiffCancelOption: cmnNandemoCancel
 	endUpon:
 
 	sprite: 102, 1
@@ -279,8 +317,7 @@ beginState: CmnActBWalk
 
 beginState: CmnActFDash
 	upon: IMMEDIATE
-		addWhiffCancelOption: GunFlame
-		addWhiffCancelOption: BanditBringer
+		addWhiffCancelOption: cmnNandemoCancel
 		callSubroutine: cmnFDash
 	endUpon:
 
@@ -301,13 +338,18 @@ beginState: CmnActFDash
 
 beginState: CmnActAirDash
 	upon: IMMEDIATE
+	
+		upon: IDLING
+			velocityXPercent: 0
+		endUpon:
+
 	endUpon:
 
 	sprite: 361, 6
 
 	setGravity: 0
-	physicsXImpulse: 35000
-	physicsYImpulse: 0
+	// physicsXImpulse: 35000
+	// physicsYImpulse: 0
 	sprite: 362, 3
 	sprite: 363, 3
 	sprite: 364, 3
@@ -316,157 +358,268 @@ beginState: CmnActAirDash
 
 	endState:
 
+
+// beginState: s32'CmnActAirFDash'
+//   upon: (IMMEDIATE)
+//     exPointFReset: (PLAYER), -20000, 160000
+//     callSubroutine: s32'cmnAirFDash'
+	// beginSubroutine: s32'cmnAirFDash'
+	//   createObject: s32'cmn_Step_mahojin', (EX_POINT_F)
+	//   setCommonActionMark: 1
+	//   senkoInputNormal: 6
+	//   bufferSpecialInput: 6
+	//   callSubroutine: s32'cmnLandingStiffadd'
+	//   upon: (IDLING)
+	//     ifOperation: (IS_GREATER_OR_EQUAL), Mem(SpeedY), Val(1)
+	//       ifOperation: (IS_LESSER_OR_EQUAL), Mem(ActionTime), Val(5)
+	//         velocityYPercent: 95
+	//       endIf: 
+	//       else: 
+	//         physicsYImpulse: 0, 0
+	//         setGravity: 0
+	//       endElse: 
+	//     endIf: 
+	//     else: 
+	//       physicsYImpulse: 0, 0
+	//       setGravity: 0
+	//     endElse: 
+	//     ifOperation: (IS_EQUAL), Mem(ActionTime), Val(13)
+	//       createParticle: s32'cmn_air_dash', (HEAD)
+	//       cmnSfx: s32'SE_BTL_CMN_DashAir'
+	//       setMotionBlurAmount: 150
+	//     endIf: 
+	//     ifOperation: (IS_EQUAL), Mem(ActionTime), Val(17)
+	//       resetMotionBlurAmount: 
+	//     endIf: 
+	//   endUpon: 
+	//   upon: (BEFORE_EXIT) // Calls before the state ends, we are simply adding it in the upon(immediate) block
+	//     resetGravity: 
+	//     velocityXPercent: 75
+	//   endUpon: 
+	// endSubroutine:
+//   endUpon: 
+//   sprite: s32'sol021_07', 3
+//   physicsXImpulse: 0, 27500
+//   velocityXRate: 25
+//   sprite: s32'sol404_15', 3
+//   spriteBlend: s32'sol404_16', 0, 500
+//   sprite: s32'sol404_16', 6
+//   sprite: s32'sol035_00', 1
+//   velocityXRate: 275
+//   sprite: s32'sol035_00', 2
+//   velocityXRate: 225
+//   sprite: s32'sol035_01', 3
+//   velocityXRate: 125
+//   sprite: s32'sol035_02', 3
+//   velocityXRate: 100
+//   velocityXPercentEachFrame: 90
+//   sprite: s32'sol035_03', 3
+// endState: 
+
 // This is how it should actually work: add state CmnActJumpPre
 beginState: CmnActJump
 	upon: IMMEDIATE
-		addWhiffCancelOption: CmnActSuperJump
-		addWhiffCancelOption: CmnActAirDash
+		addWhiffCancelOption: cmnNandemoCancel
 	endUpon:
 
 	upon: TOUCH_GROUND
 		clearRegisteredUponCode: 0
 		gotoLabel:landing
+	endUpon:
+
+	// physicsYImpulse: 35000
+	setGravity: 1400
+	sprite: 149, 2
+	sprite: 150, 3
+	sprite: 151, 2
+	sprite: 152, 2
+	sprite: 153, 2
+	setGravity: 3500
+	beginLabel:loop
+	sprite: 154, 2
+	sprite: 155, 2
+	gotoLabel:loop
+
+	beginLabel:landing
+	sprite: 156, 1
+	sprite: 157, 1
+	sprite: 158, 1
+	sprite: 159, 1
+	sprite: 160, 1
+	endState:
+
+beginState: CmnActJumpPre
+	upon: IMMEDIATE
+		callSubroutine: cmnJumpPre
 	endUpon:
 
 	sprite: 148, 2
-	// removeWhiffCancelOption: GunFlame
-	removeWhiffCancelOption: CmnActSuperJump
-	physicsYImpulse: 35000
-	setGravity: 1400
-	sprite: 149, 2
-	sprite: 150, 3
-	sprite: 151, 2
-	sprite: 152, 2
-	sprite: 153, 2
-	setGravity: 3500
-	beginLabel:loop
-	sprite: 154, 2
-	sprite: 155, 2
-	gotoLabel:loop
+	exitState:
 
-	beginLabel:landing
-	sprite: 156, 1
-	sprite: 157, 1
-	sprite: 158, 1
-	sprite: 159, 1
-	sprite: 160, 1
 	endState:
 
-beginState: CmnActSuperJump
-	upon: IMMEDIATE
-		addWhiffCancelOption: CmnActAirDash
-	endUpon:
+// beginState: CmnActSuperJump
+// 	upon: IMMEDIATE
+// 		addWhiffCancelOption: CmnActAirDash
+// 	endUpon:
 
-	upon: TOUCH_GROUND
-		clearRegisteredUponCode: 0
-		gotoLabel:landing
-	endUpon:
+// 	upon: TOUCH_GROUND
+// 		clearRegisteredUponCode: 0
+// 		gotoLabel:landing
+// 	endUpon:
 
-	sprite: 148, 5
-	physicsYImpulse: 45000
-	setGravity: 1400
-	sprite: 149, 2
-	sprite: 150, 3
-	sprite: 151, 2
-	sprite: 152, 2
-	sprite: 153, 2
-	setGravity: 3500
-	beginLabel:loop
-	sprite: 154, 2
-	sprite: 155, 2
-	gotoLabel:loop
+// 	physicsYImpulse: 45000
+// 	setGravity: 1400
+// 	sprite: 149, 2
+// 	sprite: 150, 3
+// 	sprite: 151, 2
+// 	sprite: 152, 2
+// 	sprite: 153, 2
+// 	setGravity: 3500
+// 	beginLabel:loop
+// 	sprite: 154, 2
+// 	sprite: 155, 2
+// 	gotoLabel:loop
 
-	beginLabel:landing
-	sprite: 156, 1
-	sprite: 157, 1
-	sprite: 158, 1
-	sprite: 159, 1
-	sprite: 160, 1
-	endState:
+// 	beginLabel:landing
+// 	sprite: 156, 1
+// 	sprite: 157, 1
+// 	sprite: 158, 1
+// 	sprite: 159, 1
+// 	sprite: 160, 1
+// 	endState:
 
-beginState: CmnActFJump
-	upon: IMMEDIATE
-		addWhiffCancelOption: CmnActAirDash
-	endUpon:
+// beginState: CmnActFJump
+// 	upon: IMMEDIATE
+// 		addWhiffCancelOption: CmnActAirDash
+// 	endUpon:
 
-	upon: TOUCH_GROUND
-		clearRegisteredUponCode: 0
-		gotoLabel:landing
-	endUpon:
+// 	upon: TOUCH_GROUND
+// 		clearRegisteredUponCode: 0
+// 		gotoLabel:landing
+// 	endUpon:
 
-	upon: HIT
-		cmn_screenshake: 60
-		// slowdown: 100
-	endUpon:
+// 	physicsXImpulse: 14000
+// 	physicsYImpulse: 37000
+// 	setGravity: 500
+// 	sprite: 149, 2
+// 	sprite: 150, 3
+// 	sprite: 151, 2
+// 	sprite: 152, 2
+// 	sprite: 153, 2
+// 	setGravity: 5000
+// 	beginLabel:loop
+// 	sprite: 154, 2
+// 	sprite: 155, 2
+// 	gotoLabel:loop
 
-	sprite: 148, 5
-	physicsXImpulse: 14000
-	physicsYImpulse: 37000
-	setGravity: 500
-	sprite: 149, 2
-	sprite: 150, 3
-	sprite: 151, 2
-	sprite: 152, 2
-	sprite: 153, 2
-	setGravity: 5000
-	beginLabel:loop
-	sprite: 154, 2
-	sprite: 155, 2
-	gotoLabel:loop
+// 	beginLabel:landing
+// 	sprite: 156, 1
+// 	sprite: 157, 1
+// 	sprite: 158, 1
+// 	sprite: 159, 1
+// 	sprite: 160, 1
+// 	endState:
 
-	beginLabel:landing
-	sprite: 156, 1
-	sprite: 157, 1
-	sprite: 158, 1
-	sprite: 159, 1
-	sprite: 160, 1
-	endState:
+// beginState: CmnActSuperFJump
+// 	upon: IMMEDIATE
+// 		addWhiffCancelOption: CmnActAirDash
+// 	endUpon:
 
-beginState: CmnActBJump
-	upon: IMMEDIATE
-		addWhiffCancelOption: CmnActAirDash
-	endUpon:
+// 	upon: TOUCH_GROUND
+// 		clearRegisteredUponCode: 0
+// 		gotoLabel:landing
+// 	endUpon:
 
-	upon: TOUCH_GROUND
-		clearRegisteredUponCode: 0
-		gotoLabel:landing
-	endUpon:
+// 	physicsXImpulse: 20000
+// 	physicsYImpulse: 40000
+// 	setGravity: 500
+// 	sprite: 149, 2
+// 	sprite: 150, 3
+// 	sprite: 151, 2
+// 	sprite: 152, 2
+// 	sprite: 153, 2
+// 	setGravity: 5000
+// 	beginLabel:loop
+// 	sprite: 154, 2
+// 	sprite: 155, 2
+// 	gotoLabel:loop
 
-	upon: HIT
-		cmn_screenshake: 60
-		// slowdown: 100
-	endUpon:
+// 	beginLabel:landing
+// 	sprite: 156, 1
+// 	sprite: 157, 1
+// 	sprite: 158, 1
+// 	sprite: 159, 1
+// 	sprite: 160, 1
+// 	endState:
 
-	sprite: 148, 5
-	physicsXImpulse: -9000
-	physicsYImpulse: 37000
-	setGravity: 500
-	sprite: 149, 2
-	sprite: 150, 3
-	sprite: 151, 2
-	sprite: 152, 2
-	sprite: 153, 2
-	setGravity: 5000
-	beginLabel:loop
-	sprite: 154, 2
-	sprite: 155, 2
-	gotoLabel:loop
+// beginState: CmnActBJump
+// 	upon: IMMEDIATE
+// 		addWhiffCancelOption: CmnActAirDash
+// 	endUpon:
 
-	beginLabel:landing
-	sprite: 156, 1
-	sprite: 157, 1
-	sprite: 158, 1
-	sprite: 159, 1
-	sprite: 160, 1
-	endState:
+// 	upon: TOUCH_GROUND
+// 		clearRegisteredUponCode: 0
+// 		gotoLabel:landing
+// 	endUpon:
+
+// 	physicsXImpulse: -9000
+// 	physicsYImpulse: 37000
+// 	setGravity: 500
+// 	sprite: 149, 2
+// 	sprite: 150, 3
+// 	sprite: 151, 2
+// 	sprite: 152, 2
+// 	sprite: 153, 2
+// 	setGravity: 5000
+// 	beginLabel:loop
+// 	sprite: 154, 2
+// 	sprite: 155, 2
+// 	gotoLabel:loop
+
+// 	beginLabel:landing
+// 	sprite: 156, 1
+// 	sprite: 157, 1
+// 	sprite: 158, 1
+// 	sprite: 159, 1
+// 	sprite: 160, 1
+// 	endState:
+
+// beginState: CmnActSuperBJump
+// 	upon: IMMEDIATE
+// 		addWhiffCancelOption: CmnActAirDash
+// 	endUpon:
+
+// 	upon: TOUCH_GROUND
+// 		clearRegisteredUponCode: 0
+// 		gotoLabel:landing
+// 	endUpon:
+
+// 	physicsXImpulse: -15000
+// 	physicsYImpulse: 40000
+// 	setGravity: 500
+// 	sprite: 149, 2
+// 	sprite: 150, 3
+// 	sprite: 151, 2
+// 	sprite: 152, 2
+// 	sprite: 153, 2
+// 	setGravity: 5000
+// 	beginLabel:loop
+// 	sprite: 154, 2
+// 	sprite: 155, 2
+// 	gotoLabel:loop
+
+// 	beginLabel:landing
+// 	sprite: 156, 1
+// 	sprite: 157, 1
+// 	sprite: 158, 1
+// 	sprite: 159, 1
+// 	sprite: 160, 1
+// 	endState:
 
 beginState: CmnActFDashStop
 	upon: IMMEDIATE
-		addWhiffCancelOption: GunFlame
-		addWhiffCancelOption: CmnActJump
-		addWhiffCancelOption: CmnActSuperJump
-		addWhiffCancelOption: CmnActFJump
-		addWhiffCancelOption: CmnActBJump
+		addWhiffCancelOption: cmnNandemoCancel
 		callSubroutine: cmnFDashStop
 	endUpon:
 
@@ -537,6 +690,9 @@ beginState: BanditBringer
 		addCancelOption: GunFlame
 		pushbackX: 40
 		// hitStop: 7
+		upon: BEFORE_EXIT
+			sprite: 31, 100
+		endUpon:
 	endUpon:
 
 	upon: HIT

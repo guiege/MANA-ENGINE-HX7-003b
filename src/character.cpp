@@ -131,6 +131,9 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 	insertMotionInput("INPUT_214",{
 		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.BACK},{-5,10,10})
 	});
+	insertMotionInput("INPUT_CHARGE_BACK_FORWARD_30F",{
+		CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.FORWARD},{130,10})
+	});
 
 	insertMotionInput("INPUT_22",{
 		CommandSequence({FK_Input_Buttons.DOWN, 0,FK_Input_Buttons.DOWN},{-10,-10,10}),
@@ -144,9 +147,9 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 		CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.BACK},{10,10})
 	});
 	insertMotionInput("INPUT_66",{
-		CommandSequence({FK_Input_Buttons.FORWARD, 0, FK_Input_Buttons.FORWARD},{8,-8,8}),
-		CommandSequence({FK_Input_Buttons.DOWN_FORWARD, 0, FK_Input_Buttons.FORWARD},{8,-8,8}),
-		CommandSequence({FK_Input_Buttons.UP_FORWARD, 0, FK_Input_Buttons.FORWARD},{8,-8,8})
+		CommandSequence({FK_Input_Buttons.FORWARD, 0, FK_Input_Buttons.FORWARD},{8,-8,1}),
+		CommandSequence({FK_Input_Buttons.DOWN_FORWARD, 0, FK_Input_Buttons.FORWARD},{8,-8,1}),
+		CommandSequence({FK_Input_Buttons.UP_FORWARD, 0, FK_Input_Buttons.FORWARD},{8,-8,1})
 	});
 	insertMotionInput("INPUT_2",{
 		CommandSequence({FK_Input_Buttons.DOWN},{0})
@@ -160,8 +163,20 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 	insertMotionInput("INPUT_6",{
 		CommandSequence({FK_Input_Buttons.FORWARD},{0})
 	});
+	insertMotionInput("INPUT_287",{
+		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.UP_BACK},{-12,10})
+	});
+	insertMotionInput("INPUT_289",{
+		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.UP_FORWARD},{-12,10})
+	});
 	insertMotionInput("INPUT_28",{
 		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.UP},{-12,10})
+	});
+	insertMotionInput("INPUT_ANY_UP",{
+		CommandSequence({FK_Input_Buttons.UP},{50})
+	});
+	insertMotionInput("INPUT_ANY_DOWN",{
+		CommandSequence({FK_Input_Buttons.DOWN},{50})
 	});
 	insertMotionInput("INPUT_8",{
 		CommandSequence({FK_Input_Buttons.UP},{0})
@@ -187,6 +202,13 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 	});
 	insertMotionInput("INPUT_HOLD_6",{
 		CommandSequence({FK_Input_Buttons.FORWARD},{0})
+	});
+
+	insertMotionInput("INPUT_HOLD_4L",{
+		CommandSequence({FK_Input_Buttons.BACK},{50})
+	});
+	insertMotionInput("INPUT_HOLD_6L",{
+		CommandSequence({FK_Input_Buttons.FORWARD},{50})
 	});
 
 	buttons["INPUT_PRESS_LP"] = Button(FK_Input_Buttons.LP, false);
@@ -241,9 +263,21 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
    		acceleration = {0.0f, 0.0f};
     };
 
+    commandMap["exitState"] = [this](const std::vector<std::string>& params) {
+    	exitState();
+    };
+
     commandMap["gotoLabel"] = [this](const std::vector<std::string>& params) {
     	// std::cout << "Going to label: " << params[0] << " at line: " << states[currentState].labels[params[0]] << std::endl;
     	currentLine = states[GetCurrentState()].labels[params[0]];
+    };
+
+   	commandMap["setStateTransition"] = [this](const std::vector<std::string>& params) {
+    	queuedState = params[0];
+    };
+
+    commandMap["addStateTransition"] = [this](const std::vector<std::string>& params) {
+    	states[GetCurrentState()].stateTransitions.push_back(params[0]);
     };
 
     commandMap["addCancelOption"] = [this](const std::vector<std::string>& params) {
@@ -361,6 +395,14 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
     	hit = false;
     };
 
+    commandMap["velocityXPercent"] = [this](const std::vector<std::string>& params) {
+    	velocity.x *= (stoi(params[0]) / (float)100);
+    };
+
+    commandMap["velocityYPercent"] = [this](const std::vector<std::string>& params) {
+    	velocity.y *= (stoi(params[0]) / (float)100);
+    };
+
     commandMap["velocityXPercentEachFrame"] = [this](const std::vector<std::string>& params) {
     	velocityXPercentEachFrame = stoi(params[0]) / (float)100;
     };
@@ -369,6 +411,32 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
     	velocityYPercentEachFrame = stoi(params[0]) / (float)100;
     };
 
+    commandMap["forwardJumpDistance"] = [this](const std::vector<std::string>& params) {
+    	forwardJumpDistance = stoi(params[0]) / (float)1000;
+    };
+
+    commandMap["backwardJumpDistance"] = [this](const std::vector<std::string>& params) {
+    	backwardJumpDistance = stoi(params[0]) / (float)1000;
+    };
+    commandMap["jumpHeight"] = [this](const std::vector<std::string>& params) {
+    	jumpHeight = stoi(params[0]) / (float)1000;
+    };
+    commandMap["initGravity"] = [this](const std::vector<std::string>& params) {
+    	initGravity = stoi(params[0]) / (float)1000;
+    };
+    commandMap["forwardSuperJumpDistance"] = [this](const std::vector<std::string>& params) {
+    	forwardSuperJumpDistance = stoi(params[0]);
+    };
+
+    commandMap["backwardSuperJumpDistance"] = [this](const std::vector<std::string>& params) {
+    	forwardSuperJumpDistance = stoi(params[0]);
+    };
+    commandMap["superJumpHeight"] = [this](const std::vector<std::string>& params) {
+    	forwardSuperJumpDistance = stoi(params[0]);
+    };
+    commandMap["superJumpGravity"] = [this](const std::vector<std::string>& params) {
+    	forwardSuperJumpDistance = stoi(params[0]);
+    };
 	// Add entries for buttons
 	for (const auto& [key, value] : buttons) {
 	    buttonMap[key] = false;
@@ -415,23 +483,47 @@ void Character::SetState(const std::string& state)
 	velocityYPercentEachFrame = 1.0f;
 	handleEvent(GetCurrentState(), "IMMEDIATE");
 
-	if(GetCurrentState() == "CmnActStand"){
+	if(state == "CmnActStand"){
+		characterState = "STANDING";
 		actionable = true;
 		addWhiffCancelOption("cmnNandemoCancel");
-	}
-	if(GetCurrentState() == "CmnActFWalk")
+	} else if(state == "CmnActFWalk"){
 		addWhiffCancelOption("CmnActFDash");
+	} else if(state == "CmnActCrouch2Stand"){
+		characterState = "STANDING";
+	} else if(state == "CmnActJump"){
+		gravity = initGravity;
+		velocity.y = -jumpHeight;
+		if(jumpDir == 1)
+			velocity.x = forwardJumpDistance;
+		if(jumpDir == 2)
+			velocity.x = -backwardJumpDistance;
+		characterState = "JUMPING";
+	}
+
+	jumpDir = 0;
+}
+
+void Character::exitState()
+{
+	handleEvent(GetCurrentState(), "BEFORE_EXIT");
+	if(GetCurrentState() == "CmnActStand2Crouch"){
+	    SetState("CmnActCrouch");
+	}else if(GetCurrentState() == "CmnActJumpPre"){
+		SetState("CmnActJump");
+	} else if(!queuedState.empty()){
+	    SetState(queuedState);
+	    queuedState.clear();
+	} else {
+		SetState("CmnActStand");
+	}
+
 }
 
 void Character::executeCommands()
 {
 	if (framesUntilNextCommand == 0 && currentLine >= states[GetCurrentState()].instructions.size()) {
-	    //current state animation has finished(put this in an exitState function some time for clarity)
-	    if(GetCurrentState() == "CmnActStand2Crouch"){
-	    	SetState("CmnActCrouch");
-	    }else{
-			SetState("CmnActStand");
-		}
+		exitState();
 	}
 	
     if (framesUntilNextCommand > 0) {
@@ -508,8 +600,16 @@ void Character::checkCommands()
 {
 	blocking = false;
 	std::string curstate = GetCurrentState();
+
+	if(characterState != "JUMPING"){
+		if(buttonMap["INPUT_ANY_DOWN"])
+			characterState = "CROUCHING";
+		else
+			characterState = "STANDING";
+	}
+
 	if(curstate == "CmnActStand"){
-		if(buttonMap["INPUT_HOLD_2"]){
+		if(buttonMap["INPUT_ANY_DOWN"]){
 			SetState("CmnActStand2Crouch");
 		}
 		if(buttonMap["INPUT_HOLD_6"]){
@@ -520,7 +620,7 @@ void Character::checkCommands()
 	}
 
 	if(curstate == "CmnActStand2Crouch" || curstate == "CmnActCrouch"){
-		if(buttonMap["INPUT_HOLD_2"]){
+		if(buttonMap["INPUT_ANY_DOWN"]){
 
 		} else{
 			SetState("CmnActCrouch2Stand");
@@ -549,22 +649,33 @@ void Character::checkCommands()
 		blocking = true;
 
 	for (const std::string& key : stateOrder) {
+
+		if(states[key].properties.characterState != characterState)
+			continue;
+
 		bool gatling = false;
 		bool cancel = false;
 		bool kara = false;
+		bool transition = false;
 
 		if(bbscriptFrameCount < karaFrames && states[key].properties.moveType == "SPECIAL" && states[curstate].properties.moveType == "NORMAL"){
 			kara = true;
 		}
 
+		if((std::find(states[curstate].stateTransitions.begin(), states[curstate].stateTransitions.end(), key) != states[curstate].stateTransitions.end())){
+			transition = true;
+		}
+
+		bool self = (curstate == key);
+
 		if((std::find(states[curstate].gatlingOptions.begin(), states[curstate].gatlingOptions.end(), key) != states[curstate].gatlingOptions.end()) 
-			|| (std::find(states[curstate].gatlingOptions.begin(), states[curstate].gatlingOptions.end(), "cmnNandemoCancel") != states[curstate].gatlingOptions.end())){
+			|| (!self && std::find(states[curstate].gatlingOptions.begin(), states[curstate].gatlingOptions.end(), "cmnNandemoCancel") != states[curstate].gatlingOptions.end())){
 			gatling = true;
 		} else if((std::find(states[curstate].cancelOptions.begin(), states[curstate].cancelOptions.end(), key) != states[curstate].cancelOptions.end()) 
-			|| (std::find(states[curstate].cancelOptions.begin(), states[curstate].cancelOptions.end(), "cmnNandemoCancel") != states[curstate].cancelOptions.end())){
+			|| (!self && std::find(states[curstate].cancelOptions.begin(), states[curstate].cancelOptions.end(), "cmnNandemoCancel") != states[curstate].cancelOptions.end())){
 			cancel = true;
 		} else if((std::find(states[curstate].whiffCancelOptions.begin(), states[curstate].whiffCancelOptions.end(), key) != states[curstate].whiffCancelOptions.end()) 
-			|| (std::find(states[curstate].whiffCancelOptions.begin(), states[curstate].whiffCancelOptions.end(), "cmnNandemoCancel") != states[curstate].whiffCancelOptions.end())
+			|| (!self && std::find(states[curstate].whiffCancelOptions.begin(), states[curstate].whiffCancelOptions.end(), "cmnNandemoCancel") != states[curstate].whiffCancelOptions.end())
 			){
 			gatling = false;
 		} else{
@@ -579,6 +690,11 @@ void Character::checkCommands()
 			    if(buttonMap[value.properties.moveInput[0]])
 			    {
 			    	if(buttonMap[value.properties.moveInput[1]]){
+			    		if(transition){
+			    			queuedState = key;
+			    			return;
+			    		}
+
 					    if(kara || (gatling && hit) || (!gatling && !hit && !cancel) || (cancel && cancellable)){
 					    	actionable = false;
 							SetState(key);
@@ -591,6 +707,11 @@ void Character::checkCommands()
 		if(value.properties.moveInput.size() == 1){
 			if(buttonMap[value.properties.moveInput[0]])
 			{
+				if(transition){
+					queuedState = key; 
+			    	return;
+			    }
+
 			    if(kara || (gatling && hit) || (!gatling && !hit && !cancel) || (cancel && cancellable)){
 			    	actionable = false;
 					SetState(key);
@@ -622,6 +743,16 @@ void Character::runSubroutines()
 		   		acceleration = {0.0f, 0.0f};
 				SetState("CmnActHighGuardEnd");
 		}
+	}
+
+	if(subroutines.find("cmnJumpPre") != std::string::npos){
+		if(buttonMap["INPUT_HOLD_6L"]){
+			jumpDir = 1;
+		}
+		if(buttonMap["INPUT_HOLD_4L"]){
+			jumpDir = 2;
+		}
+		std::cout << jumpDir << std::endl;
 	}
 
 	if(subroutines.find("cmnFDashStop") != std::string::npos){
@@ -710,9 +841,6 @@ void Character::updateScript(int tick, Character* opponent)
 				}
 				motionInputBuffer.push_back(key);
 				buttonMap[key] = true;
-				if(key == "INPUT_236"){
-					std::cout << "qcf sucessful" << std::endl;
-				}
 				break;
 			}
 			else
@@ -755,6 +883,7 @@ void Character::updateScript(int tick, Character* opponent)
 
 	executeCommands();
 	update(tick);
+	handleEvent(GetCurrentState(), "IDLING");
  	runSubroutines();
 
 	velocity.y += gravity;
@@ -786,10 +915,12 @@ void Character::SetFrame(const int frame)
 void Character::SetPushbox()
 {
 	if (currentFrame >= 0 && currentFrame < pushboxes.size()) {
-		pushbox = ProcessRect(pushboxes[currentFrame]);
-		width = pushbox.width;
-		height = pushbox.height;
-		posOffset = glm::vec2(pushbox.x, pushbox.y);
+		if(pushboxes[currentFrame].width != 0){
+			pushbox = ProcessRect(pushboxes[currentFrame]);
+			width = pushbox.width;
+			height = pushbox.height;
+			posOffset = glm::vec2(pushbox.x, pushbox.y);
+		}
 	}
 }
 
@@ -852,7 +983,7 @@ void Character::draw(Renderer* renderer)
 	}
 }
 
-void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& palette)
+void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& palette, Texture& shadowpalette)
 {
 	// drawPosition = pos - posOffset - glm::vec2(width, height);
 
@@ -864,11 +995,19 @@ void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& pal
 	// 	spritesheet.draw(paletteRenderer, palette);
 	// }
 
-	spritesheet.color = glm::vec4(1.0f);
-	spritesheet.pos = pos;
 	spritesheet.SetFrame(currentFrame);
+	spritesheet.color = glm::vec4(1.0f);
+
+
+	spritesheet.pos = pos;
+	spritesheet.pos.y+=(height*0.6);
+	spritesheet.SetFlippedVert(true);
+	spritesheet.draw(paletteRenderer, shadowpalette);
+
+	spritesheet.pos.y-=(height*0.6);
+	spritesheet.SetFlippedVert(false);
 	spritesheet.draw(paletteRenderer, palette);
-	//RENDER THE SHADOW HERE!!!
+
 	int vertCrossWidth = 2;
 	int vertCrossHeight = 40;
 	int horiCrossWidth = 32;

@@ -61,6 +61,7 @@ protected:
     unsigned int currentFrame = 0;
 
     int anchorPosition;
+    int anchorPositionY;
 
     glm::vec2 scale = {1.0f, 1.0f};
 

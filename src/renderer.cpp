@@ -57,7 +57,7 @@ void Renderer::DrawIndexedTexture(Texture &texture, Texture &palette, const glm:
 
 }
 
-void Renderer::DrawIndexedTextureAtlas(Texture &texture, Texture &palette, const glm::vec2& clipPos, const glm::vec2& clipSize, bool rotated, const glm::vec2& position, bool flipped, const glm::vec4& color)
+void Renderer::DrawIndexedTextureAtlas(Texture &texture, Texture &palette, const glm::vec2& clipPos, const glm::vec2& clipSize, bool rotated, const glm::vec2& position, bool flipped,bool flippedVert, const glm::vec4& color)
 {
     float x = clipPos.x;
     float y = clipPos.y;
@@ -115,11 +115,36 @@ void Renderer::DrawIndexedTextureAtlas(Texture &texture, Texture &palette, const
     this->shader.Use();
     this->shader.SetInteger("useTexture", 1);
     glm::mat4 model = glm::mat4(1.0f);
+
+    float shearX = 0.0f;
+    float shearY = 0.0f;
+
     model = glm::translate(model, glm::vec3(position, 0.0f));
-    if(rotated)
+
+   
+    glm::mat4 shear = glm::mat4(1.0f);
+    shear[1][0] = shearX;
+    shear[0][1] = shearY;
+
+    if(flippedVert)
+        model *= shear;
+    
+
+    if(rotated && flippedVert)
+    {
+        if(flipped)
+            model = glm::translate(model, glm::vec3(clipSize.x, clipSize.y, 0));
+        else
+            model = glm::translate(model, glm::vec3(0, clipSize.y, 0));
+
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    } else if(rotated)
     {
         model = glm::translate(model, glm::vec3(0, clipSize.y, 0));
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    } else if(flippedVert){
+        model = glm::translate(model, glm::vec3(clipSize.x,clipSize.y, 0));
+        model = glm::rotate(model, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     }
 
     model = glm::scale(model, glm::vec3(width, height, 1.0f));

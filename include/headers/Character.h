@@ -29,6 +29,8 @@ struct Properties {
     int juggleLimit = 0;
     int juggleStart = 0; //Later add support for multihits where each hit results in a different juggle start.
 
+    float proration = 1.0f;
+
     float hitAirPushbackY = 0.0f;
     glm::vec2 pushbackVelocity = {0.0f, 0.0f};
     float pushbackMultiplier = 1.0f;
@@ -54,6 +56,7 @@ struct State {
     std::vector<std::string> gatlingOptions; //Guilty Gear style gatling system, can cancel any time after the move hits
     std::vector<std::string> cancelOptions; //Street Fighter style cancel system, can cancel only during hitstop after the move hits
     std::vector<std::string> whiffCancelOptions;
+    std::vector<std::string> stateTransitions;
 };
 
 struct AfterImage {
@@ -92,11 +95,12 @@ public:
     void checkCommands();
     bool checkCollision(Character* opponent);
     void executeCommands();
+    void exitState();
 
     void hitOpponent(Character* opponent, const char* curstate);
 
     void draw(Renderer* renderer);
-    void draw(Renderer* renderer, Renderer* paletteRenderer, Texture& palette);
+    void draw(Renderer* renderer, Renderer* paletteRenderer, Texture& palette, Texture& shadowpalette);
 
     void SetFrame(const int frame);
 
@@ -339,11 +343,14 @@ protected:
     std::deque<AfterImage> afterImages;
 
     //State Variables
+    std::string characterState = "STANDING"; //3 potential states: STANDING, CROUCHING, JUMPING
+
     std::unordered_map<std::string, int> stateIDs;
     std::unordered_map<int, std::string> stateNames;
 
     std::unordered_map<std::string, State> states;
     std::vector<std::string> stateOrder;
+
     std::unordered_map<std::string, std::function<void(const std::vector<std::string>&)>> commandMap;
     bool cancellable = false;
     bool hit = false;
@@ -376,6 +383,15 @@ protected:
     bool flipped = false;
 
     //Battle Variables
+    float forwardJumpDistance = 0;
+    float backwardJumpDistance = 0;
+    float jumpHeight = 0;
+    float initGravity = 0;
+    unsigned int forwardSuperJumpDistance = 0;
+    unsigned int backwardSuperJumpDistance = 0;
+    unsigned int superJumpHeight = 0;
+    unsigned int superJumpGravity = 0;
+    
     bool actionable = true;
     bool hitboxActive = false;
     bool stateTouchedGround = false;
@@ -386,7 +402,9 @@ protected:
     unsigned int slowdown = 0;
     int currentState = 0;
     int currentJuggle = 0;
+    unsigned int jumpDir = 0;
     std::string subroutines = "";
+    std::string queuedState = "";
     std::array<std::string, 2> validBlockingStates = { "CmnActStand", "CmnActBWalk"};
 
     //Movement Variables

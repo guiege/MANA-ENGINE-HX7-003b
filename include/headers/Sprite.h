@@ -15,6 +15,7 @@ class Sprite
 		int width, height;
 		float rot;
 		bool flipped = false;
+		bool flippedVert = false;
 		bool hasTex;
 		glm::vec2 pos = glm::vec2(0, 0);
 		glm::vec4 color = glm::vec4(1.0f);
@@ -32,6 +33,7 @@ class Sprite
   		// bool CheckCollision(std::vector<Sprite>& sprites, const glm::ivec2& position);
 
   		void SetFlipped(bool flip);
+  		void SetFlippedVert(bool flip);
 
 		void draw(Renderer* renderer);
 

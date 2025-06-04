@@ -10,7 +10,7 @@
 #include <bitset>
 #include <deque>
 
-#include <ctime>
+#include <chrono>
 #include "PerlinNoise.h"
 
 #include "Shader.h"
@@ -135,10 +135,16 @@ private:
 	glm::vec2 maxOffset = {150.0f, 150.0f};
 	float maxAngle = 5.0f; // 10 Degrees max shake angle
 	float trauma = 0.0f; // shake is trauma^2 or trauma^3
-	const siv::PerlinNoise::seed_type seed = 654321u;
+
+	const std::uint32_t seed = static_cast<std::uint32_t>(
+        std::chrono::steady_clock::now().time_since_epoch().count()
+    );
+	// const siv::PerlinNoise::seed_type seed = 654321u;
 	const siv::PerlinNoise perlin{ seed };
 
 	//Frame Data Display Variables
+	int plusframestimer = 0;
+
 	int p1AtkActiveTimer = 0;
 	int p1UnactionableTimer = 0;
 	int p1Unactionable = 0;
@@ -157,6 +163,12 @@ private:
 	glm::vec2 butHistoryPos = {52, 125};
 
 	//CAMERA CONTROLS
+	float baseScale = 0.8f;
+    float maxScale = 2.0f;
+    float scale = 0.8f;
+
+
+
 	float cameraXPos = 0;
 	float cameraYPos = 0;
 	float cameraRot = 0.0f;

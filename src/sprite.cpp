@@ -32,6 +32,11 @@ void Sprite::SetFlipped(bool flip)
 	flipped = flip;
 }
 
+void Sprite::SetFlippedVert(bool flip)
+{
+	flippedVert = flip;
+}
+
 // bool Sprite::CheckCollision(Sprite* other) //AABB collision
 // {
 //     // collision x-axis?
