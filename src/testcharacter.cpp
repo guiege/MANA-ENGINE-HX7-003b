@@ -3,6 +3,7 @@
 void TestCharacter::start()
 {
 	readHurtboxesFromFile(hurtboxes, hitboxes, pushboxes, "scripts/hitboxes/testBoxes.hbox");
+	loadScript("scripts/ROSE/CMNEF.rose");
 	loadScript("scripts/ROSE/test.rose");
 
 	// animID = 0;

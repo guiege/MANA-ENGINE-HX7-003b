@@ -178,6 +178,12 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 	insertMotionInput("INPUT_ANY_DOWN",{
 		CommandSequence({FK_Input_Buttons.DOWN},{50})
 	});
+	insertMotionInput("INPUT_ANY_BACK",{
+		CommandSequence({FK_Input_Buttons.BACK},{50})
+	});
+	insertMotionInput("INPUT_ANY_FORWARD",{
+		CommandSequence({FK_Input_Buttons.FORWARD},{50})
+	});
 	insertMotionInput("INPUT_8",{
 		CommandSequence({FK_Input_Buttons.UP},{0})
 	});
@@ -204,13 +210,6 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 		CommandSequence({FK_Input_Buttons.FORWARD},{0})
 	});
 
-	insertMotionInput("INPUT_HOLD_4L",{
-		CommandSequence({FK_Input_Buttons.BACK},{50})
-	});
-	insertMotionInput("INPUT_HOLD_6L",{
-		CommandSequence({FK_Input_Buttons.FORWARD},{50})
-	});
-
 	buttons["INPUT_PRESS_LP"] = Button(FK_Input_Buttons.LP, false);
 	buttons["INPUT_PRESS_MP"] = Button(FK_Input_Buttons.MP, false);
 	buttons["INPUT_PRESS_HP"] = Button(FK_Input_Buttons.HP, false);
@@ -234,9 +233,30 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 		framesUntilNextCommand = stoi(params[1]); // -1 or no? Make up your mind on a consistent system
 	};
 
+	commandMap["recoveryState"] = [this](const std::vector<std::string>& params) {
+		recoveryState = true;
+	};
+
+	commandMap["callSubroutine"] = [this](const std::vector<std::string>& params) {
+		auto it = subroutines.find(params[0]);
+	    if (it != subroutines.end()) {
+	        const Subroutine& sub = it->second;
+	        mergeEventHandlers(states[GetCurrentState()], sub);
+	        std::cout << "Subroutine: " << params[0] << "\n";
+	        for (const Instruction& inst : sub.instructions) {
+	            std::cout << "  Command: " << inst.command << "\n";
+	            executeInstruction(inst);
+	        }
+	    }
+	};
+
 	commandMap["setCarriedMomentumPercentage"] = [this](const std::vector<std::string>& params) {
 		carriedMomentumPercentage = stoi(params[0]) / (float)100;
         // std::cout << "Setting carried momentum percentage to " << params[0] << std::endl;
+    };
+
+    commandMap["resetGravity"] = [this](const std::vector<std::string>& params) {
+    	gravity = initGravity;
     };
 
     commandMap["physicsXImpulse"] = [this](const std::vector<std::string>& params) {
@@ -366,10 +386,6 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
     	states[GetCurrentState()].properties.blockstun = 18;
     };
 
-    commandMap["callSubroutine"] = [this](const std::vector<std::string>& params) {
-    	callSubroutine(params[0]);
-    };
-
     commandMap["walkFSpeed"] = [this](const std::vector<std::string>& params) {
     	walkFSpeed = stoi(params[0]) / (float)1000;
     };
@@ -393,6 +409,14 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 
     commandMap["hit"] = [this](const std::vector<std::string>& params) {
     	hit = false;
+    };
+
+    commandMap["velocityXRate"] = [this](const std::vector<std::string>& params) {
+    	velocityXRate = (stoi(params[0]) / (float)100);
+    };
+
+    commandMap["velocityYRate"] = [this](const std::vector<std::string>& params) {
+    	velocityYRate = (stoi(params[0]) / (float)100);
     };
 
     commandMap["velocityXPercent"] = [this](const std::vector<std::string>& params) {
@@ -476,29 +500,28 @@ void Character::SetState(const std::string& state)
 	states[GetCurrentState()].whiffCancelOptions.clear();
 	hit = false;
 	cancellable = false;
+	recoveryState = false;
 	stateTouchedGround = false;
 	stateLeftGround = false;
-	subroutines.clear();
 	velocityXPercentEachFrame = 1.0f;
 	velocityYPercentEachFrame = 1.0f;
+	carriedMomentumPercentage = 1.0f;
+	velocityXRate = 1.0f;
+	velocityYRate = 1.0f;
 	handleEvent(GetCurrentState(), "IMMEDIATE");
 
 	if(state == "CmnActStand"){
 		characterState = "STANDING";
 		actionable = true;
-		addWhiffCancelOption("cmnNandemoCancel");
+		recoveryState = true;
 	} else if(state == "CmnActFWalk"){
 		addWhiffCancelOption("CmnActFDash");
 	} else if(state == "CmnActCrouch2Stand"){
 		characterState = "STANDING";
 	} else if(state == "CmnActJump"){
-		gravity = initGravity;
-		velocity.y = -jumpHeight;
-		if(jumpDir == 1)
-			velocity.x = forwardJumpDistance;
-		if(jumpDir == 2)
-			velocity.x = -backwardJumpDistance;
 		characterState = "JUMPING";
+	} else if(state == "CmnActFDash"){
+		velocity.x = initDashFSpeed;
 	}
 
 	jumpDir = 0;
@@ -506,10 +529,17 @@ void Character::SetState(const std::string& state)
 
 void Character::exitState()
 {
-	handleEvent(GetCurrentState(), "BEFORE_EXIT");
 	if(GetCurrentState() == "CmnActStand2Crouch"){
 	    SetState("CmnActCrouch");
-	}else if(GetCurrentState() == "CmnActJumpPre"){
+	} else if(GetCurrentState() == "CmnActJumpPre"){
+		gravity = initGravity;
+		velocity.y = -jumpHeight;
+		if(jumpDir == 1)
+			velocity.x = forwardJumpDistance;
+		if(jumpDir == 2)
+			velocity.x = -backwardJumpDistance;
+		SetState("CmnActJump");
+	} else if(GetCurrentState() == "CmnActAirDash"){
 		SetState("CmnActJump");
 	} else if(!queuedState.empty()){
 	    SetState(queuedState);
@@ -523,6 +553,7 @@ void Character::exitState()
 void Character::executeCommands()
 {
 	if (framesUntilNextCommand == 0 && currentLine >= states[GetCurrentState()].instructions.size()) {
+		handleEvent(GetCurrentState(), "BEFORE_EXIT");
 		exitState();
 	}
 	
@@ -530,19 +561,82 @@ void Character::executeCommands()
         framesUntilNextCommand--;
     }
 
-    while (framesUntilNextCommand == 0 && currentLine < states[GetCurrentState()].instructions.size()) {
-        auto it = commandMap.find(states[GetCurrentState()].instructions[currentLine].command);
-        if (it != commandMap.end()) {
-        	framesUntilNextCommand = 0;
-            it->second(states[GetCurrentState()].instructions[currentLine].parameters);
-            lastCommandExecuted = bbscriptFrameCount;
-            currentLine++;
+	while (framesUntilNextCommand == 0 && currentLine < states[GetCurrentState()].instructions.size()) {
+	    const auto& instr = states[GetCurrentState()].instructions[currentLine];
+	    executeInstruction(instr);
+	    currentLine++;
 
-            if(framesUntilNextCommand > 0) 
-	        	break;
+	    if (framesUntilNextCommand > 0)
+	        break;
+	}
+}
+
+void Character::executeInstruction(const Instruction& instr)
+{
+    if (instr.command == "ifOperation") {
+        // const auto& params = instr.parameters;
+        // if (params.size() != 3) {
+        //     std::cerr << "Invalid ifOperation parameters\n";
+        //     return;
+        // }
+
+        bool result = false;
+
+        std::string op = instr.parameters[0];
+        std::string lhs = instr.parameters[1];
+        std::string rhs = instr.parameters[2];
+
+        int lhsVar = 0;
+        int rhsVar = 0;
+
+        if(lhs.find("Val") != std::string::npos)
+        	lhsVar = extractIntFromVal(lhs);
+        else if(lhs.find("SpeedY") != std::string::npos)
+        	lhsVar = abs(velocity.y);
+        else if(lhs.find("ActionTime") != std::string::npos)
+        	lhsVar = bbscriptFrameCount + 1;
+
+        if(rhs.find("Val") != std::string::npos)
+        	rhsVar = extractIntFromVal(rhs);
+
+
+
+
+        if(op == "IS_GREATER_OR_EQUAL"){
+        	if(lhsVar >= rhsVar)
+        		result = true;
+        } else if(op == "IS_LESSER_OR_EQUAL"){
+        	if(lhsVar <= rhsVar){
+        		std::cout << "TRUE! " << lhsVar << " : " << rhsVar << std::endl;
+        		result = true;
+        	}
+        }
+
+        // result = (instr.parameters[0] == "hello");
+
+        if (result) {
+        	if(instr.children.size() > 0){
+	            for (const auto& child : instr.children) {
+	                executeInstruction(child);
+	            }
+	        }
+        } else{
+        	if(instr.elseBlock.size() > 0){
+        		for (const auto& elseinst : instr.elseBlock) {
+                	executeInstruction(elseinst);
+            	}
+        	}
+        }
+    }
+    else if(instr.command == "else"){
+
+    } else {
+        auto it = commandMap.find(instr.command);
+        if (it != commandMap.end()) {
+            it->second(instr.parameters);
+            lastCommandExecuted = bbscriptFrameCount;
         } else {
-            std::cout << "Unknown command: " << states[GetCurrentState()].instructions[currentLine].command << std::endl;
-            currentLine++;
+            std::cout << "Unknown command: " << instr.command << std::endl;
         }
     }
 }
@@ -608,6 +702,15 @@ void Character::checkCommands()
 			characterState = "STANDING";
 	}
 
+	if(curstate == "CmnActJumpPre"){
+		if(buttonMap["INPUT_ANY_FORWARD"]){
+			jumpDir = 1;
+		}
+		if(buttonMap["INPUT_ANY_BACK"]){
+			jumpDir = 2;
+		}
+	}
+
 	if(curstate == "CmnActStand"){
 		if(buttonMap["INPUT_ANY_DOWN"]){
 			SetState("CmnActStand2Crouch");
@@ -645,6 +748,23 @@ void Character::checkCommands()
 		}
 	}
 
+	if(GetCurrentState() == "CmnActFDash"){
+		if(buttonMap["INPUT_HOLD_6"]){
+			velocity.x = std::round((velocity.x + fDashAccelSpeed - (velocity.x / fDashFriction)) * 1000.0) / 1000.0;
+			if(velocity.x > dashMaxVelocity)
+				velocity.x = dashMaxVelocity;
+		} else
+		{
+			SetState("CmnActFDashStop");
+		}
+	}
+
+	if(GetCurrentState() == "CmnActFDashStop"){
+		velocity.x *= dashSkidDecay; //Dash skidding has no acceleration and is just friction til the end
+		if(velocity.x < 0.2)
+			velocity.x = 0;
+	}
+
 	if(buttonMap["INPUT_HOLD_4"] && std::find(validBlockingStates.begin(), validBlockingStates.end(), curstate) != validBlockingStates.end())
 		blocking = true;
 
@@ -668,18 +788,16 @@ void Character::checkCommands()
 
 		bool self = (curstate == key);
 
-		if((std::find(states[curstate].gatlingOptions.begin(), states[curstate].gatlingOptions.end(), key) != states[curstate].gatlingOptions.end()) 
-			|| (!self && std::find(states[curstate].gatlingOptions.begin(), states[curstate].gatlingOptions.end(), "cmnNandemoCancel") != states[curstate].gatlingOptions.end())){
+		
+		if((std::find(states[curstate].gatlingOptions.begin(), states[curstate].gatlingOptions.end(), key) != states[curstate].gatlingOptions.end())){
 			gatling = true;
-		} else if((std::find(states[curstate].cancelOptions.begin(), states[curstate].cancelOptions.end(), key) != states[curstate].cancelOptions.end()) 
-			|| (!self && std::find(states[curstate].cancelOptions.begin(), states[curstate].cancelOptions.end(), "cmnNandemoCancel") != states[curstate].cancelOptions.end())){
+		} else if((std::find(states[curstate].cancelOptions.begin(), states[curstate].cancelOptions.end(), key) != states[curstate].cancelOptions.end())){
 			cancel = true;
-		} else if((std::find(states[curstate].whiffCancelOptions.begin(), states[curstate].whiffCancelOptions.end(), key) != states[curstate].whiffCancelOptions.end()) 
-			|| (!self && std::find(states[curstate].whiffCancelOptions.begin(), states[curstate].whiffCancelOptions.end(), "cmnNandemoCancel") != states[curstate].whiffCancelOptions.end())
-			){
-			gatling = false;
+		} else if((std::find(states[curstate].whiffCancelOptions.begin(), states[curstate].whiffCancelOptions.end(), key) != states[curstate].whiffCancelOptions.end())){
+			// gatling = false;
 		} else{
-			continue;
+			if(!recoveryState)
+				continue;
 		}
 
 		State& value = states.at(key);
@@ -695,8 +813,9 @@ void Character::checkCommands()
 			    			return;
 			    		}
 
-					    if(kara || (gatling && hit) || (!gatling && !hit && !cancel) || (cancel && cancellable)){
+					    if(recoveryState || kara || (gatling && hit) || (!gatling && !hit && !cancel) || (cancel && cancellable)){
 					    	actionable = false;
+					    	handleEvent(GetCurrentState(), "BEFORE_EXIT");
 							SetState(key);
 							return;
 					    }
@@ -712,61 +831,13 @@ void Character::checkCommands()
 			    	return;
 			    }
 
-			    if(kara || (gatling && hit) || (!gatling && !hit && !cancel) || (cancel && cancellable)){
+			    if(recoveryState || kara || (gatling && hit) || (!gatling && !hit && !cancel) || (cancel && cancellable)){
 			    	actionable = false;
+			    	handleEvent(GetCurrentState(), "BEFORE_EXIT");
 					SetState(key);
 					return;
 			    }
 			}
-		}
-	}
-}
-
-void Character::callSubroutine(const std::string& subroutine)
-{
-	if(subroutine == "cmnFDash"){
-		velocity.x = initDashFSpeed;
-	}
-	subroutines.append(subroutine);
-}
-
-void Character::runSubroutines()
-{
-	if(subroutines.find("cmnHighGuard") != std::string::npos){
-		if(hitstun > guardEndStart){
-	    	// std::cout << hitstun << std::endl;
-	    	// std::cout << currentState << std::endl;
-			if(!firstFrameHit)
-				velocity.x -= (highBlockstunDecay * velocity.x);
-		} else{
-				velocity = {0.0f, 0.0f};
-		   		acceleration = {0.0f, 0.0f};
-				SetState("CmnActHighGuardEnd");
-		}
-	}
-
-	if(subroutines.find("cmnJumpPre") != std::string::npos){
-		if(buttonMap["INPUT_HOLD_6L"]){
-			jumpDir = 1;
-		}
-		if(buttonMap["INPUT_HOLD_4L"]){
-			jumpDir = 2;
-		}
-		std::cout << jumpDir << std::endl;
-	}
-
-	if(subroutines.find("cmnFDashStop") != std::string::npos){
-		velocity.x *= dashSkidDecay; //Dash skidding has no acceleration and is just friction til the end
-		if(velocity.x < 0.2)
-			velocity.x = 0;
-	} else if(subroutines.find("cmnFDash") != std::string::npos){
-		if(buttonMap["INPUT_HOLD_6"]){
-			velocity.x = std::round((velocity.x + fDashAccelSpeed - (velocity.x / fDashFriction)) * 1000.0) / 1000.0;
-			if(velocity.x > dashMaxVelocity)
-				velocity.x = dashMaxVelocity;
-		} else
-		{
-			SetState("CmnActFDashStop");
 		}
 	}
 }
@@ -881,21 +952,35 @@ void Character::updateScript(int tick, Character* opponent)
 		firstFrameHit = false;
     }
 
+    handleEvent(GetCurrentState(), "IDLING");
 	executeCommands();
 	update(tick);
-	handleEvent(GetCurrentState(), "IDLING");
- 	runSubroutines();
+
+
+ 	//DISPLACED OLDSUBROUTINE, FIND A HOME FOR IT LATER
+ 	if(GetCurrentState() == "CmnActHighGuardLoop"){
+		if(hitstun > guardEndStart){
+	    	// std::cout << hitstun << std::endl;
+	    	// std::cout << currentState << std::endl;
+			if(!firstFrameHit)
+				velocity.x -= (highBlockstunDecay * velocity.x);
+		} else{
+				velocity = {0.0f, 0.0f};
+		   		acceleration = {0.0f, 0.0f};
+				SetState("CmnActHighGuardEnd");
+		}
+	}
 
 	velocity.y += gravity;
 	velocity.y += acceleration.y;
 	velocity.x += acceleration.x;
-	MoveX(velocity.x * sign * carriedMomentumPercentage);
-	MoveY(velocity.y);
+	MoveX(velocity.x * sign * carriedMomentumPercentage * velocityXRate);
+	MoveY(velocity.y * velocityYRate);
 	velocity.x *= velocityXPercentEachFrame;
 	velocity.y *= velocityYPercentEachFrame;
 
-	if(!firstFrame)
-		bbscriptFrameCount++;
+	// if(!firstFrame)
+	bbscriptFrameCount++;
 	firstFrame = false;
 }
 

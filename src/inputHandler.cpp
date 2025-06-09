@@ -147,7 +147,7 @@ bool InputHandler::checkCommand(CommandSequence &c)
 		c.commandNumber = 0;
 	}
 
-	if(c.executeTimer > 0){
+	if(c.executeTimer > 1){
 		executed = true;
 	}
 

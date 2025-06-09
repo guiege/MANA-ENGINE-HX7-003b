@@ -97,3 +97,15 @@ void sortAllBoxesInFrames(std::map<int, std::vector<rect>>& hurtboxes) {
         }
     }
 }
+
+int extractIntFromVal(const std::string& input){
+    size_t start = input.find('(');
+    size_t end = input.find(')');
+    int value = 0;
+
+    if (start != std::string::npos && end != std::string::npos && end > start) {
+        std::string inner = input.substr(start + 1, end - start - 1);
+        value = stoi(inner);
+    }
+    return value;
+}

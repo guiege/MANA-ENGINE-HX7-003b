@@ -23,6 +23,12 @@ addMove: NmlAtk5A
     moveInput: INPUT_PRESS_LP
 	endMove:
 
+addMove: NmlAtkAir5A
+	moveType: NORMAL
+	characterState: JUMPING
+	moveInput: INPUT_PRESS_LP
+	endMove:
+
 addMove: NmlAtk2A
     moveType: NORMAL
     characterState: CROUCHING
@@ -91,16 +97,16 @@ beginState: RoundInit
 	upon:IMMEDIATE
 		forwardJumpDistance: 7900
 		backwardJumpDistance: 5200
-		jumpHeight: 35000
-		initGravity: 1900
+		jumpHeight: 55000
+		initGravity: 3000
 		forwardSuperJumpDistance: 7900
 		backwardSuperJumpDistance: 5200
 		superJumpHeight: 43700
 		superJumpGravity: 1900
 		walkFSpeed: 4300
 		walkBSpeed: 3700
-		initDashFSpeed: 13100
-		fDashAccelSpeed: 560
+		initDashFSpeed: 7000
+		fDashAccelSpeed: 450
 		fDashFriction: 95
 	endUpon:
 
@@ -110,12 +116,12 @@ beginState: NmlAtk5A
 	upon:IMMEDIATE
 		cmn_AtkLv1:
 		physicsXImpulse: 0
-		addGatlingOption: CmnActJumpPre
-		addGatlingOption: NmlAtk5A
-		addCancelOption: NmlAtk2A
-		addGatlingOption: NmlAtk5D
-		addGatlingOption: BanditBringer
-		addCancelOption: GunFlame
+		// addGatlingOption: CmnActJumpPre
+		// addGatlingOption: NmlAtk5A
+		// addCancelOption: NmlAtk2A
+		// addGatlingOption: NmlAtk5D
+		// addGatlingOption: BanditBringer
+		// addCancelOption: GunFlame
 		damage: 0, 56
 		// hitStop: 4
 		pushbackX: 70
@@ -128,6 +134,7 @@ beginState: NmlAtk5A
 
 	//Starts up on the 4th frame, active for 10 frames, recovers for 4 frames
 	sprite: 31, 4
+	callSubroutine: cmnNandemoCancel
 	sprite: 32, 1
 	sprite: 33, 1
 	sprite: 34, 1
@@ -137,6 +144,14 @@ beginState: NmlAtk5A
 	sprite: 38, 1
 	
 	endState:
+
+beginState: NmlAtkAir5A
+	sprite: 171, 4
+	sprite: 172, 4
+	sprite: 173, 4
+	sprite: 174, 4
+
+endState:
 
 beginState: NmlAtk2A
 	upon:IMMEDIATE
@@ -191,7 +206,7 @@ beginState: NmlAtk5D
 
 beginState: CmnActHighGuardLoop
 	upon:IMMEDIATE
-		callSubroutine: cmnHighGuard
+
 	endUpon:
 
 	beginLabel: loop
@@ -237,7 +252,7 @@ beginState: CmnActStand
 
 beginState: CmnActStand2Crouch
 	upon: IMMEDIATE
-		addWhiffCancelOption: cmnNandemoCancel
+		callSubroutine: cmnNandemoCancel
 	endUpon:
 
 	sprite: 90, 8
@@ -248,7 +263,7 @@ beginState: CmnActStand2Crouch
 
 beginState: CmnActCrouch
 	upon: IMMEDIATE
-		addWhiffCancelOption: cmnNandemoCancel
+		callSubroutine: cmnNandemoCancel
 	endUpon:
 
 	beginLabel: loop
@@ -267,7 +282,7 @@ beginState: CmnActCrouch
 
 beginState: CmnActCrouch2Stand
 	upon: IMMEDIATE
-		addWhiffCancelOption: cmnNandemoCancel
+		callSubroutine: cmnNandemoCancel
 	endUpon:
 
 	sprite: 102, 1
@@ -279,7 +294,7 @@ beginState: CmnActCrouch2Stand
 
 beginState: CmnActFWalk
 	upon: IMMEDIATE
-		addWhiffCancelOption: cmnNandemoCancel
+		callSubroutine: cmnNandemoCancel
 	endUpon:
 
 	beginLabel: loop
@@ -299,7 +314,7 @@ beginState: CmnActFWalk
 
 beginState: CmnActBWalk
 	upon: IMMEDIATE
-		addWhiffCancelOption: cmnNandemoCancel
+		callSubroutine: cmnNandemoCancel
 	endUpon:
 
 	beginLabel: loop
@@ -315,10 +330,10 @@ beginState: CmnActBWalk
 	
 	endState:
 
+//We gotta add clearRegisteredUponCode
 beginState: CmnActFDash
 	upon: IMMEDIATE
-		addWhiffCancelOption: cmnNandemoCancel
-		callSubroutine: cmnFDash
+		callSubroutine: cmnNandemoCancel
 	endUpon:
 
 	sprite: 361, 6
@@ -338,27 +353,35 @@ beginState: CmnActFDash
 
 beginState: CmnActAirDash
 	upon: IMMEDIATE
-	
-		upon: IDLING
-			velocityXPercent: 0
-		endUpon:
-
+		callSubroutine: cmnAirFDash
 	endUpon:
 
-	sprite: 361, 6
+	velocityXRate: 25
+	physicsXImpulse: 25000
+	sprite: 361, 3
 
-	setGravity: 0
-	// physicsXImpulse: 35000
-	// physicsYImpulse: 0
 	sprite: 362, 3
+
+	sprite: 363, 6
+
+	velocityXRate: 275
+	sprite: 364, 1
+
+	velocityXRate: 225
+	sprite: 361, 2
+
+	velocityXRate: 125
+	sprite: 362, 3
+
+	velocityXRate: 100
+	callSubroutine: cmnNandemoCancel
 	sprite: 363, 3
+
 	sprite: 364, 3
-	physicsXImpulse: 0
-	setGravity: 3500
-
-	endState:
+endState:
 
 
+// max value of a 32 bit integer is 2147483647, makeshift infinity
 // beginState: s32'CmnActAirFDash'
 //   upon: (IMMEDIATE)
 //     exPointFReset: (PLAYER), -20000, 160000
@@ -398,28 +421,51 @@ beginState: CmnActAirDash
 	//   endUpon: 
 	// endSubroutine:
 //   endUpon: 
+
 //   sprite: s32'sol021_07', 3
 //   physicsXImpulse: 0, 27500
 //   velocityXRate: 25
+
 //   sprite: s32'sol404_15', 3
 //   spriteBlend: s32'sol404_16', 0, 500
+
 //   sprite: s32'sol404_16', 6
+
 //   sprite: s32'sol035_00', 1
 //   velocityXRate: 275
+
 //   sprite: s32'sol035_00', 2
 //   velocityXRate: 225
+
 //   sprite: s32'sol035_01', 3
 //   velocityXRate: 125
+
 //   sprite: s32'sol035_02', 3
 //   velocityXRate: 100
 //   velocityXPercentEachFrame: 90
+
 //   sprite: s32'sol035_03', 3
+
 // endState: 
 
-// This is how it should actually work: add state CmnActJumpPre
+//Jump Anatomy
+//Upper
+//	Set Length
+//UpperLoop
+//	Loop
+//UpperToTop
+//	Inf
+//Top
+//	Inf
+//TopToDown
+//	Inf
+//Down
+//	Set Length, where airdash spits us out
+//DownLoop
+//	Loop
 beginState: CmnActJump
 	upon: IMMEDIATE
-		addWhiffCancelOption: cmnNandemoCancel
+		callSubroutine: cmnNandemoCancel
 	endUpon:
 
 	upon: TOUCH_GROUND
@@ -450,7 +496,6 @@ beginState: CmnActJump
 
 beginState: CmnActJumpPre
 	upon: IMMEDIATE
-		callSubroutine: cmnJumpPre
 	endUpon:
 
 	sprite: 148, 2
@@ -619,8 +664,7 @@ beginState: CmnActJumpPre
 
 beginState: CmnActFDashStop
 	upon: IMMEDIATE
-		addWhiffCancelOption: cmnNandemoCancel
-		callSubroutine: cmnFDashStop
+		callSubroutine: cmnNandemoCancel
 	endUpon:
 
 	sprite: 370, 5
@@ -689,10 +733,6 @@ beginState: BanditBringer
 		addGatlingOption: NmlAtk5D
 		addCancelOption: GunFlame
 		pushbackX: 40
-		// hitStop: 7
-		upon: BEFORE_EXIT
-			sprite: 31, 100
-		endUpon:
 	endUpon:
 
 	upon: HIT
@@ -713,4 +753,4 @@ beginState: BanditBringer
 
 	sprite: 36, 5
 	sprite: 37, 5
-	endState:
+endState:

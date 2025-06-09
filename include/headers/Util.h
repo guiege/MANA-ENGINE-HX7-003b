@@ -109,6 +109,8 @@ static std::string trim(const std::string& str) {
     return str.substr(first, (last - first + 1));
 }
 
+int extractIntFromVal(const std::string& input);
+
 bool intersect(const rect& r1, const rect& r2);
 
 void writeHurtboxesToFile(const std::map<int, std::vector<rect>>& hurtboxes, const std::string& filename);

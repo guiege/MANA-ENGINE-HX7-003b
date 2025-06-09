@@ -8,6 +8,7 @@
 #include <vector>
 #include <deque>
 #include <unordered_map>
+#include <stack>
 
 #include "Actor.h"
 #include "Spritesheet.h"
@@ -39,10 +40,11 @@ struct Properties {
 struct Instruction {
     std::string command;
     std::vector<std::string> parameters;
+    std::vector<Instruction> children;
+    std::vector<Instruction> elseBlock;
 };
 
 struct EventHandler {
-    std::string event;
     std::vector<Instruction> instructions;
 };
 
@@ -50,13 +52,19 @@ struct State {
     std::string name;
     Properties properties;
     std::vector<Instruction> instructions;
-    std::vector<EventHandler> eventHandlers;
+    std::unordered_map<std::string, EventHandler> eventHandlers;
     std::unordered_map<std::string, size_t> labels;
 
     std::vector<std::string> gatlingOptions; //Guilty Gear style gatling system, can cancel any time after the move hits
     std::vector<std::string> cancelOptions; //Street Fighter style cancel system, can cancel only during hitstop after the move hits
     std::vector<std::string> whiffCancelOptions;
     std::vector<std::string> stateTransitions;
+};
+
+struct Subroutine {
+    std::string name;
+    std::vector<Instruction> instructions;
+    std::unordered_map<std::string, EventHandler> eventHandlers;
 };
 
 struct AfterImage {
@@ -91,10 +99,10 @@ public:
     virtual void exitState(int oldstate, int newstate) = 0;
 
     void updateScript(int tick, Character* opponent);
-    void runSubroutines();
     void checkCommands();
     bool checkCollision(Character* opponent);
     void executeCommands();
+    void executeInstruction(const Instruction& instr);
     void exitState();
 
     void hitOpponent(Character* opponent, const char* curstate);
@@ -171,29 +179,27 @@ public:
         options.erase(std::remove(options.begin(), options.end(), state), options.end());
     }
 
-    void callSubroutine(const std::string& subroutine);
-
-    void clearSubroutines(){
-        subroutines = "";
-    }
-
     rect ProcessRect(const rect& r);
 
     void FaceOpponent(Character* opponent);
 
     void handleEvent(const std::string& stateName, const std::string& eventName) {
         if (states.find(stateName) != states.end()) {
-            for (const auto& handler : states[stateName].eventHandlers) {
-                if (handler.event == eventName) {
-                    for (const auto& inst : handler.instructions) {
-                        if (commandMap.find(inst.command) != commandMap.end()) {
-                            commandMap[inst.command](inst.parameters);
-                            framesUntilNextCommand = 0;
-                        } else {
-                            std::cout << "Unknown command: " << inst.command << std::endl;
-                        }
-                    }
+            const auto& handlers = states[stateName].eventHandlers;
+            auto it = handlers.find(eventName);
+            if (it != handlers.end()) {
+                for (const auto& inst : it->second.instructions) {
+                    executeInstruction(inst);
                 }
+            }
+        }
+    }
+
+    void mergeEventHandlers(State& state, const Subroutine& subroutine) {
+        for (const auto& [event, handler] : subroutine.eventHandlers) {
+            if (state.eventHandlers.find(event) == state.eventHandlers.end()) {
+                std::cout << handler.instructions[0].command << std::endl;
+                state.eventHandlers[event] = handler;
             }
         }
     }
@@ -220,10 +226,16 @@ public:
         bool inStateBlock = false;
         bool inAddBlock = false;
         bool inEventBlock = false;
+        bool inSubroutine = false;
         std::string currentEvent;
         std::string currentStateBlock;
         std::string currentAddBlock;
+        std::string currentSubroutine;
         Properties prop;
+
+        std::stack<Instruction*> ifStack;
+
+        std::stack<std::vector<Instruction>*> instructionStack;
         
         while (std::getline(file, line)) {
             size_t commentPos = line.find("//");
@@ -234,6 +246,7 @@ public:
             if (line.empty()) continue;
 
             line.erase(std::remove(line.begin(),line.end(),' '),line.end());
+            line.erase(std::remove(line.begin(), line.end(), '\t'), line.end());
 
             if(line.find("addMove:") != std::string::npos){
                 State newState;
@@ -254,25 +267,81 @@ public:
                 inAddBlock = false;
                 currentStateBlock = line.substr(11);
                 currentAddBlock = "";
+                instructionStack.push(&states[currentStateBlock].instructions);
             } else if(line.find("endState:") != std::string::npos){
                 inStateBlock = false;
                 inAddBlock = false;
                 currentStateBlock = "";
                 currentAddBlock = "";
+                instructionStack.pop();
             } else if(line.find("upon:") != std::string::npos){
                 inEventBlock = true;
                 EventHandler newHandler;
-                newHandler.event = line.substr(6);
-                states[currentStateBlock].eventHandlers.push_back(newHandler);
+                currentEvent = line.substr(5);
+                if(inSubroutine){
+                    subroutines[currentSubroutine].eventHandlers.emplace(currentEvent, EventHandler{});
+                    instructionStack.push(&subroutines[currentSubroutine].eventHandlers[currentEvent].instructions);
+                } else{
+                    states[currentStateBlock].eventHandlers.emplace(currentEvent, EventHandler{});
+                    instructionStack.push(&states[currentStateBlock].eventHandlers[currentEvent].instructions);
+                }
             } else if(line.find("endUpon") != std::string::npos){
                 inEventBlock = false;
                 currentEvent = "";
+                instructionStack.pop();
             } else if (line.find("beginLabel:") != std::string::npos) {
-                std::string labelName = line.substr(12);
+                std::string labelName = line.substr(11);
                 states[currentStateBlock].labels[labelName] = states[currentStateBlock].instructions.size();
                 // std::cout << "Label created called: " << labelName << " at line: " << states[currentStateBlock].instructions.size();
+            } else if(line.find("beginSubroutine:") != std::string::npos){
+                inSubroutine = true;
+                currentSubroutine = line.substr(16);
+                instructionStack.push(&subroutines[currentSubroutine].instructions);
+            } else if(line.find("endSubroutine:") != std::string::npos){
+                inSubroutine = false;
+                currentSubroutine = "";
+                instructionStack.pop();
+            } else if(line.find("ifOperation:") != std::string::npos){
+                Instruction newIf;
+                newIf.command = "ifOperation";
+
+                size_t colonPos = line.find(':');
+                if (colonPos == std::string::npos) continue;
+
+                std::string paramsStr = line.substr(colonPos + 1);
+                std::istringstream iss(paramsStr);
+                std::string param;
+                while (std::getline(iss, param, ',')) {
+                    newIf.parameters.push_back(trim(param));
+                }
+
+                instructionStack.top()->push_back(newIf);
+
+                Instruction* currentIf = &instructionStack.top()->back();
+                ifStack.push(currentIf);
+
+                instructionStack.push(&currentIf->children);
+
+                std::cout << "Nesting into ifOperation with condition: " << currentIf->parameters[0]
+                     << ", current depth = " << instructionStack.size() << std::endl;
+            } else if(line.find("endIf:") != std::string::npos){
+
+                if(!instructionStack.empty())
+                    instructionStack.pop();
+            } else if(line.find("else:") != std::string::npos){
+                if(!ifStack.empty()){
+                    std::cout  << instructionStack.size() << std::endl;
+                    instructionStack.push(&ifStack.top()->elseBlock);
+                }
+
+            } else if(line.find("endElse:") != std::string::npos){
+                if(!instructionStack.empty())
+                    instructionStack.pop();
+                if(!ifStack.empty())
+                    ifStack.pop();
             } else {
-                if(inStateBlock && !inEventBlock){
+                if(inStateBlock || inEventBlock || inSubroutine){
+
                     size_t colonPos = line.find(':');
                     if (colonPos == std::string::npos) continue; 
 
@@ -286,7 +355,8 @@ public:
                         inst.parameters.push_back(trim(param));
                     }
 
-                    states[currentStateBlock].instructions.push_back(inst);
+                    instructionStack.top()->push_back(inst);
+                    // states[currentStateBlock].instructions.push_back(inst);
                     // std::cout << currentStateBlock << " " << states[currentStateBlock].instructions[states[currentStateBlock].instructions.size() - 1].command << std::endl;
                 }
 
@@ -308,24 +378,9 @@ public:
                         states[currentAddBlock].properties.moveInput.push_back(paramsStr);
                     }
                 }
-
-                if(inEventBlock){
-                    Instruction inst;
-                    size_t colonPos = line.find(':');
-                    if (colonPos != std::string::npos) {
-                        inst.command = trim(line.substr(0, colonPos));
-                        std::string paramsStr = line.substr(colonPos + 1);
-                        std::istringstream iss(paramsStr);
-                        std::string param;
-                        while (std::getline(iss, param, ',')) {
-                            inst.parameters.push_back(trim(param));
-                        }
-                        states[currentStateBlock].eventHandlers.back().instructions.push_back(inst);
-                        }
-                    }
-                }
             }
         }
+    }
 
 protected:
     //Components
@@ -349,9 +404,11 @@ protected:
     std::unordered_map<int, std::string> stateNames;
 
     std::unordered_map<std::string, State> states;
+    std::unordered_map<std::string, Subroutine> subroutines;
     std::vector<std::string> stateOrder;
 
     std::unordered_map<std::string, std::function<void(const std::vector<std::string>&)>> commandMap;
+    bool recoveryState = false; //cancels the move while continuing script execution
     bool cancellable = false;
     bool hit = false;
 
@@ -403,7 +460,6 @@ protected:
     int currentState = 0;
     int currentJuggle = 0;
     unsigned int jumpDir = 0;
-    std::string subroutines = "";
     std::string queuedState = "";
     std::array<std::string, 2> validBlockingStates = { "CmnActStand", "CmnActBWalk"};
 
@@ -419,6 +475,9 @@ protected:
     float initDashFSpeed = 10.0f; // 13.1
     float dashMaxVelocity = 38.51f; // v cannot exceed 38.5
     float dashSkidDecay = 0.5f;
+
+    float velocityXRate = 1.0f;
+    float velocityYRate = 1.0f;
 
     float velocityXPercentEachFrame = 1.0f;
     float velocityYPercentEachFrame = 1.0f;

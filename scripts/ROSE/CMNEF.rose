@@ -1,0 +1,85 @@
+beginSubroutine: cmnAirFDash
+	upon: IDLING
+		ifOperation: IS_GREATER_OR_EQUAL, SpeedY, Val(1)
+			ifOperation: IS_LESSER_OR_EQUAL, ActionTime, Val(5)
+				velocityYPercent: 95
+			endIf:
+			else:
+				physicsYImpulse: 0
+				setGravity: 0
+			endElse:
+		endIf:
+		else:
+			physicsYImpulse: 0
+			setGravity: 0
+		endElse:
+	endUpon:
+
+	upon: BEFORE_EXIT
+		resetGravity:
+		velocityXPercent: 75
+	endUpon:
+endSubroutine:
+
+beginSubroutine: cmnNandemoCancel
+  recoveryState: 
+  //enableFarSlash: 0
+  //enableCrouch: 1
+  //enableWalkForward: 1
+  //enableForwardDash: 1
+  //enableWalkBack: 1
+  //enableBackDash: 1
+  //enableNormals: 1
+  //enableSpecials: 1
+  //enableBurst: 1
+  //enableJump: 1
+  //enableBlock: 1
+  //enableProximityBlock: 1
+  //autoInputDirectionSearch: 1
+  //forceEnableBlueRomanCancel: 1
+  //invulnForce: 0
+  //enableSuperArmor: 0
+  //callSubroutineWithArgs: s32'cmn_changecheck', Val(0), Val(0), Val(0), Val(0)
+endSubroutine: 
+
+//For crouching moves
+// beginSubroutine: s32'cmnNandemoCancelC'
+//   recoveryState: 
+//   enableFarSlash: 0
+//   enableWalkForward: 1
+//   enableForwardDash: 1
+//   enableWalkBack: 1
+//   enableBackDash: 1
+//   enableNormals: 1
+//   enableSpecials: 1
+//   enableBurst: 1
+//   enableJump: 1
+//   enableBlock: 1
+//   enableProximityBlock: 1
+//   autoInputDirectionSearch: 1
+//   forceEnableBlueRomanCancel: 1
+//   invulnForce: 0
+//   enableSuperArmor: 0
+//   callSubroutineWithArgs: s32'cmn_changecheck', Val(0), Val(0), Val(0), Val(0)
+// endSubroutine: 
+
+//For air moves
+beginSubroutine: cmnNandemoCancelA
+  recoveryState: 
+  // enableAirForwardDash: 1
+  // enableAirBackDash: 1
+  // enableNormals: 1
+  // enableSpecials: 1
+  // enableBurst: 1
+  // enableDoubleJump: 1
+  // enableBlock: 1
+  // enableProximityBlock: 1
+  // if: Mem(AirTurnCheck)
+  //   autoInputDirectionSearch: 1
+  // endIf: 
+  // forceEnableBlueRomanCancel: 1
+  // invulnForce: 0
+  // enableSuperArmor: 0
+  resetGravity: 
+  // callSubroutineWithArgs: s32'cmn_changecheck', Val(0), Val(0), Val(0), Val(0)
+endSubroutine: 
