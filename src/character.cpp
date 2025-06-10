@@ -237,6 +237,10 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 		recoveryState = true;
 	};
 
+	commandMap["airDashCount"] = [this](const std::vector<std::string>& params) {
+		airDashCount = stoi(params[0]);
+	};
+
 	commandMap["callSubroutine"] = [this](const std::vector<std::string>& params) {
 		auto it = subroutines.find(params[0]);
 	    if (it != subroutines.end()) {
@@ -279,8 +283,6 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 
    	commandMap["clearRegisteredUponCode"] = [this](const std::vector<std::string>& params) {
    		// std::cout << "clearing registered values" << std::endl;
-   		velocity = {0.0f, 0.0f};
-   		acceleration = {0.0f, 0.0f};
     };
 
     commandMap["exitState"] = [this](const std::vector<std::string>& params) {
@@ -290,6 +292,7 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
     commandMap["gotoLabel"] = [this](const std::vector<std::string>& params) {
     	// std::cout << "Going to label: " << params[0] << " at line: " << states[currentState].labels[params[0]] << std::endl;
     	currentLine = states[GetCurrentState()].labels[params[0]];
+    	executeInstruction(states[GetCurrentState()].instructions[currentLine]);
     };
 
    	commandMap["setStateTransition"] = [this](const std::vector<std::string>& params) {
@@ -522,6 +525,9 @@ void Character::SetState(const std::string& state)
 		characterState = "JUMPING";
 	} else if(state == "CmnActFDash"){
 		velocity.x = initDashFSpeed;
+	} else if(state == "CmnActAirDash"){
+		if(currentAirDashCount > 0)
+			currentAirDashCount--;
 	}
 
 	jumpDir = 0;
@@ -562,8 +568,7 @@ void Character::executeCommands()
     }
 
 	while (framesUntilNextCommand == 0 && currentLine < states[GetCurrentState()].instructions.size()) {
-	    const auto& instr = states[GetCurrentState()].instructions[currentLine];
-	    executeInstruction(instr);
+	    executeInstruction(states[GetCurrentState()].instructions[currentLine]);
 	    currentLine++;
 
 	    if (framesUntilNextCommand > 0)
@@ -773,6 +778,9 @@ void Character::checkCommands()
 		if(states[key].properties.characterState != characterState)
 			continue;
 
+		if(key == "CmnActAirDash" && currentAirDashCount == 0)
+			continue;
+
 		bool gatling = false;
 		bool cancel = false;
 		bool kara = false;
@@ -873,6 +881,7 @@ void Character::updateScript(int tick, Character* opponent)
 		if(!stateTouchedGround && stateLeftGround){
 			FaceOpponent(opponent);
 			handleEvent(GetCurrentState(), "TOUCH_GROUND");
+			currentAirDashCount = airDashCount;
 			stateTouchedGround = true;
 		}
 		if(GetCurrentState() == "CmnActStand"){

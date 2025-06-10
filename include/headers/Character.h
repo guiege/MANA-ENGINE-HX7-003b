@@ -291,7 +291,7 @@ public:
                 instructionStack.pop();
             } else if (line.find("beginLabel:") != std::string::npos) {
                 std::string labelName = line.substr(11);
-                states[currentStateBlock].labels[labelName] = states[currentStateBlock].instructions.size();
+                states[currentStateBlock].labels[labelName] = states[currentStateBlock].instructions.size(); //Bug with labels instruction being wrong index
                 // std::cout << "Label created called: " << labelName << " at line: " << states[currentStateBlock].instructions.size();
             } else if(line.find("beginSubroutine:") != std::string::npos){
                 inSubroutine = true;
@@ -448,6 +448,8 @@ protected:
     unsigned int backwardSuperJumpDistance = 0;
     unsigned int superJumpHeight = 0;
     unsigned int superJumpGravity = 0;
+    unsigned int airDashCount = 0;
+    unsigned int currentAirDashCount = 0;
     
     bool actionable = true;
     bool hitboxActive = false;

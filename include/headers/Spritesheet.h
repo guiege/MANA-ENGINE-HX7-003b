@@ -29,6 +29,8 @@ public:
         return currentFrame;
     }
 
+    void ChangeCurSourceX(const int newVal);
+
     void SetFrame(const int frame);
 
     void SetClipSize(const int width, const int height)
@@ -53,8 +55,8 @@ public:
     int getLength();
 
 protected:
-
-    json sheetindex;
+    json input;
+    const char* filePath;
 
     clip curClip;
 

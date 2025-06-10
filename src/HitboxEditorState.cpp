@@ -193,6 +193,8 @@ void HitboxEditorState::update(float dt)
 	if (this->Keys[GLFW_KEY_X]){
 		cameraScale += .1;
 	}
+	if(this->Keys[GLFW_KEY_C])
+		testSheet->ChangeCurSourceX(mouseX);
 
 	if(Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_L] && !loadingBoxes){
 		loadingBoxes = true;

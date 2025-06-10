@@ -89,11 +89,11 @@ bool IntroState::enter()
 	// actors.push_back(testChar2);
 
 	Solid platform(0, 700, 800, 800, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	Solid floor(-1000, 980, 6000, 1000, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	Solid stage(-1000, 980, 6000, 1000, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	Solid wallL(-40, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	Solid wallR(4000, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	// solids.push_back(platform);
-	solids.push_back(floor);
+	solids.push_back(stage);
 	solids.push_back(wallL);
 	solids.push_back(wallR);
 
@@ -284,7 +284,7 @@ void IntroState::update(float dt)
 {
 	inputs[0] = ReadInputs();
 	inputs[1] = ReadControllerInputs();
-	// std::cout << "Stick 1 is here: " << present << std::endl;
+	std::cout << testChar->pos.y << std::endl;
 
 	inputHandler2->registerInputs(inputs[0]);
 	inputHandler->registerInputs(inputs[1]);

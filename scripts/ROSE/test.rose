@@ -92,7 +92,6 @@ addMove: CmnActHighGuardEnd
     characterState: STANDING
 	endMove:
 
-//eventually add declarative subroutines(ex. beginSubroutine: s32'RoundInit')
 beginState: RoundInit
 	upon:IMMEDIATE
 		forwardJumpDistance: 7900
@@ -108,6 +107,7 @@ beginState: RoundInit
 		initDashFSpeed: 7000
 		fDashAccelSpeed: 450
 		fDashFriction: 95
+		airDashCount: 2
 	endUpon:
 
 	endState:
@@ -116,12 +116,11 @@ beginState: NmlAtk5A
 	upon:IMMEDIATE
 		cmn_AtkLv1:
 		physicsXImpulse: 0
-		// addGatlingOption: CmnActJumpPre
-		// addGatlingOption: NmlAtk5A
-		// addCancelOption: NmlAtk2A
-		// addGatlingOption: NmlAtk5D
-		// addGatlingOption: BanditBringer
-		// addCancelOption: GunFlame
+		addGatlingOption: NmlAtk5A
+		addCancelOption: NmlAtk2A
+		addGatlingOption: NmlAtk5D
+		addGatlingOption: BanditBringer
+		addCancelOption: GunFlame
 		damage: 0, 56
 		// hitStop: 4
 		pushbackX: 70
@@ -134,12 +133,12 @@ beginState: NmlAtk5A
 
 	//Starts up on the 4th frame, active for 10 frames, recovers for 4 frames
 	sprite: 31, 4
-	callSubroutine: cmnNandemoCancel
 	sprite: 32, 1
 	sprite: 33, 1
 	sprite: 34, 1
 	sprite: 35, 1
 	sprite: 36, 1
+	callSubroutine: cmnNandemoCancel
 	sprite: 37, 1
 	sprite: 38, 1
 	
@@ -469,7 +468,8 @@ beginState: CmnActJump
 	endUpon:
 
 	upon: TOUCH_GROUND
-		clearRegisteredUponCode: 0
+		physicsXImpulse: 0
+		physicsYImpulse: 0
 		gotoLabel:landing
 	endUpon:
 
@@ -683,7 +683,8 @@ beginState: GunFlame
 	endUpon:
 
 	upon: TOUCH_GROUND
-		clearRegisteredUponCode: 0
+		physicsXImpulse: 0
+		physicsYImpulse: 0
 		gotoLabel:landing
 	endUpon:
 

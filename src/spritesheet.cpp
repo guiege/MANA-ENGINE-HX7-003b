@@ -4,9 +4,8 @@ Spritesheet::Spritesheet(Texture& texture, const char* file, const float xpos, c
 : Sprite(texture, xpos, ypos, width, height, rot, color)
 {
 	std::ifstream ifs(file);
-	json input = json::parse(ifs);
-
-	sheetindex = input["frames"];
+	filePath = file;
+	input = json::parse(ifs);
 
 	SetFrame(0);
 
@@ -18,7 +17,7 @@ void Spritesheet::SetFrame(const int frame)
 {
 	currentFrame = frame;
 
-	json curFrame = sheetindex[currentFrame];
+	json curFrame = input["frames"][currentFrame];
 
 	json curFrameRect = curFrame["frame"];
 	json source = curFrame["spriteSourceSize"];
@@ -31,6 +30,14 @@ void Spritesheet::SetFrame(const int frame)
 	curClip.sourceY = source["y"];
 
 	curClip.rotated = curFrame["rotated"];
+}
+
+void Spritesheet::ChangeCurSourceX(const int newVal)
+{
+	input["frames"][currentFrame]["spriteSourceSize"]["x"] = newVal;
+	std::ofstream ofs(filePath);
+	ofs << input.dump(4);
+	ofs.close();
 }
 
 glm::vec2 Spritesheet::getCurrentSize()
@@ -116,5 +123,5 @@ void Spritesheet::drawclip(Renderer* renderer, const int x, const int y, const i
 
 int Spritesheet::getLength()
 {
-	return (sheetindex.size() -1);
+	return (input["frames"].size() -1);
 }
