@@ -50,6 +50,7 @@
 
 void Character::init() //TODO: add commands addPositionX and addPositionY, addNamerakaMoveX and Y, velocityXPercentEachFrame, haltMomentum
 {
+	target = this;
 	insertMotionInput("INPUT_1080", {
 		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK, FK_Input_Buttons.UP, FK_Input_Buttons.FORWARD}, {-70,70,70,70}),
 		CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.UP, FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN}, {-70,70,70,70}),
@@ -229,8 +230,8 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 	commandMap["sprite"] = [this](const std::vector<std::string>& params) {
 		if (params.empty()) return;
 		// std::cout << "Setting sprite to " << params[0] << " for " << params[1] << " frames" << std::endl;
-		SetFrame(stoi(params[0]));
-		framesUntilNextCommand = stoi(params[1]); // -1 or no? Make up your mind on a consistent system
+		target->SetFrame(stoi(params[0]));
+		target->framesUntilNextCommand = stoi(params[1]); // -1 or no? Make up your mind on a consistent system
 	};
 
 	commandMap["recoveryState"] = [this](const std::vector<std::string>& params) {
@@ -265,7 +266,6 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 
     commandMap["physicsXImpulse"] = [this](const std::vector<std::string>& params) {
 		if (params.empty()) return;
-		// std::cout << "Giving a x physics impulse of " << params[0] << std::endl;
 		velocity.x = stoi(params[0]) / (float)1000;
     };
 
@@ -322,13 +322,16 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
     };
 
     commandMap["damage"] = [this](const std::vector<std::string>& params) {
-    	// std::cout << "Setting damage to " << params[0] << std::endl;
     	states[GetCurrentState()].properties.damage = stoi(params[1]);
     };
 
     commandMap["hitstunAmount"] = [this](const std::vector<std::string>& params) {
     	// std::cout << "Setting " << params[0] << " frames of hitstun" << std::endl;
     	states[GetCurrentState()].properties.hitstun = stoi(params[0]);
+    };
+
+    commandMap["blockstunAmount"] = [this](const std::vector<std::string>& params) {
+    	states[GetCurrentState()].properties.blockstun = stoi(params[0]);
     };
 
     commandMap["hitStop"] = [this](const std::vector<std::string>& params) {
@@ -353,40 +356,25 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
     	states[GetCurrentState()].properties.pushbackMultiplier = stoi(params[0]) / 100.0f;
     };
 
-    commandMap["cmn_AtkLv0"] = [this](const std::vector<std::string>& params) {
-    	states[GetCurrentState()].properties.pushbackVelocity.x = 1250;
-    	states[GetCurrentState()].properties.hitstop = 11;
-    	states[GetCurrentState()].properties.hitstun = 12;
-    	states[GetCurrentState()].properties.blockstun = 9;
-    };
-
-    commandMap["cmn_AtkLv1"] = [this](const std::vector<std::string>& params) {
-    	states[GetCurrentState()].properties.pushbackVelocity.x = 1375;
-    	states[GetCurrentState()].properties.hitstop = 12;
-    	states[GetCurrentState()].properties.hitstun = 14;
-    	states[GetCurrentState()].properties.blockstun = 11;
-    };
-
-    commandMap["cmn_AtkLv2"] = [this](const std::vector<std::string>& params) {
-    	states[GetCurrentState()].properties.pushbackVelocity.x = 1500;
-    	states[GetCurrentState()].properties.hitstop = 13;
-    	states[GetCurrentState()].properties.hitstun = 16;
-    	states[GetCurrentState()].properties.blockstun = 13;
-    };
-
-    commandMap["cmn_AtkLv3"] = [this](const std::vector<std::string>& params) {
-    	states[GetCurrentState()].properties.pushbackVelocity.x = 1750;
-    	// states[GetCurrentState()].properties.pushbackVelocity.y = -50;
-    	states[GetCurrentState()].properties.hitstop = 14;
-    	states[GetCurrentState()].properties.hitstun = 19;
-    	states[GetCurrentState()].properties.blockstun = 16;
-    };
-
-    commandMap["cmn_AtkLv4"] = [this](const std::vector<std::string>& params) {
-    	states[GetCurrentState()].properties.pushbackVelocity.x = 2000;
-    	states[GetCurrentState()].properties.hitstop = 15;
-    	states[GetCurrentState()].properties.hitstun = 21;
-    	states[GetCurrentState()].properties.blockstun = 18;
+    commandMap["attackLevel"] = [this](const std::vector<std::string>& params) {
+	    int level = std::stoi(params[0]);
+	    switch (level) {
+	    	case 0:
+	        	states[GetCurrentState()].properties.pushbackVelocity.x = 1250;
+	        	break;
+	       	case 1:
+	        	states[GetCurrentState()].properties.pushbackVelocity.x = 1375;
+	        	break;
+	       	case 2:
+	        	states[GetCurrentState()].properties.pushbackVelocity.x = 1500;
+	        	break;	
+	        case 3:
+	        	states[GetCurrentState()].properties.pushbackVelocity.x = 1750;
+	        	break;
+	        case 4:
+	        	states[GetCurrentState()].properties.pushbackVelocity.x = 2000;
+	        	break;
+	    }
     };
 
     commandMap["walkFSpeed"] = [this](const std::vector<std::string>& params) {
@@ -664,6 +652,7 @@ void Character::hitOpponent(Character* opponent, const char* curstate)
 	opponent->firstFrameHit = true;
 	handleEvent(GetCurrentState(), "HIT");
 	opponent->SetState("CmnActHighGuardLoop");
+	opponent->SetFrame(406);
 	// handleEvent(currentState, "HIT_OR_GUARD");
 }
 
@@ -1059,7 +1048,6 @@ void Character::draw(Renderer* renderer)
 	renderer->DrawOutline(pos + posOffset, glm::vec2(width, height), 0, glm::vec4(pushboxColor, 1.0f), 1);
 	renderer->DrawQuad(pos + posOffset + glm::vec2(width/2 - vertCrossWidth/2, height - vertCrossHeight/2), glm::vec2(vertCrossWidth, vertCrossHeight), 0, glm::vec4(1.0f));
 	renderer->DrawQuad(pos + posOffset + glm::vec2(width/2 - horiCrossWidth/2, height - horiCrossHeight/2), glm::vec2(horiCrossWidth, horiCrossHeight), 0, glm::vec4(1.0f));
-	// renderer->DrawQuad(pos, glm::vec2(5, 5), 0, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 	// renderer->DrawQuad({pos.x + spritesheet.getCurrentOffset().x*2 + spritesheet.getCurrentSize().x*1.5 - 5, pos.y}, glm::vec2(5, 5), 0, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
 	if(hurtboxes.count(currentFrame) > 0){
@@ -1088,6 +1076,7 @@ void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& pal
 	//     spritesheet.color = {0.5f, 0.8f, 1.0f, 1.0f - opacity};
 	// 	spritesheet.draw(paletteRenderer, palette);
 	// }
+	renderer->DrawQuad(glm::vec2(spritesheet.anchorPosition, spritesheet.anchorPositionY), glm::vec2(5, 5), 0, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 
 	spritesheet.SetFrame(currentFrame);
 	spritesheet.color = glm::vec4(1.0f);

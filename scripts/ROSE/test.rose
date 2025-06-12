@@ -1,7 +1,7 @@
 addMove: GunFlame
     moveType: SPECIAL
     characterState: STANDING
-    moveInput: INPUT_236236
+    moveInput: INPUT_623
     moveInput: INPUT_PRESS_HP
 	endMove:
 
@@ -114,7 +114,7 @@ beginState: RoundInit
 
 beginState: NmlAtk5A
 	upon:IMMEDIATE
-		cmn_AtkLv1:
+		callSubroutine: cmn_AtkLv1
 		physicsXImpulse: 0
 		addGatlingOption: NmlAtk5A
 		addCancelOption: NmlAtk2A
@@ -154,7 +154,7 @@ endState:
 
 beginState: NmlAtk2A
 	upon:IMMEDIATE
-		cmn_AtkLv1:
+		callSubroutine: cmn_AtkLv1
 		physicsXImpulse: 0
 		addCancelOption: NmlAtk2A
 		addGatlingOption: NmlAtk5A
@@ -176,13 +176,14 @@ beginState: NmlAtk2A
 
 beginState: NmlAtk5D
 	upon:IMMEDIATE
-		cmn_AtkLv4:
+		callSubroutine: cmn_AtkLv4
 		damage: 0, 56
 		physicsXImpulse: 0
 		pushbackX: 100
 		// pushbackX: 1000
+		hitstop
 		addCancelOption: GunFlame
-		// addCancelOption: CmnActFDash
+		// addCancelOption: CmnActJumpPre
 	endUpon:
 
 	upon: HIT
@@ -674,7 +675,7 @@ beginState: CmnActFDashStop
 
 beginState: GunFlame
 	upon: IMMEDIATE
-		cmn_AtkLv3:
+		callSubroutine: cmn_AtkLv3
 		pushbackX: 100
 		damage: 0, 40
 		// hitStop: 15
@@ -728,7 +729,7 @@ beginState: GunFlame
 
 beginState: BanditBringer
 	upon: IMMEDIATE
-		cmn_AtkLv3:
+		callSubroutine: cmn_AtkLv3
 		damage: 0, 100
 		setCarriedMomentumPercentage: 150
 		addGatlingOption: NmlAtk5D

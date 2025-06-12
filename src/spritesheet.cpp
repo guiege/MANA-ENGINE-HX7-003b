@@ -30,11 +30,20 @@ void Spritesheet::SetFrame(const int frame)
 	curClip.sourceY = source["y"];
 
 	curClip.rotated = curFrame["rotated"];
+	// recalculateAnchor();
 }
 
 void Spritesheet::ChangeCurSourceX(const int newVal)
 {
 	input["frames"][currentFrame]["spriteSourceSize"]["x"] = newVal;
+	std::ofstream ofs(filePath);
+	ofs << input.dump(4);
+	ofs.close();
+}
+
+void Spritesheet::ChangeCurSourceY(const int newVal)
+{
+	input["frames"][currentFrame]["spriteSourceSize"]["y"] = newVal;
 	std::ofstream ofs(filePath);
 	ofs << input.dump(4);
 	ofs.close();

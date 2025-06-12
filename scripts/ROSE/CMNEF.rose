@@ -21,6 +21,46 @@ beginSubroutine: cmnAirFDash
 	endUpon:
 endSubroutine:
 
+beginSubroutine: cmn_AtkLv0
+  attackLevel: 0
+  hitstunAmount: 12
+  blockstunAmount: 9
+
+  hitStop: 11
+endSubroutine:
+
+beginSubroutine: cmn_AtkLv1
+  attackLevel: 1
+  hitstunAmount: 14
+  blockstunAmount: 11
+
+  hitStop: 12
+endSubroutine:
+
+beginSubroutine: cmn_AtkLv2
+  attackLevel: 2
+  hitstunAmount: 16
+  blockstunAmount: 13
+
+  hitStop: 13
+endSubroutine:
+
+beginSubroutine: cmn_AtkLv3
+  attackLevel: 3
+  hitstunAmount: 19
+  blockstunAmount: 16
+
+  hitStop: 14
+endSubroutine:
+
+beginSubroutine: cmn_AtkLv4
+  attackLevel: 4
+  hitstunAmount: 21
+  blockstunAmount: 18
+
+  hitStop: 15
+endSubroutine:
+
 beginSubroutine: cmnNandemoCancel
   recoveryState: 
   //enableFarSlash: 0

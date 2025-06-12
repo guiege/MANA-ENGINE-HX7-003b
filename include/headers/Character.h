@@ -79,6 +79,14 @@ struct AfterImage {
     }
 };
 
+// struct Object {
+//     glm::vec2 pos {0.0f,0.0f};
+//     glm::vec2 velocity {0.0f,0.0f};
+//     glm::vec2 acceleration {0.0f,0.0f};
+    
+
+// };
+
 class Character : public Actor {
 public:
 
@@ -399,9 +407,10 @@ protected:
 
     //State Variables
     std::string characterState = "STANDING"; //3 potential states: STANDING, CROUCHING, JUMPING
-
+    //ADD PROXIMITY GUARD
     std::unordered_map<std::string, int> stateIDs;
     std::unordered_map<int, std::string> stateNames;
+    Actor* target = nullptr;
 
     std::unordered_map<std::string, State> states;
     std::unordered_map<std::string, Subroutine> subroutines;

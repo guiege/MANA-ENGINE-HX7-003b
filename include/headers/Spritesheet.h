@@ -31,6 +31,8 @@ public:
 
     void ChangeCurSourceX(const int newVal);
 
+    void ChangeCurSourceY(const int newVal);
+
     void SetFrame(const int frame);
 
     void SetClipSize(const int width, const int height)
@@ -54,6 +56,9 @@ public:
 
     int getLength();
 
+    int anchorPosition;
+    int anchorPositionY;
+
 protected:
     json input;
     const char* filePath;
@@ -62,8 +67,6 @@ protected:
 
     unsigned int currentFrame = 0;
 
-    int anchorPosition;
-    int anchorPositionY;
 
     glm::vec2 scale = {1.0f, 1.0f};
 
