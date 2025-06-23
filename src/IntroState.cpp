@@ -94,8 +94,8 @@ bool IntroState::enter()
 	Solid wallR(4000, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	// solids.push_back(platform);
 	solids.push_back(stage);
-	solids.push_back(wallL);
-	solids.push_back(wallR);
+	// solids.push_back(wallL);
+	// solids.push_back(wallR);
 
 	cameraXPos = 0;
 	cameraYPos = 180;
@@ -284,7 +284,7 @@ void IntroState::update(float dt)
 {
 	inputs[0] = ReadInputs();
 	inputs[1] = ReadControllerInputs();
-	std::cout << testChar->pos.y << std::endl;
+	// std::cout << testChar->pos.y << std::endl;
 
 	inputHandler2->registerInputs(inputs[0]);
 	inputHandler->registerInputs(inputs[1]);
@@ -424,26 +424,37 @@ void IntroState::update(float dt)
 	// 		plusframestimer++;
 	// }
 
-	if(testChar->checkCollision(testChar2))
-	{
+	if(testChar->checkCollision(testChar2)){
 		testChar->hitOpponent(testChar2, char1state.c_str());
+	} else if(testChar->checkClash(testChar2)){
+		std::cout << "clash happened" << std::endl;
 	}
 	if(testChar2->checkCollision(testChar))
 	{
 		testChar2->hitOpponent(testChar, char2state.c_str());
 	}
 
-	// Solid wallL(-40, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	// Solid wallR(4000, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	//Solid floor(0, 980, 4000, 1000, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	// if(testChar->pos.x >= 3400)
-	// 	testChar->pos.x = 3400;
-	// if(testChar->pos.x <= -400)
-	// 	testChar->pos.x = -400;
-	// if(testChar2->pos.x >= 3400)
-	// 	testChar2->pos.x = 3400;
-	// if(testChar2->pos.x <= -400)
-	// 	testChar2->pos.x = -400;
+	Solid wallL(-40, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	Solid wallR(4000, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
+	testChar->SetPushFlag(false);
+	testChar2->SetPushFlag(false);
+	if(testChar->pos.x >= 4000){
+		testChar->pos.x = 4000;
+		testChar->SetPushFlag(true);
+	}
+	if(testChar->pos.x <= 0){
+		testChar->pos.x = 0;
+		testChar->SetPushFlag(true);
+	}
+	if(testChar2->pos.x >= 4000){
+		testChar2->pos.x = 4000;
+		testChar2->SetPushFlag(true);
+	}
+	if(testChar2->pos.x <= 0){
+		testChar2->pos.x = 0;
+		testChar2->SetPushFlag(true);
+	}
 	// std::cout << testChar->pos.x << std::endl;
 
 	if(testChar->GetHitstop() == 0){
@@ -493,10 +504,10 @@ void IntroState::update(float dt)
 	cameraXPos += (abs(testChar2->GetCenterPos().x - (distance)/2) - cameraXPos) * cameraSnap;
 	cameraYPos += (abs(testChar2->GetCenterPos().y - (distanceY)/2) - cameraYPos) * cameraSnap;
 
-	if(cameraXPos < cameraMinPos)
+	if(cameraXPos <= cameraMinPos)
 		cameraXPos = cameraMinPos;
 
-	if(cameraXPos > cameraMaxPos)
+	if(cameraXPos >= cameraMaxPos)
 		cameraXPos = cameraMaxPos;
 
     float baseScale = 0.6f;

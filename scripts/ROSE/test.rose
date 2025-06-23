@@ -1,7 +1,7 @@
 addMove: GunFlame
     moveType: SPECIAL
     characterState: STANDING
-    moveInput: INPUT_623
+    moveInput: INPUT_236214
     moveInput: INPUT_PRESS_HP
 	endMove:
 
@@ -66,6 +66,9 @@ addMove: CmnActJumpPre
 addMove: CmnActJump
 	endMove:
 
+addMove: CmnActJumpLanding
+endMove:
+
 addMove: CmnActStand
 	characterState: STANDING
 	endMove:
@@ -94,8 +97,8 @@ addMove: CmnActHighGuardEnd
 
 beginState: RoundInit
 	upon:IMMEDIATE
-		forwardJumpDistance: 7900
-		backwardJumpDistance: 5200
+		forwardJumpDistance: 13900
+		backwardJumpDistance: 8500
 		jumpHeight: 55000
 		initGravity: 3000
 		forwardSuperJumpDistance: 7900
@@ -107,15 +110,15 @@ beginState: RoundInit
 		initDashFSpeed: 7000
 		fDashAccelSpeed: 450
 		fDashFriction: 95
-		airDashCount: 2
+		airDashCount: 1
 	endUpon:
 
-	endState:
+endState:
 
 beginState: NmlAtk5A
 	upon:IMMEDIATE
-		callSubroutine: cmn_AtkLv1
 		physicsXImpulse: 0
+		callSubroutine: cmn_AtkLv1
 		addGatlingOption: NmlAtk5A
 		addCancelOption: NmlAtk2A
 		addGatlingOption: NmlAtk5D
@@ -123,7 +126,7 @@ beginState: NmlAtk5A
 		addCancelOption: GunFlame
 		damage: 0, 56
 		// hitStop: 4
-		pushbackX: 70
+		// pushbackX: 70
 		// hitstunAmount: 10
 	endUpon:
 
@@ -138,13 +141,17 @@ beginState: NmlAtk5A
 	sprite: 34, 1
 	sprite: 35, 1
 	sprite: 36, 1
-	callSubroutine: cmnNandemoCancel
 	sprite: 37, 1
+	callSubroutine: cmnNandemoCancel
 	sprite: 38, 1
 	
 	endState:
 
 beginState: NmlAtkAir5A
+	upon:IMMEDIATE
+		callSubroutine: cmnLandingStiffadd_Timer
+	endUpon:
+
 	sprite: 171, 4
 	sprite: 172, 4
 	sprite: 173, 4
@@ -181,7 +188,7 @@ beginState: NmlAtk5D
 		physicsXImpulse: 0
 		pushbackX: 100
 		// pushbackX: 1000
-		hitstop
+		// hitstop
 		addCancelOption: GunFlame
 		// addCancelOption: CmnActJumpPre
 	endUpon:
@@ -381,7 +388,27 @@ beginState: CmnActAirDash
 endState:
 
 
-// max value of a 32 bit integer is 2147483647, makeshift infinity
+beginState: CmnActJumpLanding //landing from jump should prevent all movement aside from backdash. you can cancel into anything else though.(implement please)
+	sprite: 156, 1
+	sprite: 157, 1
+	sprite: 158, 1
+	sprite: 159, 1
+	sprite: 160, 2
+	exitState:
+	beginLabel: FJumpLanding
+	sprite: 160, 100
+	endLabel:
+endState:
+
+beginState: CmnActLandingStiff
+	sprite: 156, 1
+	sprite: 157, 1
+	sprite: 158, 1
+	sprite: 159, 1
+	sprite: 160, 2147483647
+endState:
+
+
 // beginState: s32'CmnActAirFDash'
 //   upon: (IMMEDIATE)
 //     exPointFReset: (PLAYER), -20000, 160000
@@ -468,38 +495,30 @@ beginState: CmnActJump
 		callSubroutine: cmnNandemoCancel
 	endUpon:
 
-	upon: TOUCH_GROUND
-		physicsXImpulse: 0
-		physicsYImpulse: 0
-		gotoLabel:landing
-	endUpon:
+	// upon: TOUCH_GROUND
+	// 	physicsXImpulse: 0
+	// 	physicsYImpulse: 0
+	// endUpon:
 
 	// physicsYImpulse: 35000
-	setGravity: 1400
+	// setGravity: 1400
 	sprite: 149, 2
 	sprite: 150, 3
 	sprite: 151, 2
 	sprite: 152, 2
 	sprite: 153, 2
-	setGravity: 3500
+	// setGravity: 3500
 	beginLabel:loop
 	sprite: 154, 2
 	sprite: 155, 2
 	gotoLabel:loop
-
-	beginLabel:landing
-	sprite: 156, 1
-	sprite: 157, 1
-	sprite: 158, 1
-	sprite: 159, 1
-	sprite: 160, 1
-	endState:
+endState:
 
 beginState: CmnActJumpPre
 	upon: IMMEDIATE
 	endUpon:
 
-	sprite: 148, 2
+	sprite: 148, 4
 	exitState:
 
 	endState:

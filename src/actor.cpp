@@ -31,6 +31,7 @@ void Actor::MoveX(float amount)
 			
 		}
 	}
+	std::cout << pos.x << std::endl;
 }
 
 void Actor::MoveY(float amount)

@@ -176,8 +176,8 @@ private:
 	float cameraSnap = 0.1f;
 	double lastX = 0.0, lastY = 0.0;
 	bool isPanning = false;
-	int cameraMinPos = 40;
-	int cameraMaxPos = 3960;
+	int cameraMinPos = 1000;
+	int cameraMaxPos = 3800;
 	float shake = 0.0f;
 	float offsetX = 0.0f;
 	float offsetY = 0.0f;
