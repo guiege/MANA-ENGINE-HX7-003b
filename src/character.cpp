@@ -272,7 +272,7 @@ void Character::SetState(const std::string& state)
 	cancellable = false;
 	recoveryState = false;
 	stateTouchedGround = false;
-	stateLeftGround = false;
+	// stateLeftGround = false;
 	velocityXPercentEachFrame = 1.0f;
 	velocityYPercentEachFrame = 1.0f;
 	carriedMomentumPercentage = 1.0f;

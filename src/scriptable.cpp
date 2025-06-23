@@ -4,7 +4,6 @@ void Scriptable::initCommandMap()
 {
 	commandMap["sprite"] = [this](const std::vector<std::string>& params) {
 		if (params.empty()) return;
-		// std::cout << "Setting sprite to " << params[0] << " for " << params[1] << " frames" << std::endl;
 		SetFrame(stoi(params[0]));
 		framesUntilNextCommand = stoi(params[1]);
 	};
@@ -30,7 +29,6 @@ void Scriptable::initCommandMap()
 
 	commandMap["setCarriedMomentumPercentage"] = [this](const std::vector<std::string>& params) {
 		carriedMomentumPercentage = stoi(params[0]) / (float)100;
-        // std::cout << "Setting carried momentum percentage to " << params[0] << std::endl;
     };
 
     commandMap["resetGravity"] = [this](const std::vector<std::string>& params) {
@@ -52,27 +50,22 @@ void Scriptable::initCommandMap()
 
     commandMap["physicsYImpulse"] = [this](const std::vector<std::string>& params) {
 		if (params.empty()) return;
-		// std::cout << "Giving a y physics impulse of " << params[0] << std::endl;
 		velocity.y = -(stoi(params[0]) / (float)1000);
     };
 
     commandMap["setGravity"] = [this](const std::vector<std::string>& params) {
 		if (params.empty()) return;
-		// std::cout << "Setting gravity value to " << (stoi(params[0]) / (float)1000) << std::endl;
 		gravity = stoi(params[0]) / (float)1000;
     };
 
    	commandMap["clearRegisteredUponCode"] = [this](const std::vector<std::string>& params) {
-   		// std::cout << "clearing registered values" << std::endl;
     };
 
     commandMap["setEventTrigger"] = [this](const std::vector<std::string>& params) {
         states[GetCurrentState()].eventHandlers[params[0]].eventTrigger = stoi(params[1]);
-        // std::cout << params[0] << " , " << params[1] << std::endl;
     };
 
     commandMap["gotoLabel"] = [this](const std::vector<std::string>& params) {
-    	// std::cout << "Going to label: " << params[0] << " at line: " << states[currentState].labels[params[0]] << std::endl;
     	currentLine = states[GetCurrentState()].labels[params[0]];
     	executeInstruction(states[GetCurrentState()].instructions[currentLine]);
     };
@@ -82,12 +75,10 @@ void Scriptable::initCommandMap()
     };
 
     commandMap["addGatlingOption"] = [this](const std::vector<std::string>& params) {
-    	// std::cout << "Adding gatling option: " << params[0] << std::endl;
     	states[GetCurrentState()].gatlingOptions.push_back(params[0]);
     };
 
     commandMap["addWhiffCancelOption"] = [this](const std::vector<std::string>& params) {
-    	// std::cout << "Adding whiff cancel option: " << params[0] << std::endl;
     	states[GetCurrentState()].whiffCancelOptions.push_back(params[0]);
     };
 
@@ -96,7 +87,6 @@ void Scriptable::initCommandMap()
     };
 
     commandMap["hitstunAmount"] = [this](const std::vector<std::string>& params) {
-    	// std::cout << "Setting " << params[0] << " frames of hitstun" << std::endl;
     	states[GetCurrentState()].properties.hitstun = stoi(params[0]);
     };
 
@@ -105,7 +95,6 @@ void Scriptable::initCommandMap()
     };
 
     commandMap["hitStop"] = [this](const std::vector<std::string>& params) {
-    	// std::cout << "Setting " << params[0] << " frames of hitstop" << std::endl;
     	states[GetCurrentState()].properties.hitstop = stoi(params[0]);
     };
 
@@ -114,7 +103,6 @@ void Scriptable::initCommandMap()
     };
 
     commandMap["cmn_screenshake"] = [this](const std::vector<std::string>& params) {
-    	// std::cout << "Setting requested shake to " << (stoi(params[0]) / (float)100) << std::endl;
     	requestedShake = stoi(params[0]) / (float)100;
     };
 
@@ -156,7 +144,6 @@ void Scriptable::initCommandMap()
     };
 
     commandMap["initDashFSpeed"] = [this](const std::vector<std::string>& params) {
-    	// std::cout << (stoi(params[0]) / (float)1000) << std::endl;
     	initDashFSpeed = stoi(params[0]) / (float)1000;
     };
 
