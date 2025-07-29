@@ -64,8 +64,17 @@ public:
         return centerPos;
     }
 
+    // void SetCenterPos(const glm::vec2& new){
+
+    // }
+
+    void SetCenterPosY(const int& newY){
+        pos.y = newY - centerVec.y;
+    }
+
     bool isColliding(Character* opponent)
     {
+        std::cout << GetPushbox().y << std::endl;
         return intersect(GetPushbox(), opponent->GetPushbox());
     }
 
@@ -180,6 +189,7 @@ protected:
     //Drawing Variables
     glm::vec2 drawPosition = {0.0f, 0.0f};
     glm::vec2 centerPos = {0.0f, 0.0f};
+    glm::vec2 centerVec = {0.0f,0.0f};
     bool flipped = false;
 
     //Battle Variables

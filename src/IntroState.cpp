@@ -93,7 +93,7 @@ bool IntroState::enter()
 	Solid wallL(-40, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	Solid wallR(4000, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
 	// solids.push_back(platform);
-	solids.push_back(stage);
+	// solids.push_back(stage);
 	// solids.push_back(wallL);
 	// solids.push_back(wallR);
 
@@ -293,8 +293,6 @@ void IntroState::update(float dt)
 	{
 		testChar->pos.x = 1500;
 		testChar2->pos.x = 2500;
-		testChar->xCollision = false;
-		testChar2->xCollision = false;
 	}
 
 	//FOR TESTING TRADES
@@ -411,10 +409,18 @@ void IntroState::update(float dt)
 		savingLoading = true;
 	}
 
-	testChar->updateScript(tick, testChar2);
+	if(testChar2->pos.y >= 980){
+		testChar2->yCollision = true;
+	}
+	if(testChar->pos.y >= 980){
+		testChar->yCollision = true;
+	}
+
 	testChar2->updateScript(tick, testChar);
+	testChar->updateScript(tick, testChar2);
 	std::string char1state = testChar->GetCurrentState();
 	std::string char2state = testChar2->GetCurrentState();
+
 
 	// std::cout << plusframestimer <<std::endl;
 	// if(char2state == "CmnActStand"){
@@ -457,41 +463,41 @@ void IntroState::update(float dt)
 	}
 	// std::cout << testChar->pos.x << std::endl;
 
-	if(testChar->GetHitstop() == 0){
-		if(!testChar->isActionable())
-			p1UnactionableTimer++;
-		else{
-			if(p1UnactionableTimer != 0)
-				p1Unactionable = p1UnactionableTimer;
-			p1UnactionableTimer = 0;
-		}
+	// if(testChar->GetHitstop() == 0){
+	// 	if(!testChar->isActionable())
+	// 		p1UnactionableTimer++;
+	// 	else{
+	// 		if(p1UnactionableTimer != 0)
+	// 			p1Unactionable = p1UnactionableTimer;
+	// 		p1UnactionableTimer = 0;
+	// 	}
 
-		if(testChar->isHitboxActive())
-			p1AtkActiveTimer++;
-		else{
-			if(p1AtkActiveTimer != 0)
-				p1AtkActive = p1AtkActiveTimer;
-			p1AtkActiveTimer = 0;
-		}
-	}
+	// 	if(testChar->isHitboxActive())
+	// 		p1AtkActiveTimer++;
+	// 	else{
+	// 		if(p1AtkActiveTimer != 0)
+	// 			p1AtkActive = p1AtkActiveTimer;
+	// 		p1AtkActiveTimer = 0;
+	// 	}
+	// }
 
-	if(testChar2->GetHitstop() == 0){ //horrible fucking code fix it
-		if(!testChar2->isActionable())
-			p2UnactionableTimer++;
-		else{
-			if(p2UnactionableTimer != 0)
-				p2Unactionable = p2UnactionableTimer;
-			p2UnactionableTimer = 0;
-		}
+	// if(testChar2->GetHitstop() == 0){ //horrible fucking code fix it
+	// 	if(!testChar2->isActionable())
+	// 		p2UnactionableTimer++;
+	// 	else{
+	// 		if(p2UnactionableTimer != 0)
+	// 			p2Unactionable = p2UnactionableTimer;
+	// 		p2UnactionableTimer = 0;
+	// 	}
 
-		if(testChar2->isHitboxActive())
-			p2AtkActiveTimer++;
-		else{
-			if(p2AtkActiveTimer != 0)
-				p2AtkActive = p2AtkActiveTimer;
-			p2AtkActiveTimer = 0;
-		}
-	}
+	// 	if(testChar2->isHitboxActive())
+	// 		p2AtkActiveTimer++;
+	// 	else{
+	// 		if(p2AtkActiveTimer != 0)
+	// 			p2AtkActive = p2AtkActiveTimer;
+	// 		p2AtkActiveTimer = 0;
+	// 	}
+	// }
 
 	// std::cout << "Active: " << p2AtkActive << "/ " << "Advantage: " << (p1Unactionable - p2Unactionable) << std::endl;
 

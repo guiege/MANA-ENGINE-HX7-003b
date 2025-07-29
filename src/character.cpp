@@ -256,6 +256,8 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 	SetState("RoundInit");
 
 	afterImages.push_front(AfterImage(pos, spritesheet.GetFrame()));
+	SetPushbox();
+	centerVec = posOffset + glm::vec2(width/2, height);
 }
 
 void Character::SetState(const std::string& state)
@@ -591,7 +593,6 @@ void Character::updateScript(int tick, Character* opponent)
 			handleEvent(GetCurrentState(), "TOUCH_GROUND");
 			currentAirDashCount = airDashCount;
 			stateTouchedGround = true;
-			pushFlag = true;
 			std::cout << "handled" << std::endl;
 			if(landingStiffTime > 0)
 				SetState("CmnActLandingStiff");
@@ -610,7 +611,7 @@ void Character::updateScript(int tick, Character* opponent)
 	}
 
 	if(isColliding(opponent)){
-		if(velocity.x != 0 || xCollision || pushFlag){
+		if(velocity.x != 0 || pushFlag){
 			if(centerPos.x < opponent->GetCenterPos().x)
 				opponent->MoveX(((GetPushbox().x + width) - (opponent->pos.x + opponent->posOffset.x)) + 1);
 			else
@@ -727,6 +728,10 @@ void Character::updateScript(int tick, Character* opponent)
 	velocity.x *= velocityXPercentEachFrame;
 	velocity.y *= velocityYPercentEachFrame;
 
+	if(pos.y >= 980){
+		pos.y = 980;
+	}
+
 	// if(!firstFrame)
 	bbscriptFrameCount++;
 	firstFrame = false;
@@ -829,10 +834,10 @@ void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& pal
 	int vertCrossHeight = 40;
 	int horiCrossWidth = 32;
 	int horiCrossHeight = 2;
-	centerPos = pos + posOffset + glm::vec2(width/2, height);
+	centerPos = pos + centerVec;
 	renderer->DrawOutline(pos + posOffset, glm::vec2(width, height), 0, glm::vec4(pushboxColor, 1.0f), 1);
-	renderer->DrawQuad(pos + posOffset + glm::vec2(width/2 - vertCrossWidth/2, height - vertCrossHeight/2), glm::vec2(vertCrossWidth, vertCrossHeight), 0, glm::vec4(1.0f));
-	renderer->DrawQuad(pos + posOffset + glm::vec2(width/2 - horiCrossWidth/2, height - horiCrossHeight/2), glm::vec2(horiCrossWidth, horiCrossHeight), 0, glm::vec4(1.0f));
+	renderer->DrawQuad(centerPos + glm::vec2(-vertCrossWidth/2, -vertCrossHeight/2), glm::vec2(vertCrossWidth, vertCrossHeight), 0, glm::vec4(1.0f));
+	renderer->DrawQuad(centerPos + glm::vec2(-horiCrossWidth/2, -horiCrossHeight/2), glm::vec2(horiCrossWidth, horiCrossHeight), 0, glm::vec4(1.0f));
 	// renderer->DrawQuad(pos, glm::vec2(5, 5), 0, glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
 	// renderer->DrawQuad({pos.x + spritesheet.getCurrentOffset().x*2 + spritesheet.getCurrentSize().x*1.5 - 5, pos.y}, glm::vec2(5, 5), 0, glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
 
