@@ -142,7 +142,7 @@ bool InputHandler::checkCommand(CommandSequence &c)
 
 	if(c.commandNumber == c.commandList.size())
 	{
-		c.executeTimer = c.commandTimer;
+		c.executeTimer = std::abs(c.timingList.back()) + 1;
 		c.commandTimer = 0;
 		c.commandNumber = 0;
 	}

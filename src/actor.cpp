@@ -1,7 +1,14 @@
 #include "Actor.h"
 
+
+Actor::Actor(const int xpos, const int ypos, const int width, const int height, const float rot)
+: pos(xpos, ypos), width(width), height(height), rot(rot), solids(nullptr), xRemainder(0), yRemainder(0)
+{
+
+}
+
 Actor::Actor(const int xpos, const int ypos, const int width, const int height, const float rot, std::vector<Solid>& solids)
-: pos(xpos, ypos), width(width), height(height), rot(rot), solids(solids), xRemainder(0), yRemainder(0)
+: pos(xpos, ypos), width(width), height(height), rot(rot), solids(&solids), xRemainder(0), yRemainder(0)
 {
 
 }
@@ -16,18 +23,18 @@ void Actor::MoveX(float amount)
 		int sign = sgn(move);
 		while(move != 0)
 		{
-			if(!CheckCollision(solids, glm::ivec2(this->pos.x + posOffset.x + sign, pos.y + posOffset.y)))
-			{
+			// if(!CheckCollision(solids, glm::ivec2(this->pos.x + posOffset.x + sign, pos.y + posOffset.y)))
+			// {
 				xCollision = false;
 				pos.x += sign;
 				move -= sign;
-			}
-			else
-			{
-				xCollision = true;
-				// std::cout << "Collision!" << std::endl;
-				break;
-			}
+			// }
+			// else
+			// {
+			// 	xCollision = true;
+			// 	// std::cout << "Collision!" << std::endl;
+			// 	break;
+			// }
 			
 		}
 	}
@@ -43,18 +50,18 @@ void Actor::MoveY(float amount)
 		int sign = sgn(move);
 		while(move != 0)
 		{
-			if(!CheckCollision(solids, glm::ivec2(pos.x + posOffset.x, pos.y + posOffset.y + sign)))
-			{
+			// if(!CheckCollision(solids, glm::ivec2(pos.x + posOffset.x, pos.y + posOffset.y + sign)))
+			// {
 				yCollision = false;
 				pos.y += sign;
 				move -= sign;
-			}
-			else
-			{
-				// std::cout << "Collision!" << std::endl;
-				yCollision = true;
-				break;
-			}
+			// }
+			// else
+			// {
+			// 	// std::cout << "Collision!" << std::endl;
+			// 	yCollision = true;
+			// 	break;
+			// }
 			
 		}
 	}

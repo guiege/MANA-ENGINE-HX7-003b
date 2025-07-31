@@ -50,6 +50,10 @@
 
 void Character::init() //TODO: add commands addPositionX and addPositionY, addNamerakaMoveX and Y, velocityXPercentEachFrame, haltMomentum
 {
+	readHurtboxesFromFile(hurtboxes, hitboxes, pushboxes, "scripts/hitboxes/testBoxes.hbox");
+	loadScript("scripts/ROSE/CMEF.rose");
+	loadScript("scripts/ROSE/test.rose");
+
 	insertMotionInput("INPUT_1080", {
 		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK, FK_Input_Buttons.UP, FK_Input_Buttons.FORWARD}, {-70,70,70,70}),
 		CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.UP, FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN}, {-70,70,70,70}),
@@ -243,7 +247,6 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 	}
 
     SetFlipped(false);
-	start();
 
 	int count = 0;
 
@@ -255,7 +258,7 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 
 	SetState("RoundInit");
 
-	afterImages.push_front(AfterImage(pos, spritesheet.GetFrame()));
+	// afterImages.push_front(AfterImage(pos, spritesheet.GetFrame()));
 	SetPushbox();
 	centerVec = posOffset + glm::vec2(width/2, height);
 }
@@ -283,21 +286,21 @@ void Character::SetState(const std::string& state)
 	gravity = initGravity;
 
 	if(state == "CmnActStand"){
-		characterState = "STANDING";
+		characterState = 0;
 		actionable = true;
 		recoveryState = true;
 	} else if(state == "CmnActFWalk"){
 		states[GetCurrentState()].whiffCancelOptions.push_back("CmnActFDash");
 	} else if(state == "CmnActCrouch2Stand"){
-		characterState = "STANDING";
+		characterState = 0;
 	} else if(state == "CmnActJump"){
-		characterState = "JUMPING";
+		characterState = 2;
 	} else if(state == "CmnActJumpLanding"){
-		characterState = "STANDING";
+		characterState = 0;
 		velocity.x = 0;
 		velocity.y = 0;
 	} else if(state == "CmnActLandingStiff"){
-		characterState = "STANDING";
+		characterState = 0;
 		velocity.x = 0;
 		velocity.y = 0;
 	} else if(state == "CmnActFDash"){
@@ -326,7 +329,7 @@ void Character::exitState()
 	} else if(GetCurrentState() == "CmnActAirDash"){
 		SetState("CmnActJump");
 	} else {
-		if(characterState == "JUMPING")
+		if(characterState == 2)
 			SetState("CmnActJump");
 		else
 			SetState("CmnActStand");
@@ -428,11 +431,11 @@ void Character::checkCommands()
 	blocking = false;
 	std::string curstate = GetCurrentState();
 
-	if(characterState != "JUMPING"){
+	if(characterState != 2){
 		if(buttonMap["INPUT_ANY_DOWN"])
-			characterState = "CROUCHING";
+			characterState = 1;
 		else
-			characterState = "STANDING";
+			characterState = 0;
 	}
 
 	if(curstate == "CmnActJumpPre"){
@@ -537,21 +540,19 @@ void Character::checkCommands()
 
 		State& value = states.at(key);
 		if(value.properties.moveInput.size() == 2){
-			if (!value.properties.moveInput.empty())
-			{
-			    // if(value.properties.moveInput[0] == getHighestPriorityInput() && buttonMap[value.properties.moveInput[0]])
-			    if(buttonMap[value.properties.moveInput[0]])
-			    {
-			    	if(buttonMap[value.properties.moveInput[1]]){
 
-					    if(recoveryState || kara || (gatling && hit) || (!gatling && !hit && !cancel) || (cancel && cancellable)){
-					    	actionable = false;
-					    	handleEvent(GetCurrentState(), "BEFORE_EXIT");
-							SetState(key);
-							return;
-					    }
+			if(buttonMap[value.properties.moveInput[0]])
+			{
+				std::cout << key << std::endl;
+			    if(buttonMap[value.properties.moveInput[1]]){
+
+					if(recoveryState || kara || (gatling && hit) || (!gatling && !hit && !cancel) || (cancel && cancellable)){
+					    // actionable = false;
+					    // handleEvent(GetCurrentState(), "BEFORE_EXIT");
+						// SetState(key);
+						return;
 					}
-			    }
+				}
 			}
 		}
 		if(value.properties.moveInput.size() == 1){
@@ -559,9 +560,9 @@ void Character::checkCommands()
 			{
 
 			    if(recoveryState || kara || (gatling && hit) || (!gatling && !hit && !cancel) || (cancel && cancellable)){
-			    	actionable = false;
-			    	handleEvent(GetCurrentState(), "BEFORE_EXIT");
-					SetState(key);
+			    	// actionable = false;
+			    	// handleEvent(GetCurrentState(), "BEFORE_EXIT");
+					// SetState(key);
 					return;
 			    }
 			}
@@ -571,8 +572,7 @@ void Character::checkCommands()
 
 void Character::updateScript(int tick, Character* opponent)
 {
-
-	// pos = {static_cast<int>(round(pos.x)), static_cast<int>(round(pos.y))};	
+	pos = {static_cast<int>(round(pos.x)), static_cast<int>(round(pos.y))};	
 
 	// if (!afterImages.empty()) {
 	//     if (afterImages.size() > 8) {
@@ -619,8 +619,6 @@ void Character::updateScript(int tick, Character* opponent)
 		}
 	}
 
-	motionInputBuffer.clear();
-
 	// std::cout << health << std::endl;
 	for (const std::string& key : motionInputPriority) {
 		int sze = motionInputs[key].size();
@@ -633,7 +631,6 @@ void Character::updateScript(int tick, Character* opponent)
 			if(key == "INPUT_720" && !buttonMap["INPUT_720"] && !buttonMap["INPUT_360"]){
 				break;
 			}
-
 			bool check = inputHandler->checkCommand(cmd);
 
 			if(check){
@@ -645,12 +642,12 @@ void Character::updateScript(int tick, Character* opponent)
 						motionInputs[key][j].executeTimer = 0;
 					}
 				}
-				motionInputBuffer.push_back(key);
 				buttonMap[key] = true;
 				break;
 			}
-			else
+			else{
 				buttonMap[key] = false;
+			}
 		}
 	}
 
@@ -701,7 +698,6 @@ void Character::updateScript(int tick, Character* opponent)
     	}
     }
 	executeCommands();
-	update(tick);
 
 
  	//DISPLACED OLDSUBROUTINE, FIND A HOME FOR IT LATER
@@ -730,7 +726,9 @@ void Character::updateScript(int tick, Character* opponent)
 
 	if(pos.y >= 980){
 		pos.y = 980;
+		yCollision = true;
 	}
+	centerPos = pos + centerVec;
 
 	// if(!firstFrame)
 	bbscriptFrameCount++;
@@ -752,7 +750,7 @@ void Character::SetPushbox()
 void Character::SetFlipped(bool flop)
 {
 	sign = flop ? -1 : 1;
-	spritesheet.SetFlipped(flop);
+	spritesheet->SetFlipped(flop);
 	flipped = flop;
 }
 
@@ -760,7 +758,7 @@ rect Character::ProcessRect(const rect& r)
 {
 	rect result;
 	if(flipped)
-		result = {spritesheet.getAnchorPosition() - r.x - r.width, r.y, r.width, r.height};
+		result = {spritesheet->getAnchorPosition() - r.x - r.width, r.y, r.width, r.height};
 	else
 		result = {r.x, r.y, r.width, r.height};
 
@@ -778,10 +776,11 @@ void Character::FaceOpponent(Character* opponent)
 
 void Character::draw(Renderer* renderer)
 {
+	glm::vec2 drawPosition = {0.0f, 0.0f};
 	drawPosition = pos - posOffset - glm::vec2(width, height);
-	spritesheet.SetFrame(currentFrame);
-	spritesheet.pos = pos;
-	spritesheet.draw(renderer);
+	// spritesheet.SetFrame(currentFrame);
+	// spritesheet.pos = pos;
+	// spritesheet.draw(renderer);
 	int vertCrossWidth = 2;
 	int vertCrossHeight = 40;
 	int horiCrossWidth = 32;
@@ -817,24 +816,23 @@ void Character::draw(Renderer* renderer, Renderer* paletteRenderer, Texture& pal
 	//     spritesheet.color = {0.5f, 0.8f, 1.0f, 1.0f - opacity};
 	// 	spritesheet.draw(paletteRenderer, palette);
 	// }
-	spritesheet.SetFrame(currentFrame);
-	spritesheet.color = glm::vec4(1.0f);
+	spritesheet->SetFrame(currentFrame);
+	// spritesheet.color = glm::vec4(1.0f);
 
 
-	spritesheet.pos = pos;
-	spritesheet.pos.y+=(height*0.6);
-	spritesheet.SetFlippedVert(true);
-	spritesheet.draw(paletteRenderer, shadowpalette);
+	spritesheet->pos = pos;
+	// spritesheet->pos.y+=(height*0.6);
+	// spritesheet->SetFlippedVert(true);
+	// spritesheet->draw(paletteRenderer, shadowpalette);
 
-	spritesheet.pos.y-=(height*0.6);
-	spritesheet.SetFlippedVert(false);
-	spritesheet.draw(paletteRenderer, palette);
+	// spritesheet->pos.y-=(height*0.6);
+	// spritesheet->SetFlippedVert(false);
+	spritesheet->draw(paletteRenderer, palette);
 
 	int vertCrossWidth = 2;
 	int vertCrossHeight = 40;
 	int horiCrossWidth = 32;
 	int horiCrossHeight = 2;
-	centerPos = pos + centerVec;
 	renderer->DrawOutline(pos + posOffset, glm::vec2(width, height), 0, glm::vec4(pushboxColor, 1.0f), 1);
 	renderer->DrawQuad(centerPos + glm::vec2(-vertCrossWidth/2, -vertCrossHeight/2), glm::vec2(vertCrossWidth, vertCrossHeight), 0, glm::vec4(1.0f));
 	renderer->DrawQuad(centerPos + glm::vec2(-horiCrossWidth/2, -horiCrossHeight/2), glm::vec2(horiCrossWidth, horiCrossHeight), 0, glm::vec4(1.0f));

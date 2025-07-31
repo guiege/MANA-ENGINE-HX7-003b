@@ -42,13 +42,17 @@ struct CommandSequence{
 
     int executeTimer = 0;
 
+    int executionFrames = 0;
+
     std::vector<std::bitset<4>> commandList;
 
     std::vector<int> timingList;
 
     CommandSequence(const std::vector<std::bitset<4>> &commandList, const std::vector<int> &tL)
     :commandList(commandList), timingList(tL)
-    {}
+    {
+        executionFrames = abs(tL[0]); 
+    }
 
     CommandSequence()
     {}

@@ -17,6 +17,7 @@ public:
     bool yCollision = false;
 
     Actor(const int xpos, const int ypos, const int width, const int height, const float rot, std::vector<Solid>& solids);
+    Actor(const int xpos, const int ypos, const int width, const int height, const float rot);
 
     void MoveX(float amount);
     void MoveY(float amount);
@@ -33,7 +34,7 @@ public:
 
 private:
 
-    std::vector<Solid>& solids;
+    std::vector<Solid>* solids;
 
     float xRemainder, yRemainder;
 

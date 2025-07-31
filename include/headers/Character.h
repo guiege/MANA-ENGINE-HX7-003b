@@ -34,19 +34,16 @@ struct AfterImage {
 class Character : public Actor, public Scriptable {
 public:
 
-    Character(InputHandler* handler, Texture& texture, const char* file, const float xpos, const float ypos, const float width, const float height, const float rot, 
-        std::vector<Solid>& solids, glm::vec4 color = glm::vec4(1.0f))
-        : Actor(xpos, ypos, 0, 0, rot, solids), inputHandler(handler), spritesheet(texture, file, xpos, ypos, width, height, rot, color) {}
+    Character()
+        : Actor(0,0,0,0,0),inputHandler(nullptr){}
+
+    Character(InputHandler* handler, Texture& texture, const char* file, const float xpos, const float ypos, const float width, const float height, const float rot, glm::vec4 color = glm::vec4(1.0f))
+        : Actor(xpos, ypos, 0, 0, rot), inputHandler(handler) 
+    {
+        spritesheet = new Spritesheet(texture, file, xpos, ypos, width, height, rot, color);
+    }
 
     void init();
-
-    virtual void start() = 0;
-
-    virtual void update(int tick) = 0;
-
-    virtual void enterState(int newstate, int oldstate) = 0;
-
-    virtual void exitState(int oldstate, int newstate) = 0;
 
     void updateScript(int tick, Character* opponent);
     void checkCommands();
@@ -74,7 +71,6 @@ public:
 
     bool isColliding(Character* opponent)
     {
-        std::cout << GetPushbox().y << std::endl;
         return intersect(GetPushbox(), opponent->GetPushbox());
     }
 
@@ -139,23 +135,13 @@ public:
         buttonMap[key] = false;
     }
 
-    std::string getHighestPriorityInput() {
-        for (const auto& priorityKey : motionInputPriority) {
-            if (std::find(motionInputBuffer.begin(), motionInputBuffer.end(), priorityKey) != motionInputBuffer.end()) {
-                return priorityKey;
-            }
-        }
-        return "";
-    }
-
 protected:
     //Components
     InputHandler* inputHandler;
-    Spritesheet spritesheet;
+    Spritesheet* spritesheet; // delete it please
 
     //Input Variables
     std::unordered_map<std::string, std::vector<CommandSequence>> motionInputs;
-    std::vector<std::string> motionInputBuffer;
     std::vector<std::string> motionInputPriority;
 
     std::unordered_map<std::string, Button> buttons;
@@ -164,7 +150,7 @@ protected:
     std::deque<AfterImage> afterImages;
 
     //State Variables
-    std::string characterState = "STANDING"; //3 potential states: STANDING, CROUCHING, JUMPING
+    int characterState = 0; //3 potential states: STANDING, CROUCHING, JUMPING
     //ADD PROXIMITY GUARD
     std::unordered_map<std::string, int> stateIDs;
 
@@ -187,7 +173,6 @@ protected:
     glm::vec4 blockingHighColor = {0, 0, 1, 1};
 
     //Drawing Variables
-    glm::vec2 drawPosition = {0.0f, 0.0f};
     glm::vec2 centerPos = {0.0f, 0.0f};
     glm::vec2 centerVec = {0.0f,0.0f};
     bool flipped = false;

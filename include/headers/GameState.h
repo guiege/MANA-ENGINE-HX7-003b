@@ -1,18 +1,34 @@
 #ifndef _GAMESTATE_H_
 #define _GAMESTATE_H_
 
-#define MAX_CHARS             2
+#include "imgui.h"
 
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <bitset>
+#include <deque>
+#include <chrono>
 
-struct GameState {
-	void Init();
-	void ParseInputs();
-	void Update(int inputs[], int disconnect_flags);
+#include "Actor.h"
+#include "InputHandler.h"
+#include "Character.h"
+#include "ResourceManager.h"
 
-	int _num_players;
-	// Character _characters[MAX_CHARS];
+#define MAX_SHIPS               2
 
-	int _framenumber;
+struct GameState{
+	void init();
+
+	void update(int inputs[], int disconnect_flags);
+	void parsePlayerInputs(int inputs, int i, InputHandler* ih);
+
+	int         _framenumber;
+	Character   _chars[MAX_SHIPS];
+	InputHandler* i1;
+	InputHandler* i2;
+
 };
+
 
 #endif

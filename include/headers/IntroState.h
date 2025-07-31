@@ -9,6 +9,7 @@
 #include <vector>
 #include <bitset>
 #include <deque>
+#include <windows.h>
 
 #include <chrono>
 #include "PerlinNoise.h"
@@ -21,79 +22,24 @@
 #include "Solid.h"
 #include "PostProcessor.h"
 #include "InputHandler.h"
-#include "Character.h"
 #include "Camera.h"
 
-#include "TestCharacter.h"
+#include "GameState.h"
+#include "NonGameState.h"
 
 class IntroState : public Scene
 {
 public:
 
-	TestCharacter* testChar;
-	TestCharacter* testChar2;
-
 	Spritesheet* icons;
 	Spritesheet* gauge;
 
+	int len;
+	int checksum = 0;
+	unsigned char *buffer;
+
 	//Static accessor
 	static IntroState* get();
-
-	int inputs[2] = { 0 };
-	int oldinputs[2] = { 0 };
-
-	int len;
-	int len2;
-	unsigned char *buffer;
-	unsigned char *buffer2;
-
-    bool save_char()
-    {
-    	memcpy(oldinputs, inputs, sizeof(oldinputs));
-    	std::cout << inputs[0] << std::endl;
-        if (!testChar) {
-            std::cout << "testChar is null\n";
-            return false;
-        }
-        len = sizeof(TestCharacter);
-        buffer = new unsigned char[len];
-        if (!buffer)
-        {
-            std::cout << "save failed: memory allocation error\n";
-            return false;
-        }
-        memcpy(buffer, testChar, len);
-
-        len2 = sizeof(TestCharacter);
-        buffer2 = new unsigned char[len];
-        if (!buffer2)
-        {
-            std::cout << "save failed: memory allocation error\n";
-            return false;
-        }
-        memcpy(buffer2, testChar2, len2);
-        std::cout << "save complete\n";
-        return true;
-    }
-
-    bool load_char()
-    {
-    	memcpy(inputs, oldinputs, sizeof(inputs));
-    	std::cout << inputs[0] << std::endl;
-        if (!buffer || len == 0) {
-            std::cout << "load failed: no data to load\n";
-            return false;
-        }
-        memcpy(testChar, buffer, len);
-
-        if (!buffer2 || len2 == 0) {
-            std::cout << "load failed: no data to load\n";
-            return false;
-        }
-        memcpy(testChar2, buffer2, len2);
-        std::cout << "load complete\n";
-        return true;
-    }
 
 	//Transitions
 	bool enter();
@@ -106,6 +52,16 @@ public:
 	void update(float dt);
 	void render();
 
+	//GGPO compliant functions
+	void VectorWar_Init(unsigned short localport, int num_players, GGPOPlayer *players, int num_spectators);
+	void VectorWar_InitSpectator(unsigned short localport, int num_players, char *host_ip, unsigned short host_port);
+	void VectorWar_DrawCurrentFrame();
+	void VectorWar_AdvanceFrame(int inputs[], int disconnect_flags);
+	void VectorWar_RunFrame();
+	void VectorWar_Idle(int time);
+	void VectorWar_DisconnectPlayer(int player);
+	void VectorWar_Exit();
+
 private:
 	//Static instance
 	static IntroState sIntroState;
@@ -116,9 +72,6 @@ private:
 	Renderer* batchRenderer;
 	Renderer* characterRenderer;
 	Renderer* shadowRenderer;
-
-	InputHandler* inputHandler;
-	InputHandler* inputHandler2;
 
 	Camera* m_Camera;
 
@@ -141,19 +94,6 @@ private:
     );
 	// const siv::PerlinNoise::seed_type seed = 654321u;
 	const siv::PerlinNoise perlin{ seed };
-
-	//Frame Data Display Variables
-	int plusframestimer = 0;
-
-	int p1AtkActiveTimer = 0;
-	int p1UnactionableTimer = 0;
-	int p1Unactionable = 0;
-	int p1AtkActive = 0;
-
-	int p2AtkActiveTimer = 0;
-	int p2UnactionableTimer = 0;
-	int p2Unactionable = 0;
-	int p2AtkActive = 0;
 
 	//Input History Display Variables
 	std::unordered_map<int, std::vector<int>> inputHistory;
@@ -183,9 +123,9 @@ private:
 	float offsetY = 0.0f;
 	float angle = 0.0f;
 
-	std::vector<Solid> solids;
-	std::vector<Actor*> actors;
-
 };
+
+#define ARRAY_SIZE(n)      (sizeof(n) / sizeof(n[0]))
+#define FRAME_DELAY        2
 
 #endif

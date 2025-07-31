@@ -17,7 +17,7 @@
 
 struct Properties {
     std::string moveType;
-    std::string characterState;
+    int characterState;
     std::vector<std::string> moveInput;
     int hitstop = 0;
     int slowdown = 0;
@@ -268,8 +268,12 @@ public:
                         states[currentAddBlock].properties.moveType = paramsStr;
 
                     } else if(function == "characterState"){
-                        states[currentAddBlock].properties.characterState = paramsStr;
-
+                        if(paramsStr == "STANDING")
+                            states[currentAddBlock].properties.characterState = 0;
+                        else if(paramsStr == "CROUCHING")
+                            states[currentAddBlock].properties.characterState = 1;
+                        else if(paramsStr == "JUMPING")
+                            states[currentAddBlock].properties.characterState = 2;
                     } else if(function == "moveInput"){
                         states[currentAddBlock].properties.moveInput.push_back(paramsStr);
                     }

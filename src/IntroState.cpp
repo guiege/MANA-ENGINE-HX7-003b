@@ -1,23 +1,364 @@
 #include "IntroState.h"
 
+#define SYNC_TEST
+
+GameState gs = {  };
+NonGameState ngs = { 0 };
+GGPOSession *ggpo = NULL;
+
+int
+fletcher32_checksum(short *data, size_t len)
+{
+   int sum1 = 0xffff, sum2 = 0xffff;
+
+   while (len) {
+      size_t tlen = len > 360 ? 360 : len;
+      len -= tlen;
+      do {
+         sum1 += *data++;
+         sum2 += sum1;
+      } while (--tlen);
+      sum1 = (sum1 & 0xffff) + (sum1 >> 16);
+      sum2 = (sum2 & 0xffff) + (sum2 >> 16);
+   }
+
+   /* Second reduction step to reduce sums to 16 bits */
+   sum1 = (sum1 & 0xffff) + (sum1 >> 16);
+   sum2 = (sum2 & 0xffff) + (sum2 >> 16);
+   return sum2 << 16 | sum1;
+}
+
+bool __cdecl
+vw_begin_game_callback(const char *)
+{
+   return true;
+}
+
+bool __cdecl
+vw_on_event_callback(GGPOEvent *info)
+{
+   int progress;
+   switch (info->code) {
+   case GGPO_EVENTCODE_CONNECTED_TO_PEER:
+      ngs.SetConnectState(info->u.connected.player, Synchronizing);
+      break;
+   case GGPO_EVENTCODE_SYNCHRONIZING_WITH_PEER:
+      progress = 100 * info->u.synchronizing.count / info->u.synchronizing.total;
+      ngs.UpdateConnectProgress(info->u.synchronizing.player, progress);
+      break;
+   case GGPO_EVENTCODE_SYNCHRONIZED_WITH_PEER:
+      ngs.UpdateConnectProgress(info->u.synchronized.player, 100);
+      break;
+   case GGPO_EVENTCODE_RUNNING:
+      ngs.SetConnectState(Running);
+      // renderer->SetStatusText("");
+      break;
+   case GGPO_EVENTCODE_CONNECTION_INTERRUPTED:
+      ngs.SetDisconnectTimeout(info->u.connection_interrupted.player,
+                               timeGetTime(),
+                               info->u.connection_interrupted.disconnect_timeout);
+      break;
+   case GGPO_EVENTCODE_CONNECTION_RESUMED:
+      ngs.SetConnectState(info->u.connection_resumed.player, Running);
+      break;
+   case GGPO_EVENTCODE_DISCONNECTED_FROM_PEER:
+      ngs.SetConnectState(info->u.disconnected.player, Disconnected);
+      break;
+   case GGPO_EVENTCODE_TIMESYNC:
+      Sleep(1000 * info->u.timesync.frames_ahead / 60);
+      break;
+   }
+   return true;
+}
+
+bool __cdecl
+vw_advance_frame_callback(int)
+{
+   int inputs[MAX_SHIPS] = { 0 };
+   int disconnect_flags;
+
+   ggpo_synchronize_input(ggpo, (void *)inputs, sizeof(int) * MAX_SHIPS, &disconnect_flags);
+   IntroState::get()->VectorWar_AdvanceFrame(inputs, disconnect_flags);
+   return true;
+}
+
+bool __cdecl
+vw_load_game_state_callback(unsigned char *buffer, int len)
+{
+   memcpy(&gs, buffer, len);
+   return true;
+}
+
+bool __cdecl
+vw_save_game_state_callback(unsigned char **buffer, int *len, int *checksum, int)
+{
+   *len = sizeof(gs);
+   *buffer = (unsigned char *)malloc(*len);
+   if (!*buffer) {
+      return false;
+   }
+   memcpy(*buffer, &gs, *len);
+   *checksum = fletcher32_checksum((short *)*buffer, *len / 2);
+   return true;
+}
+
+void __cdecl 
+vw_free_buffer(void *buffer)
+{
+   free(buffer);
+}
+
+bool __cdecl
+vw_log_game_state(char *filename, unsigned char *buffer, int)
+{
+   return true;
+}
+
+
+void IntroState::VectorWar_Init(unsigned short localport, int num_players, GGPOPlayer *players, int num_spectators)
+{
+	srand(time(0)); 
+	GGPOErrorCode result;
+
+	gs.init();
+	ngs.num_players = num_players;
+
+	GGPOSessionCallbacks cb = {0};
+	cb.begin_game      = vw_begin_game_callback;
+   cb.advance_frame	 = vw_advance_frame_callback;
+   cb.load_game_state = vw_load_game_state_callback;
+   cb.save_game_state = vw_save_game_state_callback;
+   cb.free_buffer     = vw_free_buffer;
+   cb.on_event        = vw_on_event_callback;
+   cb.log_game_state  = vw_log_game_state;
+
+   #if defined(SYNC_TEST)
+	   result = ggpo_start_synctest(&ggpo, &cb, "vectorwar", num_players, sizeof(int), 1);
+	#else
+	   result = ggpo_start_session(&ggpo, &cb, "vectorwar", num_players, sizeof(int), localport);
+	#endif
+
+   ggpo_set_disconnect_timeout(ggpo, 3000);
+   ggpo_set_disconnect_notify_start(ggpo, 1000);
+
+   int i;
+   std::cout << (num_players + num_spectators) << std::endl;
+   for (i = 0; i < num_players + num_spectators; i++) {
+      GGPOPlayerHandle handle;
+      result = ggpo_add_player(ggpo, players + i, &handle);
+      ngs.players[i].handle = handle;
+      ngs.players[i].type = players[i].type;
+      if (players[i].type == GGPO_PLAYERTYPE_LOCAL) {
+         ngs.players[i].connect_progress = 100;
+         ngs.local_player_handle = handle;
+         ngs.SetConnectState(handle, Connecting);
+         ggpo_set_frame_delay(ggpo, handle, FRAME_DELAY);
+      } else {
+         ngs.players[i].connect_progress = 0;
+      }
+   }
+
+
+
+}
+
+void IntroState::VectorWar_InitSpectator(unsigned short localport, int num_players, char *host_ip, unsigned short host_port)
+{
+	
+}
+
+void IntroState::VectorWar_DrawCurrentFrame()
+{
+	//Camera Params for Scene Rendering
+	m_Camera->SetCenter(glm::vec3(960, 540, 0));
+	m_Camera->SetCenterPosition(glm::vec3(cameraXPos + offsetX, cameraYPos + offsetY - (380 * cameraScale), 0));
+	m_Camera->SetRotation(angle);
+	m_Camera->SetScale(cameraScale);
+	worldProj = m_Camera->GetViewProjectionMatrix();
+	ResourceManager::GetShader("batch").Use().SetMatrix4("projection", worldProj);//Set Projection Matrix to World
+	ResourceManager::GetShader("palette").Use().SetMatrix4("projection", worldProj);
+
+	//Camera Params for UI
+	m_Camera->SetPosition(glm::vec3(0, 0, 0));
+	m_Camera->SetRotation(0);
+	m_Camera->SetCenter(glm::vec3(0, 0, 0));
+	m_Camera->SetScale(0.6667); //1.5x scale because mbtl assets are for 720p
+	uiProj = m_Camera->GetViewProjectionMatrix();
+
+	// post->BeginRender();
+
+	batchRenderer->ResetStats();
+
+	batchRenderer->BeginBatch(); //BG pass
+
+	// for (auto& solid : solids){
+	// 	solid.draw(batchRenderer);
+	// }
+
+	// for(float y = 0; y < 10000; y += 100)
+	// {
+	// 	for(float x = 0; x < 10000; x += 100)
+	// 	{
+	// 		float rot = (x + y) / 2000.0f;
+	// 		glm::vec4 color = { (x + 100) / 20000.0f, 0.2f, (y + 100) / 20000.0f, 1.0f};
+	// 		batchRenderer->DrawQuad({x, y}, {100.0f, 100.0f}, 0.0f, color);
+	// 	}
+	// }
+
+    batchRenderer->EndBatch();
+	batchRenderer->Flush(); //End BG pass
+
+	ResourceManager::GetShader("batch").Use().SetMatrix4("projection", uiProj); //Set Projection Matrix to UI
+
+	batchRenderer->BeginBatch(); //UI Pass
+
+	float percentage = 1 - (100 / 420);
+	int value = (420 - 100);
+
+	gauge->SetFrame(0);
+	gauge->pos.x = 0;
+	gauge->draw(batchRenderer);
+	gauge->SetFrame(1);
+	gauge->draw(batchRenderer);
+	gauge->SetFrame(2);
+	gauge->draw(batchRenderer);
+	gauge->SetFrame(3);
+	gauge->pos = {150, 58};
+	gauge->drawclip(batchRenderer, 0, 322, 100, 20, false);
+	gauge->pos = {0, 0};
+	gauge->SetFrame(4);
+	gauge->draw(batchRenderer);
+
+	// batchRenderer->DrawQuad({100, 50}, {(testChar2->GetHealth() / 420.0f) * 100.0f, 50.0f}, 0, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+	for (int i = 0; i < MAX_HISTORY_SIZE; ++i) {
+	    int index = (currentIndex - i + MAX_HISTORY_SIZE) % MAX_HISTORY_SIZE;
+
+	    if (inputHistory.find(index) != inputHistory.end()) {
+	        icons->pos.y = i * 32 + dirHistoryPos.y;
+	        
+	        // Sort the input numbers from least to greatest
+	        std::vector<int> sortedInputs = inputHistory[index];
+	        // std::sort(sortedInputs.begin(), sortedInputs.end(), std::greater<>());
+	        
+	        int drawnCount = 0;
+	        for (auto it = sortedInputs.rbegin(); it != sortedInputs.rend() && drawnCount < 4; ++it) {
+	            int frameNumber = *it;
+	            
+				icons->pos.x = dirHistoryPos.x + (drawnCount * 32);
+
+	            icons->SetFrame(frameNumber);
+	            icons->draw(batchRenderer);
+	            
+	            drawnCount++;
+	        }
+	    }
+	}
+	batchRenderer->EndBatch();
+	batchRenderer->Flush(); //End UI Pass
+
+	ResourceManager::GetShader("batch").Use().SetMatrix4("projection", worldProj); //Set Projection Matrix to World
+	ResourceManager::GetShader("palette").Use().SetMatrix4("projection", worldProj);
+	ResourceManager::GetShader("shadow").Use().SetMatrix4("projection", worldProj);
+
+	// float skew = 0.0f;
+	// glm::vec2 char1centerpos = testChar
+	// int bottompos = (ypos +(ypos /2));
+	// shadowRenderer->DrawTexture(ResourceManager::GetTexture("popcat"), testChar->pos.x, testChar->pos.y, 960, testChar->pos.y, 960 + (100 * skew), bottompos, (100 * skew), bottompos, 0.12, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
+
+	batchRenderer->BeginBatch(); //Character Pass
+
+	gs._chars[0].draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepal"), ResourceManager::GetTexture("shadowpal"));
+
+   gs._chars[1].draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepalp2"),ResourceManager::GetTexture("shadowpal"));
+
+   batchRenderer->EndBatch();
+	batchRenderer->Flush(); //End Character Pass
+
+	// const Stats& stats = batchRenderer->GetStats();
+    // ImGui::Text("Draw Calls: %d", stats.DrawCount);
+    // ImGui::Text("Quads Rendered: %d", stats.QuadCount);
+
+
+	// post->EndRender();
+    // post->Render(glfwGetTime());
+	
+}
+
+void IntroState::VectorWar_AdvanceFrame(int inputs[], int disconnect_flags)
+{
+	gs.update(inputs,disconnect_flags);
+
+	ngs.now.framenumber = gs._framenumber;
+	ngs.now.checksum = fletcher32_checksum((short *)&gs, sizeof(gs) / 2);
+	if((gs._framenumber % 90) == 0){
+		ngs.periodic = ngs.now;
+	}
+
+	ggpo_advance_frame(ggpo);
+	
+}
+
+void IntroState::VectorWar_RunFrame()
+{
+	GGPOErrorCode result = GGPO_OK;
+	int disconnect_flags;
+	int inputs[MAX_SHIPS] = {0};
+
+	if (ngs.local_player_handle != GGPO_INVALID_HANDLE) {
+		int input = ReadInputs();
+   #if defined(SYNC_TEST)
+     	// input = rand(); // test: use random inputs to demonstrate sync testing
+	#endif
+      result = ggpo_add_local_input(ggpo, 0, &input, sizeof(input));
+   }
+
+   if (GGPO_SUCCEEDED(result)) {
+   	result = ggpo_synchronize_input(ggpo,(void*)inputs,sizeof(int)*MAX_SHIPS,&disconnect_flags);
+   	if(GGPO_SUCCEEDED(result)){
+   		VectorWar_AdvanceFrame(inputs,disconnect_flags);
+   	}
+   }
+
+}
+
+void IntroState::VectorWar_Idle(int time)
+{
+	ggpo_idle(ggpo, time);	
+}
+
+void IntroState::VectorWar_DisconnectPlayer(int player)
+{
+	if (player < ngs.num_players) {
+      char logbuf[128];
+      GGPOErrorCode result = ggpo_disconnect_player(ggpo, ngs.players[player].handle);
+      if (GGPO_SUCCEEDED(result)) {
+         sprintf_s(logbuf, ARRAYSIZE(logbuf), "Disconnected player %d.\n", player);
+      } else {
+         sprintf_s(logbuf, ARRAYSIZE(logbuf), "Error while disconnecting player (err:%d).\n", result);
+      }
+      std::cout << logbuf << std::endl;
+   }
+}
+
+void IntroState::VectorWar_Exit()
+{
+
+   if (ggpo) {
+      ggpo_close_session(ggpo);
+      ggpo = NULL;
+   }
+}
+
+
+
 bool IntroState::exit()
 {
-	delete testChar;
-	delete testChar2;
+	VectorWar_Exit();
 	delete icons;
-    // for (int i = actors.size() - 1; i >= 0; --i)
-    // {
-    //     if (actors[i] != nullptr)
-    //     {
-    //         delete actors[i];
-    //         actors[i] = nullptr;
-    //     }
-    // }
-	actors.clear();
-	solids.clear();
 
-	delete inputHandler;
-	delete inputHandler2;
+	// delete inputHandler;
+	// delete inputHandler2;
 
 	batchRenderer->Delete();	
 	delete batchRenderer;
@@ -53,7 +394,7 @@ bool IntroState::enter()
     ResourceManager::LoadTexture("res/textures/blackpal.png", true, "shadowpal");
     ResourceManager::LoadTexture("res/textures/ui/icons-capcom-32.png", true, GL_LINEAR, GL_NEAREST, "icons-capcom-32");
     ResourceManager::LoadTexture("res/textures/ui/gauge_00.png", GL_LINEAR, GL_LINEAR, true, "gauge");
-    ResourceManager::LoadTexture("res/textures/pop_cat.png", true, "popcat");
+    // ResourceManager::LoadTexture("res/textures/pop_cat.png", true, "popcat");
     // ResourceManager::LoadTexture("res/textures/ryu.png", true, "ryusheet");
     
 
@@ -70,9 +411,6 @@ bool IntroState::enter()
     shadowRenderer = new Renderer(ResourceManager::GetShader("shadow"));
 
 	// post = new PostProcessor(ResourceManager::GetShader("post"), 1920, 1080);
-	inputHandler = new InputHandler();
-	inputHandler2 = new InputHandler();
-
 	icons = new Spritesheet(ResourceManager::GetTexture("icons-capcom-32"), "res/textures/ui/icons-capcom-32.json", 0, 0, 32, 32, 0);
 	icons->SetFrame(0);
 
@@ -80,22 +418,6 @@ bool IntroState::enter()
 	gauge->SetFrame(0);
 	gauge->SetScale({1.0f, 1.0f});
 
-	testChar = new TestCharacter(inputHandler, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 1500, 0, 4296, 15673, 0, solids);
-	testChar->init();
-	// actors.push_back(testChar);
-
-	testChar2 = new TestCharacter(inputHandler2, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 2500, 0, 4296, 15673, 0, solids);
-	testChar2->init();
-	// actors.push_back(testChar2);
-
-	Solid platform(0, 700, 800, 800, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	Solid stage(-1000, 980, 6000, 1000, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	Solid wallL(-40, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	Solid wallR(4000, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	// solids.push_back(platform);
-	// solids.push_back(stage);
-	// solids.push_back(wallL);
-	// solids.push_back(wallR);
 
 	cameraXPos = 0;
 	cameraYPos = 180;
@@ -103,6 +425,14 @@ bool IntroState::enter()
 	// cameraScale = 0.6f;
 
 	// post->Chromatic = true;
+
+	GGPOPlayer players[2];
+	// strcpy(p2.ip_address, "192.168.0.100");
+	// p2.ip_address.port = 8001;
+
+
+	VectorWar_Init(8001,2,players,0);
+	// gs.init();
 
 	return success;
 }
@@ -139,14 +469,14 @@ int IntroState::ReadInputs()
 
 	if (Keys[GLFW_KEY_D])
 	{
-		if(testChar2->GetFlipped())
+		if(gs._chars[0].GetFlipped())
 			inputs |= ButtonIDs::BACK;
 		else
 			inputs |= ButtonIDs::FORWARD;
 	}
 	if (Keys[GLFW_KEY_A])
 	{
-		if(testChar2->GetFlipped())
+		if(gs._chars[0].GetFlipped())
 			inputs |= ButtonIDs::FORWARD;
 		else
 			inputs |= ButtonIDs::BACK;
@@ -258,7 +588,7 @@ int IntroState::ReadControllerInputs()
 
 		if(GLFW_PRESS == buttons[11])
 		{
-			if(testChar->GetFlipped())
+			if(gs._chars[0].GetFlipped())
 				inputs |= ButtonIDs::BACK;
 			else
 				inputs |= ButtonIDs::FORWARD;
@@ -271,54 +601,43 @@ int IntroState::ReadControllerInputs()
 
 		if(GLFW_PRESS == buttons[13])
 		{
-			if(testChar->GetFlipped())
+			if(gs._chars[0].GetFlipped())
 				inputs |= ButtonIDs::FORWARD;
 			else
 				inputs |= ButtonIDs::BACK;
 		}
+
+		// if(Keys[GLFW_KEY_R])
+		// {
+		// 	gs.testChar->pos.x = 1500;
+		// 	gs.testChar2->pos.x = 2500;
+		// }
+
 	}
 	return inputs;
 }
 
 void IntroState::update(float dt)
 {
+	int inputs[2] = { 0 };
 	inputs[0] = ReadInputs();
 	inputs[1] = ReadControllerInputs();
-	// std::cout << testChar->pos.y << std::endl;
 
-	inputHandler2->registerInputs(inputs[0]);
-	inputHandler->registerInputs(inputs[1]);
-
-	if(Keys[GLFW_KEY_R])
-	{
-		testChar->pos.x = 1500;
-		testChar2->pos.x = 2500;
-	}
-
-	//FOR TESTING TRADES
-	// if(Keys[GLFW_KEY_U])
-	// 	{
-	// 		inputHandler->registerInput(FK_Input_Buttons.LP);
-	// 	}
 	if(this->Keys[GLFW_KEY_LEFT])
 	{
 		cameraXPos -= 1;
-		// solids[0].Move(-20, 0);
 	}
 	if(this->Keys[GLFW_KEY_RIGHT])
 	{
 		cameraXPos += 1;
-		// solids[0].Move(20, 0);
 	}
 	if(this->Keys[GLFW_KEY_UP])
 	{
 		cameraYPos -= 5;
-		// solids[0].Move(0, -20);
 	}
 	if(this->Keys[GLFW_KEY_DOWN])
 	{
 		cameraYPos += 5;
-		// solids[0].Move(0, 20);
 	}
 	if (this->Keys[GLFW_KEY_Z]){
 		cameraScale -= .01;
@@ -327,15 +646,15 @@ void IntroState::update(float dt)
 		cameraScale += .01;
 	}
 
-	if(testChar->GetRequestedShake() > 0.0f){
-		trauma += testChar->GetRequestedShake();
-		testChar->SetRequestedShake(0.0f);
-	}
+	// if(gs._chars[0].GetRequestedShake() > 0.0f){
+	// 	trauma += gs._chars[0].GetRequestedShake();
+	// 	gs._chars[0].SetRequestedShake(0.0f);
+	// }
 
-	if(testChar2->GetRequestedShake() > 0.0f){
-		trauma += testChar2->GetRequestedShake();
-		testChar2->SetRequestedShake(0.0f);
-	}
+	// if(gs._chars[1].GetRequestedShake() > 0.0f){
+	// 	trauma += gs._chars[1].GetRequestedShake();
+	// 	gs._chars[1].SetRequestedShake(0.0f);
+	// }
 
 	if(trauma > 1){
 		trauma = 1;
@@ -353,162 +672,73 @@ void IntroState::update(float dt)
 	offsetY = maxOffset.y * shake * perlin.noise1D((tick + 1) * frequency);
 	angle = maxAngle * shake * perlin.noise1D((tick + 2) * frequency);
 
-	std::vector<int> inputNumbers;
+	// std::vector<int> inputNumbers;
 
-	std::bitset<7> newButtonState(inputHandler->butPress.to_ullong());
-	if((newButtonState & FK_Input_Buttons.LP) != 0) inputNumbers.push_back(8);
-	if((newButtonState & FK_Input_Buttons.MP) != 0) inputNumbers.push_back(9);
-	if((newButtonState & FK_Input_Buttons.HP) != 0) inputNumbers.push_back(10);
-	if((newButtonState & FK_Input_Buttons.LK) != 0) inputNumbers.push_back(11);
-	if((newButtonState & FK_Input_Buttons.MK) != 0) inputNumbers.push_back(12);
-	if((newButtonState & FK_Input_Buttons.HK) != 0) inputNumbers.push_back(13);
+	// std::bitset<7> newButtonState(inputHandler->butPress.to_ullong());
+	// if((newButtonState & FK_Input_Buttons.LP) != 0) inputNumbers.push_back(8);
+	// if((newButtonState & FK_Input_Buttons.MP) != 0) inputNumbers.push_back(9);
+	// if((newButtonState & FK_Input_Buttons.HP) != 0) inputNumbers.push_back(10);
+	// if((newButtonState & FK_Input_Buttons.LK) != 0) inputNumbers.push_back(11);
+	// if((newButtonState & FK_Input_Buttons.MK) != 0) inputNumbers.push_back(12);
+	// if((newButtonState & FK_Input_Buttons.HK) != 0) inputNumbers.push_back(13);
 
-	if(inputHandler->inputChanged){
-		if (inputHandler->currentDirection == "UP") {
-		    inputNumbers.push_back(2);
-		} if (inputHandler->currentDirection == "BACK") {
-		    inputNumbers.push_back(0);
-		} if (inputHandler->currentDirection == "FORWARD") {
-			inputNumbers.push_back(1);
-		} if (inputHandler->currentDirection == "DOWN") {
-		    inputNumbers.push_back(3);
-		} if (inputHandler->currentDirection == "UP_FORWARD") {
-		    inputNumbers.push_back(5);
-		} if (inputHandler->currentDirection == "UP_BACK") {
-		    inputNumbers.push_back(4);
-		} if (inputHandler->currentDirection == "DOWN_BACK") {
-		    inputNumbers.push_back(6);
-		} if (inputHandler->currentDirection == "DOWN_FORWARD") {
-		    inputNumbers.push_back(7);
-		}
-	}
+	// if(inputHandler->inputChanged){
+	// 	if (inputHandler->currentDirection == "UP") {
+	// 	    inputNumbers.push_back(2);
+	// 	} if (inputHandler->currentDirection == "BACK") {
+	// 	    inputNumbers.push_back(0);
+	// 	} if (inputHandler->currentDirection == "FORWARD") {
+	// 		inputNumbers.push_back(1);
+	// 	} if (inputHandler->currentDirection == "DOWN") {
+	// 	    inputNumbers.push_back(3);
+	// 	} if (inputHandler->currentDirection == "UP_FORWARD") {
+	// 	    inputNumbers.push_back(5);
+	// 	} if (inputHandler->currentDirection == "UP_BACK") {
+	// 	    inputNumbers.push_back(4);
+	// 	} if (inputHandler->currentDirection == "DOWN_BACK") {
+	// 	    inputNumbers.push_back(6);
+	// 	} if (inputHandler->currentDirection == "DOWN_FORWARD") {
+	// 	    inputNumbers.push_back(7);
+	// 	}
+	// }
 
-	if (!inputNumbers.empty()) {
-	    currentIndex = (currentIndex + 1) % MAX_HISTORY_SIZE;
+	// if (!inputNumbers.empty()) {
+	//     currentIndex = (currentIndex + 1) % MAX_HISTORY_SIZE;
 	    
-	    inputHistory[currentIndex] = inputNumbers;
+	//     inputHistory[currentIndex] = inputNumbers;
 	    
-	    if (inputHistory.size() > MAX_HISTORY_SIZE) {
-	        int oldestIndex = (currentIndex + 1) % MAX_HISTORY_SIZE;
-	        inputHistory.erase(oldestIndex);
-	    }
-	}
-
-	if(!Keys[GLFW_KEY_LEFT_CONTROL] && (!Keys[GLFW_KEY_S] || !Keys[GLFW_KEY_L]))
-	{
-		savingLoading = false;
-	}
-
-	if(!savingLoading && Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_S]){
-		save_char();
-		savingLoading = true;
-	}
-
-	if(!savingLoading && Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_L]){
-		load_char();
-		savingLoading = true;
-	}
-
-	if(testChar2->pos.y >= 980){
-		testChar2->yCollision = true;
-	}
-	if(testChar->pos.y >= 980){
-		testChar->yCollision = true;
-	}
-
-	testChar2->updateScript(tick, testChar);
-	testChar->updateScript(tick, testChar2);
-	std::string char1state = testChar->GetCurrentState();
-	std::string char2state = testChar2->GetCurrentState();
-
-
-	// std::cout << plusframestimer <<std::endl;
-	// if(char2state == "CmnActStand"){
-	// 	plusframestimer=0;
-	// } else{
-	// 	if(char1state == "CmnActStand")
-	// 		plusframestimer++;
+	//     if (inputHistory.size() > MAX_HISTORY_SIZE) {
+	//         int oldestIndex = (currentIndex + 1) % MAX_HISTORY_SIZE;
+	//         inputHistory.erase(oldestIndex);
+	//     }
 	// }
 
-	if(testChar->checkCollision(testChar2)){
-		testChar->hitOpponent(testChar2, char1state.c_str());
-	} else if(testChar->checkClash(testChar2)){
-		std::cout << "clash happened" << std::endl;
-	}
-	if(testChar2->checkCollision(testChar))
-	{
-		testChar2->hitOpponent(testChar, char2state.c_str());
-	}
-
-	//Solid floor(0, 980, 4000, 1000, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	Solid wallL(-40, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	Solid wallR(4000, 0, 40, 980, 0, actors, glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-	testChar->SetPushFlag(false);
-	testChar2->SetPushFlag(false);
-	if(testChar->pos.x >= 4000){
-		testChar->pos.x = 4000;
-		testChar->SetPushFlag(true);
-	}
-	if(testChar->pos.x <= 0){
-		testChar->pos.x = 0;
-		testChar->SetPushFlag(true);
-	}
-	if(testChar2->pos.x >= 4000){
-		testChar2->pos.x = 4000;
-		testChar2->SetPushFlag(true);
-	}
-	if(testChar2->pos.x <= 0){
-		testChar2->pos.x = 0;
-		testChar2->SetPushFlag(true);
-	}
-	// std::cout << testChar->pos.x << std::endl;
-
-	// if(testChar->GetHitstop() == 0){
-	// 	if(!testChar->isActionable())
-	// 		p1UnactionableTimer++;
-	// 	else{
-	// 		if(p1UnactionableTimer != 0)
-	// 			p1Unactionable = p1UnactionableTimer;
-	// 		p1UnactionableTimer = 0;
-	// 	}
-
-	// 	if(testChar->isHitboxActive())
-	// 		p1AtkActiveTimer++;
-	// 	else{
-	// 		if(p1AtkActiveTimer != 0)
-	// 			p1AtkActive = p1AtkActiveTimer;
-	// 		p1AtkActiveTimer = 0;
-	// 	}
+	// if(!Keys[GLFW_KEY_LEFT_CONTROL] && (!Keys[GLFW_KEY_S] || !Keys[GLFW_KEY_L]))
+	// {
+	// 	savingLoading = false;
 	// }
 
-	// if(testChar2->GetHitstop() == 0){ //horrible fucking code fix it
-	// 	if(!testChar2->isActionable())
-	// 		p2UnactionableTimer++;
-	// 	else{
-	// 		if(p2UnactionableTimer != 0)
-	// 			p2Unactionable = p2UnactionableTimer;
-	// 		p2UnactionableTimer = 0;
-	// 	}
-
-	// 	if(testChar2->isHitboxActive())
-	// 		p2AtkActiveTimer++;
-	// 	else{
-	// 		if(p2AtkActiveTimer != 0)
-	// 			p2AtkActive = p2AtkActiveTimer;
-	// 		p2AtkActiveTimer = 0;
-	// 	}
+	// if(!savingLoading && Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_S]){
+	// 	vw_save_game_state_callback(&buffer, &len, &checksum, 0);
+	// 	std::cout << "saved" << std::endl;
+	// 	// std::cout << checksum << std::endl;
+	// 	savingLoading = true;
 	// }
 
-	// std::cout << "Active: " << p2AtkActive << "/ " << "Advantage: " << (p1Unactionable - p2Unactionable) << std::endl;
+	// if(!savingLoading && Keys[GLFW_KEY_LEFT_CONTROL] && Keys[GLFW_KEY_L]){
+	// 	vw_load_game_state_callback(buffer, len);
+	// 	savingLoading = true;
+	// }
+	VectorWar_Idle(5);
 
-	inputHandler->update(tick);
-	inputHandler2->update(tick);
+	VectorWar_RunFrame();
+	// gs.update(inputs,0);
 
-	float distance = testChar2->GetCenterPos().x - testChar->GetCenterPos().x;
-	float distanceY = testChar2->GetCenterPos().y - testChar->GetCenterPos().y;
+	float distance = gs._chars[1].GetCenterPos().x - gs._chars[0].GetCenterPos().x;
+	float distanceY = gs._chars[1].GetCenterPos().y - gs._chars[0].GetCenterPos().y;
 
-	cameraXPos += (abs(testChar2->GetCenterPos().x - (distance)/2) - cameraXPos) * cameraSnap;
-	cameraYPos += (abs(testChar2->GetCenterPos().y - (distanceY)/2) - cameraYPos) * cameraSnap;
+	cameraXPos += (abs(gs._chars[1].GetCenterPos().x - (distance)/2) - cameraXPos) * cameraSnap;
+	cameraYPos += (abs(gs._chars[1].GetCenterPos().y - (distanceY)/2) - cameraYPos) * cameraSnap;
 
 	if(cameraXPos <= cameraMinPos)
 		cameraXPos = cameraMinPos;
@@ -530,119 +760,7 @@ void IntroState::update(float dt)
 
 void IntroState::render()
 {
-	//Camera Params for Scene Rendering
-	m_Camera->SetCenter(glm::vec3(960, 540, 0));
-	m_Camera->SetCenterPosition(glm::vec3(cameraXPos + offsetX, cameraYPos + offsetY - (380 * cameraScale), 0));
-	m_Camera->SetRotation(angle);
-	m_Camera->SetScale(cameraScale);
-	worldProj = m_Camera->GetViewProjectionMatrix();
-	ResourceManager::GetShader("batch").Use().SetMatrix4("projection", worldProj);//Set Projection Matrix to World
-	ResourceManager::GetShader("palette").Use().SetMatrix4("projection", worldProj);
-
-	//Camera Params for UI
-	m_Camera->SetPosition(glm::vec3(0, 0, 0));
-	m_Camera->SetRotation(0);
-	m_Camera->SetCenter(glm::vec3(0, 0, 0));
-	m_Camera->SetScale(0.6667); //1.5x scale because mbtl assets are for 720p
-	uiProj = m_Camera->GetViewProjectionMatrix();
-
-	// post->BeginRender();
-
-	batchRenderer->ResetStats();
-
-	batchRenderer->BeginBatch(); //BG pass
-
-	for (auto& solid : solids){
-		solid.draw(batchRenderer);
-	}
-
-	// for(float y = 0; y < 10000; y += 100)
-	// {
-	// 	for(float x = 0; x < 10000; x += 100)
-	// 	{
-	// 		float rot = (x + y) / 2000.0f;
-	// 		glm::vec4 color = { (x + 100) / 20000.0f, 0.2f, (y + 100) / 20000.0f, 1.0f};
-	// 		batchRenderer->DrawQuad({x, y}, {100.0f, 100.0f}, 0.0f, color);
-	// 	}
-	// }
-
-    batchRenderer->EndBatch();
-	batchRenderer->Flush(); //End BG pass
-
-	ResourceManager::GetShader("batch").Use().SetMatrix4("projection", uiProj); //Set Projection Matrix to UI
-
-	batchRenderer->BeginBatch(); //UI Pass
-
-	float percentage = 1 - (testChar2->GetHealth() / 420);
-	int value = (420 - testChar2->GetHealth());
-
-	gauge->SetFrame(0);
-	gauge->pos.x = 0;
-	gauge->draw(batchRenderer);
-	gauge->SetFrame(1);
-	gauge->draw(batchRenderer);
-	gauge->SetFrame(2);
-	gauge->draw(batchRenderer);
-	gauge->SetFrame(3);
-	gauge->pos = {150, 58};
-	gauge->drawclip(batchRenderer, 0, 322, testChar2->GetHealth(), 20, false);
-	gauge->pos = {0, 0};
-	gauge->SetFrame(4);
-	gauge->draw(batchRenderer);
-
-	// batchRenderer->DrawQuad({100, 50}, {(testChar2->GetHealth() / 420.0f) * 100.0f, 50.0f}, 0, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-
-	for (int i = 0; i < MAX_HISTORY_SIZE; ++i) {
-	    int index = (currentIndex - i + MAX_HISTORY_SIZE) % MAX_HISTORY_SIZE;
-
-	    if (inputHistory.find(index) != inputHistory.end()) {
-	        icons->pos.y = i * 32 + dirHistoryPos.y;
-	        
-	        // Sort the input numbers from least to greatest
-	        std::vector<int> sortedInputs = inputHistory[index];
-	        // std::sort(sortedInputs.begin(), sortedInputs.end(), std::greater<>());
-	        
-	        int drawnCount = 0;
-	        for (auto it = sortedInputs.rbegin(); it != sortedInputs.rend() && drawnCount < 4; ++it) {
-	            int frameNumber = *it;
-	            
-				icons->pos.x = dirHistoryPos.x + (drawnCount * 32);
-
-	            icons->SetFrame(frameNumber);
-	            icons->draw(batchRenderer);
-	            
-	            drawnCount++;
-	        }
-	    }
-	}
-	batchRenderer->EndBatch();
-	batchRenderer->Flush(); //End UI Pass
-
-	ResourceManager::GetShader("batch").Use().SetMatrix4("projection", worldProj); //Set Projection Matrix to World
-	ResourceManager::GetShader("palette").Use().SetMatrix4("projection", worldProj);
-	ResourceManager::GetShader("shadow").Use().SetMatrix4("projection", worldProj);
-
-	// float skew = 0.0f;
-	// glm::vec2 char1centerpos = testChar
-	// int bottompos = (ypos +(ypos /2));
-	// shadowRenderer->DrawTexture(ResourceManager::GetTexture("popcat"), testChar->pos.x, testChar->pos.y, 960, testChar->pos.y, 960 + (100 * skew), bottompos, (100 * skew), bottompos, 0.12, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f));
-
-	batchRenderer->BeginBatch(); //Character Pass
-
-	testChar->draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepal"), ResourceManager::GetTexture("shadowpal"));
-
-    testChar2->draw(batchRenderer, characterRenderer, ResourceManager::GetTexture("hydepalp2"),ResourceManager::GetTexture("shadowpal"));
-
-    batchRenderer->EndBatch();
-	batchRenderer->Flush(); //End Character Pass
-
-	// const Stats& stats = batchRenderer->GetStats();
-    // ImGui::Text("Draw Calls: %d", stats.DrawCount);
-    // ImGui::Text("Quads Rendered: %d", stats.QuadCount);
-
-
-	// post->EndRender();
-    // post->Render(glfwGetTime());
+	VectorWar_DrawCurrentFrame();
 }
 
 //Declare static instance
