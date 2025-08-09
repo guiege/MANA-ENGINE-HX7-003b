@@ -21,12 +21,10 @@ struct GameState{
 	void init();
 
 	void update(int inputs[], int disconnect_flags);
-	void parsePlayerInputs(int inputs, int i, InputHandler* ih);
 
 	int         _framenumber;
 	Character   _chars[MAX_SHIPS];
-	InputHandler* i1;
-	InputHandler* i2;
+	InputHandler _handlers[MAX_SHIPS];
 
 };
 

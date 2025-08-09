@@ -2,13 +2,13 @@
 
 void GameState::init()
 {
-	i1 = new InputHandler();
-	i2 = new InputHandler();
+	_handlers[0] = InputHandler();
+	_handlers[1] = InputHandler();
 
-	_chars[0] = Character(i1, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 1500, 0, 4296, 15673, 0);
+	_chars[0] = Character(&_handlers[0], ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 1500, 0, 4296, 15673, 0);
 	_chars[0].init();
 
-	_chars[1] = Character(i2, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 2500, 0, 4296, 15673, 0);
+	_chars[1] = Character(&_handlers[1], ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 2500, 0, 4296, 15673, 0);
 	_chars[1].init();
 
 	// testChar = new Character(i1, ResourceManager::GetTexture("hydesheet"), "res/textures/hydesheet.json", 1500, 0, 4296, 15673, 0);
@@ -18,17 +18,12 @@ void GameState::init()
 	// testChar2->init();
 }
 
-void GameState::parsePlayerInputs(int inputs, int i, InputHandler* ih)
-{
-	
-}
-
 void GameState::update(int inputs[], int disconnect_flags)
 {
 	_framenumber++;
 
-	i1->registerInputs(inputs[0]);
-	i2->registerInputs(inputs[1]);
+	_handlers[0].registerInputs(inputs[0]);
+	_handlers[1].registerInputs(inputs[1]);
 
 	std::string char1state = _chars[0].GetCurrentState();
 	std::string char2state = _chars[1].GetCurrentState();
@@ -68,8 +63,8 @@ void GameState::update(int inputs[], int disconnect_flags)
 		_chars[1].SetPushFlag(true);
 	}
 
-	i1->update(_framenumber);
-	i2->update(_framenumber);
+	_handlers[0].update(_framenumber);
+	_handlers[1].update(_framenumber);
 
 
 }

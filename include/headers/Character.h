@@ -19,6 +19,8 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
+#define MOTIONS_3_SIZE 2
+
 struct AfterImage {
 
     glm::vec2 pos = {0.0f, 0.0f};
@@ -29,6 +31,28 @@ struct AfterImage {
         pos = p;
         ID = sprite;
     }
+};
+
+template <std::size_t N>
+struct MotionInput{
+    CommandSequence validCommands[N];
+    std::string name = "INPUT_623";
+
+
+    MotionInput(){}
+
+    MotionInput(const std::string& name_) 
+    :name(name_) {}
+
+    void checkValidCommands(std::unordered_map<std::string, bool>& buttonMap, InputHandler* inputHandler) {
+        buttonMap[name] = false;
+        for (std::size_t i = 0; i < N; ++i) {
+            if(inputHandler->checkCommand(validCommands[i])){
+                buttonMap[name] = true;
+            }
+        }
+    }
+
 };
 
 class Character : public Actor, public Scriptable {
@@ -143,6 +167,9 @@ protected:
     //Input Variables
     std::unordered_map<std::string, std::vector<CommandSequence>> motionInputs;
     std::vector<std::string> motionInputPriority;
+    MotionInput<3> _motions3[MOTIONS_3_SIZE];
+    // MotionInput<1> _motions1[3];
+    // MotionInput<6> _motions6[1];
 
     std::unordered_map<std::string, Button> buttons;
     std::unordered_map<std::string, bool> buttonMap;

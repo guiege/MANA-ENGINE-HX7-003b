@@ -10,6 +10,8 @@
 #include <map>
 #include <algorithm>
 
+#define MAX_SEQ              8
+
 struct Animation{
     Animation(std::vector<int> key, std::vector<int> frame)
     :keyframes(key), frames(frame)
@@ -42,17 +44,13 @@ struct CommandSequence{
 
     int executeTimer = 0;
 
-    int executionFrames = 0;
-
     std::vector<std::bitset<4>> commandList;
 
     std::vector<int> timingList;
 
     CommandSequence(const std::vector<std::bitset<4>> &commandList, const std::vector<int> &tL)
     :commandList(commandList), timingList(tL)
-    {
-        executionFrames = abs(tL[0]); 
-    }
+    {}
 
     CommandSequence()
     {}

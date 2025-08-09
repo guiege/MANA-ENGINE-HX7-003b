@@ -1,7 +1,7 @@
 addMove: GunFlame
     moveType: SPECIAL
     characterState: STANDING
-    moveInput: INPUT_236
+    moveInput: INPUT_623
     moveInput: INPUT_PRESS_HP
 	endMove:
 
