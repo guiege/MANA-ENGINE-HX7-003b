@@ -13,10 +13,11 @@ public:
 	static BatchState* get();
 
 	//Transitions
-	bool enter();
+	bool enter(const std::vector<std::string>& args);
 	bool exit();
 
 	//Main loop functions
+	void network(int ms);
 	void update(float dt);
 	void render();
 

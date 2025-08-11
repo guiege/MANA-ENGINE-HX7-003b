@@ -84,7 +84,7 @@ bool HitboxEditorState::exit()
 	return true;
 }
 
-bool HitboxEditorState::enter()
+bool HitboxEditorState::enter(const std::vector<std::string>& args)
 {
 	bool success = true;
 
@@ -153,6 +153,8 @@ bool HitboxEditorState::enter()
 
 	return success;
 }
+
+void HitboxEditorState::network(int ms){}
 
 void HitboxEditorState::update(float dt)
 {

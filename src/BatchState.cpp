@@ -17,7 +17,7 @@ bool BatchState::exit()
 	return true;
 }
 
-bool BatchState::enter()
+bool BatchState::enter(const std::vector<std::string>& args)
 {
 	bool success = true;
 
@@ -33,6 +33,8 @@ bool BatchState::enter()
 
 	return success;
 }
+
+void BatchState::network(int ms){}
 
 void BatchState::update(float dt)
 {

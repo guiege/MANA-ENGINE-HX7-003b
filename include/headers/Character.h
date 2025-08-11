@@ -19,7 +19,8 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
-#define MOTIONS_3_SIZE 2
+#define MOTIONS_1_SIZE 27
+#define MOTIONS_3_SIZE 1
 
 struct AfterImage {
 
@@ -167,8 +168,8 @@ protected:
     //Input Variables
     std::unordered_map<std::string, std::vector<CommandSequence>> motionInputs;
     std::vector<std::string> motionInputPriority;
+    MotionInput<1> _motions1[MOTIONS_1_SIZE];
     MotionInput<3> _motions3[MOTIONS_3_SIZE];
-    // MotionInput<1> _motions1[3];
     // MotionInput<6> _motions6[1];
 
     std::unordered_map<std::string, Button> buttons;

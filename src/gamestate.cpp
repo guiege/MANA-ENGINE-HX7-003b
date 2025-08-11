@@ -66,5 +66,24 @@ void GameState::update(int inputs[], int disconnect_flags)
 	_handlers[0].update(_framenumber);
 	_handlers[1].update(_framenumber);
 
+	if(_chars[0].GetRequestedShake() > 0.0f){
+		trauma += _chars[0].GetRequestedShake();
+		_chars[0].SetRequestedShake(0.0f);
+	}
+
+	if(_chars[1].GetRequestedShake() > 0.0f){
+		trauma += _chars[1].GetRequestedShake();
+		_chars[1].SetRequestedShake(0.0f);
+	}
+
+	if(trauma > 1){
+		trauma = 1;
+	}
+
+	if(trauma > 0)
+		trauma -= 0.01;
+
+	trauma = std::max(0.0f, std::min(trauma, 1.0f));
+
 
 }

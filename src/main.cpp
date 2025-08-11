@@ -41,6 +41,7 @@
 #include "HitboxEditorState.h"
 #include "BatchState.h"
 #include "SplashState.h"
+#include "OnlineLobby.h"
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
@@ -132,7 +133,7 @@ void changeState()
         ResourceManager::Clear();
 
         gNextState->doneLoading = false;
-        gNextState->enter();
+        gNextState->enter(gCurrentState->args);
 
         std::thread loadingThread(ResourceManager::UploadToRAM);
         loadingThread.detach();
@@ -240,24 +241,11 @@ int main()
     loadingText.Load("res/fonts/FOTNewRodin Pro B.otf", 24);
 
     gCurrentState = SplashState::get();
-    gCurrentState->enter();
+    gCurrentState->enter(gCurrentState->args);
     std::thread loadingThread(ResourceManager::UploadToRAM);
     loadingThread.detach();
 
     //FMOD STUFF
-
-    // FMOD_SYSTEM* system;
-    // FMOD_RESULT result=FMOD_System_Create(&system, FMOD_VERSION);
-
-    // FMOD_System_Set3DSettings(system, 1.0,1.0f,1.0f);
-
-    // result=FMOD_System_Init(system, 512,FMOD_INIT_NORMAL | FMOD_INIT_CHANNEL_LOWPASS,nullptr);
-
-    // FMOD_SOUND* sound;
-    // result=FMOD_System_CreateSound(system, "testing.mp3",FMOD_DEFAULT,nullptr,&sound);
-
-    // FMOD_CHANNEL*channel;
-    // result=FMOD_System_PlaySound(system, sound,nullptr,false,&channel);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -266,7 +254,7 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    while(!glfwWindowShouldClose(window)) //Main while loop. Huge thanks to TylerGlaiel for helping to fix my timestep.
+    while(!glfwWindowShouldClose(window)) //Main while loop. Huge thanks to TylerGlaiel
     {
         glfwPollEvents();
         double cposx, cposy;
@@ -277,6 +265,7 @@ int main()
         
         int64_t current_frame_time = static_cast<int64_t>(glfwGetTime() * 1000000.0);
         int64_t delta_time = current_frame_time - prev_frame_time;
+        int delta_ms = static_cast<int>(delta_time / 1000);
         prev_frame_time = current_frame_time;
 
         if(delta_time > desired_frametime*8){
@@ -331,6 +320,8 @@ int main()
             gCurrentState->doneLoading = true;
         }
 
+        gCurrentState->network(glm::max(0,delta_ms-1));
+
         if(unlock_framerate){
             int64_t consumedDeltaTime = delta_time;
 
@@ -365,41 +356,45 @@ int main()
                                 setNextState(BatchState::get());
                                 changeState();
                             }
+                            if(gCurrentState->desiredState == 4){
+                                setNextState(OnlineLobby::get());
+                                changeState();
+                            }
                         }
                     }
                     frame_accumulator -= desired_frametime;
                     tick++;
+
+                    ImGui_ImplOpenGL3_NewFrame();
+                    ImGui_ImplGlfw_NewFrame();
+                    ImGui::NewFrame();
+
+                    if(gCurrentState->doneLoading){
+                        //Specify the color of the background
+                        // glClearColor(48/(float)255, 56/(float)255, 65/(float)255, 1.0f);
+                        glClearColor(55/(float)255, 55/(float)255, 55/(float)255, 1.0f);
+
+                        // Clean the back buffer and assign the new color to it
+                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                        gCurrentState->render();
+                    }
+                    else{
+                        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                        loadingRenderer.DrawRect(glm::vec2(840, 520), glm::vec2(240 * (ResourceManager::percentLoading), 100), 0, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+                        loadingText.RenderText("Loading...", 840, 640, 1.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+                    }
+
+                    if (show_demo_window)
+                        ImGui::ShowDemoWindow(&show_demo_window);
+
+                    ImGui::Render();
+                    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+                    glfwSwapBuffers(window);
                 }
             }
-
-            ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
-            ImGui::NewFrame();
-
-            if(gCurrentState->doneLoading){
-                //Specify the color of the background
-                // glClearColor(48/(float)255, 56/(float)255, 65/(float)255, 1.0f);
-                glClearColor(55/(float)255, 55/(float)255, 55/(float)255, 1.0f);
-
-                // Clean the back buffer and assign the new color to it
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-                gCurrentState->render();
-            }
-            else{
-                glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                loadingRenderer.DrawRect(glm::vec2(840, 520), glm::vec2(240 * (ResourceManager::percentLoading), 100), 0, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-                loadingText.RenderText("Loading...", 840, 640, 1.0f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-            }
-
-            if (show_demo_window)
-                ImGui::ShowDemoWindow(&show_demo_window);
-
-            ImGui::Render();
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-            glfwSwapBuffers(window);
 
         }
 
@@ -467,6 +462,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
     if (key == GLFW_KEY_F3 && action == GLFW_PRESS && gCurrentState->doneLoading){
         setNextState(BatchState::get());
+        changeState();
+    }
+    if (key == GLFW_KEY_F4 && action == GLFW_PRESS && gCurrentState->doneLoading){
+        setNextState(OnlineLobby::get());
         changeState();
     }
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)

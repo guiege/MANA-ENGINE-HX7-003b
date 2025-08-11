@@ -23,6 +23,7 @@ struct GameState{
 	void update(int inputs[], int disconnect_flags);
 
 	int         _framenumber;
+	float trauma = 0.0f; // shake is trauma^2 or trauma^3
 	Character   _chars[MAX_SHIPS];
 	InputHandler _handlers[MAX_SHIPS];
 

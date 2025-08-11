@@ -15,9 +15,10 @@ class SplashState : public Scene
 public:
 	static SplashState* get();
 
-	bool enter();
+	bool enter(const std::vector<std::string>& args);
 	bool exit();
 
+	void network(int ms);
 	void update(float dt);
 	void render();
 

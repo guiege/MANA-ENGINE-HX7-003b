@@ -14,7 +14,7 @@ bool SplashState::exit()
 	return true;
 }
 
-bool SplashState::enter()
+bool SplashState::enter(const std::vector<std::string>& args)
 {
 	bool success = true;
 
@@ -36,6 +36,8 @@ bool SplashState::enter()
 	return success;
 }
 
+void SplashState::network(int ms){}
+
 void SplashState::update(float dt)
 {
 	if (tick <= keyframes.back().tick) {
@@ -47,7 +49,7 @@ void SplashState::update(float dt)
 	if(tick == 320)
 		currentLogo = "logo_dw";
 	if(tick == 480 || isAnyKeyPressed())
-		desiredState = 1;
+		desiredState = 4;
 
 	int present = glfwJoystickPresent(GLFW_JOYSTICK_1);
 

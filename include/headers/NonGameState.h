@@ -3,7 +3,7 @@
 
 #include "ggponet.h"
 
-#define MAX_PLAYERS 64
+#define MAX_PLAYERS 2
 
 enum PlayerConnectState {
 	Connecting = 0,

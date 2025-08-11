@@ -699,7 +699,7 @@ beginState: GunFlame
 		damage: 0, 40
 		// hitStop: 15
 		// hitstunAmount: 20
-		addWhiffCancelOption: GunFlame
+		//addWhiffCancelOption: GunFlame
 	endUpon:
 
 	upon: TOUCH_GROUND

@@ -54,15 +54,97 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 	loadScript("scripts/ROSE/CMEF.rose");
 	loadScript("scripts/ROSE/test.rose");
 
-	_motions3[0] = MotionInput<3>("INPUT_623");
-	_motions3[0].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD},{-5,15,15,12});
-	_motions3[0].validCommands[1] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK},{-5,15,15,12});
-	_motions3[0].validCommands[2] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK},{-5,15,15,12});
+	_motions1[0] = MotionInput<1>("INPUT_236214");
+	_motions1[0].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.BACK},{-5,10,10,10,10,10});
 
-	_motions3[1] = MotionInput<3>("INPUT_236");
-	_motions3[1].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD},{-5,15,15,12});
-	_motions3[1].validCommands[1] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK},{-5,15,15,12});
-	_motions3[1].validCommands[2] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK},{-5,15,15,12});
+	_motions1[1] = MotionInput<1>("INPUT_63214");
+	_motions1[1].validCommands[0] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.BACK},{-5,12,12,12});
+
+	_motions1[2] = MotionInput<1>("INPUT_421");
+	_motions1[2].validCommands[0] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN_BACK},{-8,12,7});
+
+	_motions1[3] = MotionInput<1>("INPUT_623");
+	_motions1[3].validCommands[0] = CommandSequence({FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN_FORWARD},{-8,-12,-7});
+	
+	_motions1[4] = MotionInput<1>("INPUT_236");
+	_motions1[4].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN_FORWARD, FK_Input_Buttons.FORWARD},{-5,10,10});
+
+	_motions1[5] = MotionInput<1>("INPUT_214");
+	_motions1[5].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.DOWN_BACK, FK_Input_Buttons.BACK},{-5,10,10});
+
+	_motions1[6] = MotionInput<1>("INPUT_CHARGE_BACK_FORWARD_30F");
+	_motions1[6].validCommands[0] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.FORWARD},{130,10});
+
+	_motions1[7] = MotionInput<1>("INPUT_44");
+	_motions1[7].validCommands[0] = CommandSequence({FK_Input_Buttons.BACK, FK_Input_Buttons.BACK},{10,10});
+
+	_motions1[8] = MotionInput<1>("INPUT_2");
+	_motions1[8].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN},{0});
+
+	_motions1[9] = MotionInput<1>("INPUT_3");
+	_motions1[9].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN_FORWARD},{0});
+
+	_motions1[10] = MotionInput<1>("INPUT_4");
+	_motions1[10].validCommands[0] = CommandSequence({FK_Input_Buttons.BACK},{0});
+
+	_motions1[11] = MotionInput<1>("INPUT_6");
+	_motions1[11].validCommands[0] = CommandSequence({FK_Input_Buttons.FORWARD},{0});
+
+	_motions1[12] = MotionInput<1>("INPUT_287");
+	_motions1[12].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.UP_BACK},{-12,10});
+
+	_motions1[13] = MotionInput<1>("INPUT_289");
+	_motions1[13].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.UP_FORWARD},{-12,10});
+
+	_motions1[14] = MotionInput<1>("INPUT_28");
+	_motions1[14].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.UP},{-12,10});
+
+	_motions1[15] = MotionInput<1>("INPUT_ANY_UP");
+	_motions1[15].validCommands[0] = CommandSequence({FK_Input_Buttons.UP},{50});
+
+	_motions1[16] = MotionInput<1>("INPUT_ANY_DOWN");
+	_motions1[16].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN},{50});
+
+	_motions1[17] = MotionInput<1>("INPUT_ANY_BACK");
+	_motions1[17].validCommands[0] = CommandSequence({FK_Input_Buttons.BACK},{50});
+
+	_motions1[18] = MotionInput<1>("INPUT_ANY_FORWARD");
+	_motions1[18].validCommands[0] = CommandSequence({FK_Input_Buttons.FORWARD},{50});
+
+	_motions1[19] = MotionInput<1>("INPUT_8");
+	_motions1[19].validCommands[0] = CommandSequence({FK_Input_Buttons.UP},{0});
+
+	_motions1[20] = MotionInput<1>("INPUT_7");
+	_motions1[20].validCommands[0] = CommandSequence({FK_Input_Buttons.UP_BACK},{0});
+
+	_motions1[21] = MotionInput<1>("INPUT_9");
+	_motions1[21].validCommands[0] = CommandSequence({FK_Input_Buttons.UP_FORWARD},{0});
+
+	_motions1[22] = MotionInput<1>("INPUT_HOLD_2");
+	_motions1[22].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN},{0});
+
+	_motions1[23] = MotionInput<1>("INPUT_HOLD_1");
+	_motions1[23].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN_BACK},{0});
+
+	_motions1[24] = MotionInput<1>("INPUT_HOLD_3");
+	_motions1[24].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN_FORWARD},{0});
+
+	_motions1[25] = MotionInput<1>("INPUT_HOLD_4");
+	_motions1[25].validCommands[0] = CommandSequence({FK_Input_Buttons.BACK},{0});
+
+	_motions1[26] = MotionInput<1>("INPUT_HOLD_6");
+	_motions1[26].validCommands[0] = CommandSequence({FK_Input_Buttons.FORWARD},{0});
+
+
+	_motions3[0] = MotionInput<3>("INPUT_66");
+	_motions3[0].validCommands[0] = CommandSequence({FK_Input_Buttons.FORWARD, 0, FK_Input_Buttons.FORWARD},{8,-8,1});
+	_motions3[0].validCommands[1] = CommandSequence({FK_Input_Buttons.DOWN_FORWARD, 0, FK_Input_Buttons.FORWARD},{8,-8,1});
+	_motions3[0].validCommands[2] = CommandSequence({FK_Input_Buttons.UP_FORWARD, 0, FK_Input_Buttons.FORWARD},{8,-8,1});
+
+	// _motions3[1] = MotionInput<3>("INPUT_236");
+	// _motions3[1].validCommands[0] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD, FK_Input_Buttons.DOWN, FK_Input_Buttons.FORWARD},{-5,15,15,12});
+	// _motions3[1].validCommands[1] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK},{-5,15,15,12});
+	// _motions3[1].validCommands[2] = CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK},{-5,15,15,12});
 
 	// _motions6[0] = MotionInput<6>("INPUT_214214");
 	// _motions6[0].validCommands[0] =		CommandSequence({FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK, FK_Input_Buttons.DOWN, FK_Input_Buttons.BACK},{-5,15,15,12});
@@ -205,10 +287,10 @@ void Character::init() //TODO: add commands addPositionX and addPositionY, addNa
 	insertMotionInput("INPUT_8",{
 		CommandSequence({FK_Input_Buttons.UP},{0})
 	});
-	insertMotionInput("INPUT_87",{
+	insertMotionInput("INPUT_7",{
 		CommandSequence({FK_Input_Buttons.UP_BACK},{0})
 	});
-	insertMotionInput("INPUT_89",{
+	insertMotionInput("INPUT_9",{
 		CommandSequence({FK_Input_Buttons.UP_FORWARD},{0})
 	});
 
@@ -661,6 +743,10 @@ void Character::updateScript(int tick, Character* opponent)
 	// 		}
 	// 	}
 	// }
+
+	for (std::size_t i = 0; i < MOTIONS_1_SIZE; ++i) {
+		_motions1[i].checkValidCommands(buttonMap, inputHandler);
+	}
 
 	for (std::size_t i = 0; i < MOTIONS_3_SIZE; ++i) {
 		_motions3[i].checkValidCommands(buttonMap, inputHandler);

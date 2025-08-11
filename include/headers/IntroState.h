@@ -42,13 +42,14 @@ public:
 	static IntroState* get();
 
 	//Transitions
-	bool enter();
+	bool enter(const std::vector<std::string>& args);
 	bool exit();
 
-	int ReadInputs();
+	int ReadInputs(int _charID);
 	int ReadControllerInputs();
 
 	//Main loop functions
+	void network(int ms);
 	void update(float dt);
 	void render();
 
@@ -87,7 +88,6 @@ private:
 	//Camera Shake Variables
 	glm::vec2 maxOffset = {150.0f, 150.0f};
 	float maxAngle = 5.0f; // 10 Degrees max shake angle
-	float trauma = 0.0f; // shake is trauma^2 or trauma^3
 
 	const std::uint32_t seed = static_cast<std::uint32_t>(
         std::chrono::steady_clock::now().time_since_epoch().count()

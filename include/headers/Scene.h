@@ -18,12 +18,15 @@ class Scene
 		double mouseX, mouseY;
 		int tick = 0;
 		int desiredState = 0;
+
+		std::vector<std::string> args;
 		
 		//State Transitions
-		virtual bool enter() = 0;
+		virtual bool enter(const std::vector<std::string>& args) = 0;
 		virtual bool exit() = 0;
 
 		//Main loop functions
+		virtual void network(int ms) = 0;
 		virtual void update(float dt) = 0;
 		virtual void render() = 0;
 

@@ -1,6 +1,6 @@
 #include "IntroState.h"
 
-#define SYNC_TEST
+// #define SYNC_TEST
 
 GameState gs = {  };
 NonGameState ngs = { 0 };
@@ -117,7 +117,7 @@ vw_log_game_state(char *filename, unsigned char *buffer, int)
 
 void IntroState::VectorWar_Init(unsigned short localport, int num_players, GGPOPlayer *players, int num_spectators)
 {
-	srand(time(0)); 
+	// srand(time(0)); 
 	GGPOErrorCode result;
 
 	gs.init();
@@ -157,8 +157,6 @@ void IntroState::VectorWar_Init(unsigned short localport, int num_players, GGPOP
          ngs.players[i].connect_progress = 0;
       }
    }
-
-
 
 }
 
@@ -212,7 +210,7 @@ void IntroState::VectorWar_DrawCurrentFrame()
 
 	batchRenderer->BeginBatch(); //UI Pass
 
-	float percentage = 1 - (100 / 420);
+	float percentage = 1 - (gs._chars[0].GetHealth() / 420);
 	int value = (420 - 100);
 
 	gauge->SetFrame(0);
@@ -224,7 +222,9 @@ void IntroState::VectorWar_DrawCurrentFrame()
 	gauge->draw(batchRenderer);
 	gauge->SetFrame(3);
 	gauge->pos = {150, 58};
-	gauge->drawclip(batchRenderer, 0, 322, 100, 20, false);
+	gauge->drawclip(batchRenderer, 0, 322, gs._chars[0].GetHealth(), 20, false);
+	gauge->pos = {720, 58};
+	gauge->drawclip(batchRenderer, 0 , 322, gs._chars[1].GetHealth(), 20, false);
 	gauge->pos = {0, 0};
 	gauge->SetFrame(4);
 	gauge->draw(batchRenderer);
@@ -306,11 +306,11 @@ void IntroState::VectorWar_RunFrame()
 	int inputs[MAX_SHIPS] = {0};
 
 	if (ngs.local_player_handle != GGPO_INVALID_HANDLE) {
-		int input = ReadInputs();
+		int input = ReadInputs(ngs.local_player_handle - 1);
    #if defined(SYNC_TEST)
-     	// input = rand(); // test: use random inputs to demonstrate sync testing
+     	input = rand(); // test: use random inputs to demonstrate sync testing
 	#endif
-      result = ggpo_add_local_input(ggpo, 0, &input, sizeof(input));
+      result = ggpo_add_local_input(ggpo, ngs.local_player_handle, &input, sizeof(input));
    }
 
    if (GGPO_SUCCEEDED(result)) {
@@ -324,7 +324,7 @@ void IntroState::VectorWar_RunFrame()
 
 void IntroState::VectorWar_Idle(int time)
 {
-	ggpo_idle(ggpo, time);	
+	ggpo_idle(ggpo, time);
 }
 
 void IntroState::VectorWar_DisconnectPlayer(int player)
@@ -375,10 +375,11 @@ bool IntroState::exit()
 	return true;
 }
 
-bool IntroState::enter()
+bool IntroState::enter(const std::vector<std::string>& args)
 {
 	//Loading success flag
 	bool success = true;
+
 
 	m_Camera = new Camera(0, 1920, 1080, 0);
 	//0.3333(3x), 0.4(2.5x), 0.5(2x), 0.6667(1.5x), 1.0(1x)
@@ -426,18 +427,88 @@ bool IntroState::enter()
 
 	// post->Chromatic = true;
 
-	GGPOPlayer players[2];
-	// strcpy(p2.ip_address, "192.168.0.100");
-	// p2.ip_address.port = 8001;
+	int offset = 0, local_player = 0;
+	WSADATA wd = { 0 };
+   wchar_t wide_ip_buffer[128];
+   unsigned int wide_ip_buffer_size = (unsigned int)ARRAYSIZE(wide_ip_buffer);
+
+   WSAStartup(MAKEWORD(2, 2), &wd);
+
+   std::wstring wargs[args.size()];
+   for (int i = 0; i < args.size(); ++i) {
+   	wargs[i] = std::wstring(args[i].begin(), args[i].end());
+   }
+
+   const wchar_t* arguments[args.size()];
+   for (int i = 0; i < args.size(); ++i) {
+   	arguments[i] = wargs[i].c_str();
+   }
+
+   // const wchar_t* arguments[] = {
+   //      L"7000",
+   //      L"2",
+   //      L"local",
+   //      L"127.0.0.1:7001"
+  	// };
+
+	unsigned short local_port = (unsigned short)_wtoi(arguments[offset++]);
+	int num_players = _wtoi(arguments[offset++]);
+	std::cout << "num_players" << num_players <<  std::endl;
 
 
-	VectorWar_Init(8001,2,players,0);
+	if (wcscmp(arguments[offset], L"spectate") == 0) {
+      char host_ip[128];
+      unsigned short host_port;
+      if (swscanf_s(arguments[offset+1], L"%[^:]:%hu", wide_ip_buffer, wide_ip_buffer_size, &host_port) != 2) {
+         	std::cout << "no" << std::endl;
+         	return false;
+      }
+      wcstombs_s(nullptr, host_ip, ARRAYSIZE(host_ip), wide_ip_buffer, _TRUNCATE);
+      VectorWar_InitSpectator(local_port, num_players, host_ip, host_port);
+   } else {
+      GGPOPlayer players[GGPO_MAX_SPECTATORS + GGPO_MAX_PLAYERS];
+
+      int i;
+      for (i = 0; i < num_players; i++) {
+         const wchar_t *arg = arguments[offset++];
+         wprintf(L"arg = %s\n", arg);
+
+         players[i].size = sizeof(players[i]);
+         players[i].player_num = i + 1;
+         if (!_wcsicmp(arg, L"local")) {
+            players[i].type = GGPO_PLAYERTYPE_LOCAL;
+            local_player = i;
+            continue;
+         }
+         
+         players[i].type = GGPO_PLAYERTYPE_REMOTE;
+         if (swscanf_s(arg, L"%[^:]:%hd", wide_ip_buffer, wide_ip_buffer_size, &players[i].u.remote.port) != 2) {
+         	std::cout << "no" << std::endl;
+         	return false;
+         }
+         wcstombs_s(nullptr, players[i].u.remote.ip_address, ARRAYSIZE(players[i].u.remote.ip_address), wide_ip_buffer, _TRUNCATE);
+      }
+      // these are spectators...
+      int num_spectators = 0;
+      while (offset < __argc) {
+         players[i].type = GGPO_PLAYERTYPE_SPECTATOR;
+         if (swscanf_s(arguments[offset++], L"%[^:]:%hd", wide_ip_buffer, wide_ip_buffer_size, &players[i].u.remote.port) != 2) {
+         	std::cout << "no" << std::endl;
+         	return false;
+         }
+         wcstombs_s(nullptr, players[i].u.remote.ip_address, ARRAYSIZE(players[i].u.remote.ip_address), wide_ip_buffer, _TRUNCATE);
+         i++;
+         num_spectators++;
+      }
+
+      VectorWar_Init(local_port, num_players, players, num_spectators);
+   }
 	// gs.init();
 
 	return success;
 }
 
-int IntroState::ReadInputs()
+int IntroState::ReadInputs(int _charID)
 {
 	int inputs = 0;
 
@@ -469,14 +540,14 @@ int IntroState::ReadInputs()
 
 	if (Keys[GLFW_KEY_D])
 	{
-		if(gs._chars[0].GetFlipped())
+		if(gs._chars[_charID].GetFlipped())
 			inputs |= ButtonIDs::BACK;
 		else
 			inputs |= ButtonIDs::FORWARD;
 	}
 	if (Keys[GLFW_KEY_A])
 	{
-		if(gs._chars[0].GetFlipped())
+		if(gs._chars[_charID].GetFlipped())
 			inputs |= ButtonIDs::FORWARD;
 		else
 			inputs |= ButtonIDs::BACK;
@@ -617,11 +688,13 @@ int IntroState::ReadControllerInputs()
 	return inputs;
 }
 
+void IntroState::network(int ms)
+{
+	VectorWar_Idle(ms);
+}
+
 void IntroState::update(float dt)
 {
-	int inputs[2] = { 0 };
-	inputs[0] = ReadInputs();
-	inputs[1] = ReadControllerInputs();
 
 	if(this->Keys[GLFW_KEY_LEFT])
 	{
@@ -646,28 +719,9 @@ void IntroState::update(float dt)
 		cameraScale += .01;
 	}
 
-	// if(gs._chars[0].GetRequestedShake() > 0.0f){
-	// 	trauma += gs._chars[0].GetRequestedShake();
-	// 	gs._chars[0].SetRequestedShake(0.0f);
-	// }
-
-	// if(gs._chars[1].GetRequestedShake() > 0.0f){
-	// 	trauma += gs._chars[1].GetRequestedShake();
-	// 	gs._chars[1].SetRequestedShake(0.0f);
-	// }
-
-	if(trauma > 1){
-		trauma = 1;
-	}
-
-	if(trauma > 0)
-		trauma -= 0.01;
-
-	trauma = std::max(0.0f, std::min(trauma, 1.0f));
-
 	float frequency = 0.40f;
 
-	shake = (trauma * trauma);
+	shake = (gs.trauma * gs.trauma);
 	offsetX = maxOffset.x * shake * perlin.noise1D(tick * frequency);
 	offsetY = maxOffset.y * shake * perlin.noise1D((tick + 1) * frequency);
 	angle = maxAngle * shake * perlin.noise1D((tick + 2) * frequency);
@@ -729,7 +783,6 @@ void IntroState::update(float dt)
 	// 	vw_load_game_state_callback(buffer, len);
 	// 	savingLoading = true;
 	// }
-	VectorWar_Idle(5);
 
 	VectorWar_RunFrame();
 	// gs.update(inputs,0);
