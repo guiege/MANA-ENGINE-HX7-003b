@@ -1,4 +1,5 @@
 BackYard Compatible MANA Chariot High Capacity MANA ENGINE HX7-003b High Octane Lead Free MANA Only Caution!! Extreme Temperature
+<img width="624" height="200" alt="ggpo_header" src="https://github.com/user-attachments/assets/e851e5ec-b53b-4589-bb11-81efbff0a176" />
 
 A 2D(maybe one day 2.5d?) fighting game engine for my personal project codename "Dialect". More to come.
 
